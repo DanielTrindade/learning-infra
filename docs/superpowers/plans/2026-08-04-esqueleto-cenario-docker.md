@@ -77,12 +77,16 @@ Responsabilidade por pacote: `execucao` só sabe rodar processos e não conhece 
 
 ### Task 1: Esqueleto do backend e do repositório
 
+> **CONCLUÍDA e validada em 2026-08-04** — commit `11fa3cc`. Spring Boot 4.0.0 sobre
+> Java 25.0.3, `./mvnw test` com `BUILD SUCCESS`. Os passos abaixo já incorporam as
+> correções que a execução real revelou. Não reexecute esta tarefa.
+
 **Files:**
 - Create: `.gitignore`
 - Create: `backend/pom.xml`, `backend/mvnw`, `backend/mvnw.cmd`, `backend/.mvn/wrapper/maven-wrapper.properties`
 - Create: `backend/src/main/java/dev/learninginfra/LearningInfraApplication.java`
 - Create: `backend/src/main/resources/application.yaml`
-- Test: `backend/src/test/java/dev/learninginfra/LearningInfraApplicationTest.java`
+- Test: `backend/src/test/java/dev/learninginfra/LearningInfraApplicationTests.java`
 
 **Interfaces:**
 - Consumes: nada.
@@ -125,21 +129,35 @@ frontend/dist/
 Gere pelo Spring Initializr, com o wrapper Maven incluído (não há `mvn` na máquina):
 
 ```bash
-curl -G https://start.spring.io/starter.zip \
+curl -sS -G https://start.spring.io/starter.zip \
   -d type=maven-project \
   -d language=java \
   -d bootVersion=4.0.0 \
   -d javaVersion=25 \
   -d groupId=dev.learninginfra \
   -d artifactId=backend \
-  -d name=backend \
+  -d name=learning-infra \
   -d packageName=dev.learninginfra \
   -d dependencies=web \
   -o backend.zip
-unzip backend.zip -d backend-tmp && mv backend-tmp/backend backend && rm -rf backend.zip backend-tmp
+unzip -q backend.zip -d backend && rm backend.zip
 ```
 
+Dois detalhes verificados na execução real, ambos fáceis de errar:
+
+- **O zip não tem diretório-base.** Os arquivos vêm na raiz do arquivo, então é
+  `unzip -d backend`, e não descompactar num temporário para depois mover.
+- **`name` define o nome da classe principal**, não o `artifactId`. Com
+  `name=learning-infra` o Initializr gera `LearningInfraApplication.java` e
+  `LearningInfraApplicationTests.java`. Com `name=backend` sairia `BackendApplication`,
+  divergindo do resto deste plano.
+
 Se `bootVersion=4.0.0` for recusado, omita o parâmetro `bootVersion` e deixe o Initializr escolher a versão estável mais recente — qualquer 4.0.x ou superior serve. Confirme depois que `pom.xml` tem `<java.version>25</java.version>`.
+
+Note que o Spring Boot 4 renomeou os starters: pedir `dependencies=web` produz
+`spring-boot-starter-webmvc` e `spring-boot-starter-webmvc-test` no `pom.xml` — e
+**não** os antigos `spring-boot-starter-web` / `spring-boot-starter-test`. Isso é o
+esperado; não "corrija" para os nomes antigos.
 
 - [ ] **Step 4: Escrever a configuração**
 
@@ -158,9 +176,11 @@ learninginfra:
 
 `server.address: 127.0.0.1` não é cosmético — o backend executa comandos e mexe em containers da máquina. Ele nunca deve escutar em `0.0.0.0`.
 
-- [ ] **Step 5: Escrever o teste de contexto**
+- [ ] **Step 5: Ajustar o teste de contexto**
 
-Crie `backend/src/test/java/dev/learninginfra/LearningInfraApplicationTest.java`:
+O Initializr **já gerou** `backend/src/test/java/dev/learninginfra/LearningInfraApplicationTests.java`
+com um método `contextLoads()`. Não crie o arquivo — substitua o conteúdo dele, para
+seguir a convenção de nomes em português deste projeto:
 
 ```java
 package dev.learninginfra;
@@ -169,7 +189,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class LearningInfraApplicationTest {
+class LearningInfraApplicationTests {
 
     @Test
     void oContextoSobe() {
@@ -1139,17 +1159,30 @@ class GerenciadorDeCenarioAtivoTest {
 
 O último teste implementa a consequência escrita na ADR 0002: teardown que falha em silêncio reintroduz exatamente o bug que a invariante existe para eliminar.
 
-- [ ] **Step 2: Adicionar Mockito ao `pom.xml`**
+- [ ] **Step 2: Confirmar que Mockito está disponível**
 
-`spring-boot-starter-test` já traz Mockito — confirme que a dependência de teste existe no `pom.xml`:
+No Spring Boot 4 o starter de teste chama-se `spring-boot-starter-webmvc-test`, e ele
+já traz Mockito transitivamente — verificado em execução real. Confirme que existe no
+`pom.xml`:
 
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-test</artifactId>
+    <artifactId>spring-boot-starter-webmvc-test</artifactId>
     <scope>test</scope>
 </dependency>
 ```
+
+Não adicione `spring-boot-starter-test` — esse é o nome anterior ao Boot 4.
+
+Ao rodar, o Mockito emite este aviso no Java 25:
+
+> Mockito is currently self-attaching to enable the inline-mock-maker. This will no
+> longer work in future releases of the JDK.
+
+É só aviso, os testes passam. Se um JDK futuro transformar isso em erro, a correção é
+declarar o agente do Byte Buddy no `maven-surefire-plugin` via `argLine`, em vez de
+deixar o Mockito se auto-anexar.
 
 - [ ] **Step 3: Rodar para ver falhar**
 
