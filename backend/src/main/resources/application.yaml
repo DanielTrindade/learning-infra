@@ -1,0 +1,8 @@
+server:
+  address: 127.0.0.1
+  port: 8080
+
+learninginfra:
+  diretorio-de-conteudo: ../content
+  diretorio-de-trabalho: ../work
+  arquivo-de-progresso: ../data/progresso.json
