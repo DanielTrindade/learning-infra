@@ -2,6 +2,7 @@ package dev.learninginfra.verificacao;
 
 import dev.learninginfra.execucao.ExecutorDeComando;
 import dev.learninginfra.execucao.SaidaDeComando;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -9,20 +10,38 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MotorDeVerificacao {
 
-    private final ExecutorDeComando executor;
-    private final HttpClient http = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(3))
-            .build();
+    /**
+     * Generoso de propósito. Um serviço do Cenário pode depender de outro que está
+     * morrendo, e aí ele responde só depois do próprio timeout interno — cinco segundos
+     * é comum. Um limite apertado reprovaria como "morto" um serviço que está de pé.
+     */
+    private static final Duration ESPERA_PADRAO = Duration.ofSeconds(10);
 
+    private final ExecutorDeComando executor;
+    private final Duration espera;
+    private final HttpClient http;
+
+    /**
+     * O {@code @Autowired} é obrigatório: com mais de um construtor, o Spring não elege
+     * nenhum sozinho e procura um construtor sem argumentos, que não existe.
+     */
+    @Autowired
     public MotorDeVerificacao(ExecutorDeComando executor) {
+        this(executor, ESPERA_PADRAO);
+    }
+
+    /** Só para teste: permite uma espera curta sem deixar a suíte lenta. */
+    MotorDeVerificacao(ExecutorDeComando executor, Duration espera) {
         this.executor = executor;
+        this.espera = espera;
+        this.http = HttpClient.newBuilder().connectTimeout(espera).build();
     }
 
     public ResultadoDaVerificacao verificar(List<Assercao> asercoes) {
@@ -62,33 +81,49 @@ public class MotorDeVerificacao {
     }
 
     private ResultadoDeAsercao avaliarStatus(Assercao.HttpResponde a) {
-        return buscar(a.url())
-                .map(resposta -> resposta.statusCode() == a.status()
-                        ? ResultadoDeAsercao.aprovada(a)
-                        : ResultadoDeAsercao.reprovada(a, "respondeu " + resposta.statusCode()))
-                .orElseGet(() -> ResultadoDeAsercao.reprovada(a, "nada respondeu em " + a.url()));
+        Tentativa tentativa = buscar(a.url());
+        if (!tentativa.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a, tentativa.falha());
+        }
+        return tentativa.resposta().statusCode() == a.status()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a, "respondeu " + tentativa.resposta().statusCode());
     }
 
     private ResultadoDeAsercao avaliarCorpo(Assercao.HttpCorpoContem a) {
-        return buscar(a.url())
-                .map(resposta -> resposta.body().contains(a.texto())
-                        ? ResultadoDeAsercao.aprovada(a)
-                        : ResultadoDeAsercao.reprovada(a, "respondeu, mas sem o texto esperado"))
-                .orElseGet(() -> ResultadoDeAsercao.reprovada(a, "nada respondeu em " + a.url()));
+        Tentativa tentativa = buscar(a.url());
+        if (!tentativa.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a, tentativa.falha());
+        }
+        return tentativa.resposta().body().contains(a.texto())
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a, "respondeu, mas sem o texto esperado");
     }
 
-    private Optional<HttpResponse<String>> buscar(String url) {
+    /** Resposta obtida, ou a razão pela qual não veio — as duas são informação para o leitor. */
+    private record Tentativa(HttpResponse<String> resposta, String falha) {
+        boolean sucesso() {
+            return resposta != null;
+        }
+    }
+
+    private Tentativa buscar(String url) {
         try {
             HttpRequest requisicao = HttpRequest.newBuilder(URI.create(url))
-                    .timeout(Duration.ofSeconds(3))
+                    .timeout(espera)
                     .GET()
                     .build();
-            return Optional.of(http.send(requisicao, HttpResponse.BodyHandlers.ofString()));
+            return new Tentativa(http.send(requisicao, HttpResponse.BodyHandlers.ofString()), null);
+        } catch (HttpTimeoutException e) {
+            // Alguém escuta em url, mas não respondeu a tempo. Diagnóstico bem diferente
+            // de "não há ninguém aí" — normalmente é uma dependência travada.
+            return new Tentativa(null,
+                    "não respondeu em " + espera.toSeconds() + "s — está lento ou travado");
         } catch (IOException e) {
-            return Optional.empty();
+            return new Tentativa(null, "nada respondeu em " + url);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return Optional.empty();
+            return new Tentativa(null, "verificação interrompida");
         }
     }
 }

@@ -53,9 +53,27 @@ public class GerenciadorDeCenarioAtivo {
         Path trabalho = diretorioDeTrabalho.toAbsolutePath().normalize();
         apagarRecursivamente(trabalho);
         copiarWorkspace(cenario, trabalho);
+        subirCompose(cenario, trabalho);
 
         progressos.salvar(progressos.carregar().comAtivo(cenario.id()));
         return trabalho;
+    }
+
+    /** Sobe o stack quando o workspace materializado traz um compose.yaml. */
+    private void subirCompose(Cenario cenario, Path trabalho) {
+        Path arquivo = trabalho.resolve("compose.yaml");
+        if (!cenario.usaCompose() || !Files.isRegularFile(arquivo)) {
+            return;
+        }
+        SaidaDeComando saida = executor.executar(List.of(
+                "docker", "compose", "-p", cenario.projetoCompose(),
+                "-f", arquivo.toString(), "up", "-d", "--build"));
+        if (!saida.sucesso()) {
+            throw new IllegalStateException(
+                    "não consegui subir o projeto Compose `" + cenario.projetoCompose()
+                    + "` do Cenário " + cenario.id() + ": " + saida.stderr().strip()
+                    + " — o ambiente deste Cenário não está pronto");
+        }
     }
 
     public void marcarConcluido(Cenario cenario) {

@@ -52,6 +52,57 @@ class GerenciadorDeCenarioAtivoTest {
                 diretorio, List.of(), projeto);
     }
 
+    private Cenario cenarioComposeComArquivo(String id, String projeto) throws Exception {
+        Path diretorio = raiz.resolve("content").resolve(id.replace('/', '-'));
+        Files.createDirectories(diretorio.resolve("workspace"));
+        Files.writeString(diretorio.resolve("workspace").resolve("compose.yaml"),
+                "services:\n  alfa:\n    image: alpine\n");
+        return new Cenario(id, "titulo", Dificuldade.GUIADO, List.of(), "# corpo",
+                diretorio, List.of(), projeto);
+    }
+
+    @Test
+    void iniciarSobeOComposeQuandoOWorkspaceTrazUm() throws Exception {
+        Cenario cenario = cenarioComposeComArquivo("docker/04", "lab-04");
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+
+        Path trabalho = gerenciador(repositorio).iniciar(cenario);
+
+        assertEquals(
+                List.of(List.of("docker", "compose", "-p", "lab-04",
+                        "-f", trabalho.resolve("compose.yaml").toString(),
+                        "up", "-d", "--build")),
+                comandosExecutados);
+    }
+
+    @Test
+    void iniciarNaoSobeComposeQuandoOWorkspaceNaoTrazArquivo() throws Exception {
+        Cenario cenario = cenarioCompose("docker/03", "lab-03");
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+
+        gerenciador(repositorio).iniciar(cenario);
+
+        assertTrue(comandosExecutados.stream().noneMatch(c -> c.contains("up")));
+    }
+
+    @Test
+    void falhaDoComposeUpEhRuidosa() throws Exception {
+        Cenario cenario = cenarioComposeComArquivo("docker/04", "lab-04");
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+
+        ExecutorDeComando executorQueFalha = comando ->
+                comando.contains("up") ? new SaidaDeComando(1, "", "imagem nao encontrada")
+                                       : new SaidaDeComando(0, "", "");
+        var gerenciador = new GerenciadorDeCenarioAtivo(
+                raiz.resolve("work").toString(),
+                executorQueFalha,
+                new RepositorioDeProgresso(raiz.resolve("data/progresso.json").toString()),
+                repositorio);
+
+        var erro = assertThrows(IllegalStateException.class, () -> gerenciador.iniciar(cenario));
+        assertTrue(erro.getMessage().contains("lab-04"));
+    }
+
     @Test
     void iniciarDerrubaOProjetoComposeDoCenarioAnterior() throws Exception {
         Cenario primeiro = cenarioCompose("docker/03", "lab-03");

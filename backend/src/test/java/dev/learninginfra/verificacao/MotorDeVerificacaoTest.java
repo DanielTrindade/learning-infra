@@ -29,6 +29,16 @@ class MotorDeVerificacaoTest {
                 saida.write(corpo);
             }
         });
+        servidor.createContext("/lento", troca -> {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            troca.sendResponseHeaders(200, 0);
+            troca.close();
+        });
+        servidor.setExecutor(java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor());
         servidor.start();
         base = "http://127.0.0.1:" + servidor.getAddress().getPort();
     }
@@ -76,6 +86,20 @@ class MotorDeVerificacaoTest {
                 .verificar(List.of(new Assercao.HttpResponde(base, 200)));
 
         assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void servicoLentoNaoEhConfundidoComServicoMorto() {
+        ExecutorDeComando falso = comando -> new SaidaDeComando(0, "true\n", "");
+        var motorImpaciente = new MotorDeVerificacao(falso, java.time.Duration.ofSeconds(1));
+
+        var resultado = motorImpaciente
+                .verificar(List.of(new Assercao.HttpResponde(base + "/lento", 200)));
+
+        var detalhe = resultado.asercoes().getFirst().detalhe();
+        assertFalse(resultado.concluido());
+        assertTrue(detalhe.contains("lento ou travado"), "veio: " + detalhe);
+        assertFalse(detalhe.contains("nada respondeu"), "veio: " + detalhe);
     }
 
     @Test

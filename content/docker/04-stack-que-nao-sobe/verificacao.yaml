@@ -1,0 +1,11 @@
+asercoes:
+  - tipo: container_rodando
+    nome: lab-04-api-1
+  - tipo: container_rodando
+    nome: lab-04-web-1
+  - tipo: http_responde
+    url: http://localhost:8091
+    status: 200
+  - tipo: http_corpo_contem
+    url: http://localhost:8091
+    texto: "O api disse: tatu-bola"
