@@ -221,6 +221,10 @@ git commit -m "chore: esqueleto do backend Spring Boot"
 
 ### Task 2: Ler um Cenário do disco
 
+> **CONCLUÍDA e validada em 2026-08-06** — commit `7dd4e43`, 4 testes verdes. O
+> SnakeYAML já vem no classpath do Spring Boot 4, sem dependência extra. Não
+> reexecute esta tarefa.
+
 **Files:**
 - Create: `backend/src/main/java/dev/learninginfra/conteudo/Dificuldade.java`
 - Create: `backend/src/main/java/dev/learninginfra/conteudo/Cenario.java`
@@ -611,6 +615,10 @@ git commit -m "feat: leitura de Cenário e Asserções do disco"
 ---
 
 ### Task 3: Executar comandos e avaliar Asserções
+
+> **CONCLUÍDA e validada em 2026-08-06** — commit `43b0aa3`. Suíte inteira com 14
+> testes verdes, incluindo os dois que batem no daemon real (engine 29.6.1). Não
+> reexecute esta tarefa.
 
 **Files:**
 - Create: `backend/src/main/java/dev/learninginfra/execucao/SaidaDeComando.java`
