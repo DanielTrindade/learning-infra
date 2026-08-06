@@ -1235,9 +1235,10 @@ public record Progresso(String cenarioAtivo, Map<String, String> concluidos) {
 ```java
 package dev.learninginfra.progresso;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -1248,7 +1249,7 @@ import java.nio.file.Path;
 public class RepositorioDeProgresso {
 
     private final Path arquivo;
-    private final ObjectMapper json = new ObjectMapper();
+    private final ObjectMapper json = JsonMapper.builder().build();
 
     public RepositorioDeProgresso(@Value("${learninginfra.arquivo-de-progresso}") String arquivo) {
         this.arquivo = Path.of(arquivo);
@@ -1258,30 +1259,33 @@ public class RepositorioDeProgresso {
         if (!Files.isRegularFile(arquivo)) {
             return Progresso.vazio();
         }
-        try {
-            return json.readValue(arquivo.toFile(), Progresso.class);
-        } catch (IOException e) {
-            throw new UncheckedIOException("progresso ilegível em " + arquivo, e);
-        }
+        return json.readValue(arquivo.toFile(), Progresso.class);
     }
 
     public void salvar(Progresso progresso) {
         try {
             Files.createDirectories(arquivo.toAbsolutePath().getParent());
-            json.writerWithDefaultPrettyPrinter().writeValue(arquivo.toFile(), progresso);
         } catch (IOException e) {
-            throw new UncheckedIOException("não consegui gravar " + arquivo, e);
+            throw new UncheckedIOException("não consegui criar o diretório de " + arquivo, e);
         }
+        json.writerWithDefaultPrettyPrinter().writeValue(arquivo.toFile(), progresso);
     }
 }
 ```
 
-Nota sobre o import do Jackson: o Spring Boot 4 pode trazer Jackson 3, cujo pacote
-raiz é `tools.jackson` em vez de `com.fasterxml.jackson`. Se
-`com.fasterxml.jackson.databind.ObjectMapper` não resolver, troque por
-`tools.jackson.databind.ObjectMapper` — os métodos usados aqui (`readValue`,
-`writerWithDefaultPrettyPrinter`) têm o mesmo nome nas duas versões. Records são
-desserializados nativamente desde o Jackson 2.12, sem módulo extra.
+**Jackson 3, não Jackson 2** — verificado com `dependency:tree`: o Spring Boot 4.0.0
+traz `tools.jackson.core:jackson-databind:3.0.2`. Três consequências que o código
+acima já incorpora:
+
+- O import é `tools.jackson.databind.ObjectMapper`. `com.fasterxml.jackson.databind`
+  **não existe** no classpath e não vai compilar.
+- A instância vem de `JsonMapper.builder().build()`, não de `new ObjectMapper()`.
+- **O Jackson 3 lança exceções não-checadas.** `readValue` e `writeValue` não
+  declaram `IOException`, então envolvê-los num `try/catch (IOException e)` é erro de
+  compilação — *exception is never thrown*. Por isso o `try` em `salvar` cobre só o
+  `Files.createDirectories`, e `carregar` não tem `try` nenhum.
+
+Records seguem sendo desserializados nativamente, sem módulo extra.
 
 - [ ] **Step 6: Escrever `GerenciadorDeCenarioAtivo`**
 
