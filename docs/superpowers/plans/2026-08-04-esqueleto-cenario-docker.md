@@ -1021,6 +1021,9 @@ git commit -m "feat: motor de verificação por asserções"
 
 ### Task 4: Cenário Ativo e progresso
 
+> **CONCLUÍDA e validada em 2026-08-06** — commit `2e5a551`, 6 testes verdes.
+> Confirmado que o Spring Boot 4 traz Jackson 3 (`tools.jackson`). Não reexecute.
+
 **Files:**
 - Create: `backend/src/main/java/dev/learninginfra/progresso/Progresso.java`
 - Create: `backend/src/main/java/dev/learninginfra/progresso/RepositorioDeProgresso.java`
@@ -1449,6 +1452,9 @@ cd .. && git add backend/src && git commit -m "feat: cenário ativo, teardown e 
 
 ### Task 5: API REST
 
+> **CONCLUÍDA e validada em 2026-08-06** — commit pendente, 4 testes verdes. O teste
+> usa fixture próprio, então a tarefa não depende mais da Task 8. Não reexecute.
+
 **Files:**
 - Create: `backend/src/main/java/dev/learninginfra/api/dto/CenarioDetalhado.java`
 - Create: `backend/src/main/java/dev/learninginfra/api/CenarioController.java`
@@ -1481,7 +1487,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@TestPropertySource(properties = "learninginfra.diretorio-de-conteudo=../content")
+@TestPropertySource(properties = {
+        "learninginfra.diretorio-de-conteudo=src/test/resources/conteudo-fixture",
+        "learninginfra.arquivo-de-progresso=target/progresso-de-teste.json"
+})
 class CenarioControllerTest {
 
     @Autowired
@@ -1516,7 +1525,45 @@ class CenarioControllerTest {
 }
 ```
 
-Este teste depende do conteúdo da Task 8. Ele vai falhar até lá — é esperado e correto: escreva o controller agora, confirme que compila e que o 404 passa, e reveja este teste ao fim da Task 8.
+O teste lê um **fixture próprio**, não o `content/` real. Isso é deliberado e importa:
+se ele apontasse para `../content`, a Task 5 dependeria da Task 8 e você commitaria
+uma suíte vermelha entre as duas. O fixture torna a tarefa autocontida e mantém o
+build verde do começo ao fim. O `content/` real é validado no passo a passo manual da
+Task 8, que é onde ele precisa ser exercitado de verdade.
+
+Crie o fixture antes de rodar o teste:
+
+`backend/src/test/resources/conteudo-fixture/docker/01-servir-html-nginx/cenario.md`:
+
+```markdown
+---
+id: docker/01-servir-html-nginx
+titulo: Servir um HTML seu com nginx
+dificuldade: guiado
+containers: [lab-web]
+---
+# Servir um HTML seu com nginx
+
+Fixture de teste do controller. O conteúdo real vive em `content/`, fora do backend.
+```
+
+`backend/src/test/resources/conteudo-fixture/docker/01-servir-html-nginx/verificacao.yaml`:
+
+```yaml
+asercoes:
+  - tipo: container_rodando
+    nome: lab-web
+  - tipo: http_responde
+    url: http://localhost:8080
+    status: 200
+  - tipo: http_corpo_contem
+    url: http://localhost:8080
+    texto: Meu primeiro container
+```
+
+O redirecionamento de `arquivo-de-progresso` para `target/` também é proposital: sem
+ele, rodar os testes escreveria no `data/progresso.json` de verdade e bagunçaria o seu
+progresso real.
 
 - [ ] **Step 2: Escrever o DTO**
 
@@ -1633,10 +1680,11 @@ public class CenarioController {
 }
 ```
 
-- [ ] **Step 4: Rodar o teste de 404**
+- [ ] **Step 4: Rodar os testes do controller**
 
-Run: `cd backend && ./mvnw test -Dtest=CenarioControllerTest#devolve404ParaCenarioInexistente`
-Expected: PASS. Os outros dois só passam depois da Task 8.
+Run: `cd backend && ./mvnw test -Dtest=CenarioControllerTest`
+Expected: PASS, 4 testes. Como o teste usa fixture próprio, todos passam agora — não
+há nada a revisitar depois da Task 8.
 
 - [ ] **Step 5: Commit**
 
