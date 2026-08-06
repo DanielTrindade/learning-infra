@@ -1,0 +1,11 @@
+asercoes:
+  - tipo: container_rodando
+    nome: lab-03-api-1
+  - tipo: container_rodando
+    nome: lab-03-web-1
+  - tipo: http_responde
+    url: http://localhost:8090
+    status: 200
+  - tipo: http_corpo_contem
+    url: http://localhost:8090
+    texto: "O api disse: pinguim-imperador"

@@ -33,7 +33,8 @@ public class LeitorDeCenario {
                 lerContainers(meta),
                 corpo,
                 diretorioDoCenario,
-                asercoes);
+                asercoes,
+                textoOpcional(meta, "projetoCompose"));
     }
 
     private String[] separarFrontmatter(String bruto, Path diretorio) {
@@ -82,6 +83,11 @@ public class LeitorDeCenario {
     private List<String> lerContainers(Map<String, Object> meta) {
         Object valor = meta.get("containers");
         return valor == null ? List.of() : List.copyOf((List<String>) valor);
+    }
+
+    private String textoOpcional(Map<String, Object> mapa, String chave) {
+        Object valor = mapa.get(chave);
+        return valor == null ? null : valor.toString();
     }
 
     private String exigirTexto(Map<String, Object> mapa, String chave) {

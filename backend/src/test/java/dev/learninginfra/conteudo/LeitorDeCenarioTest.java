@@ -76,6 +76,29 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leOProjetoComposeQuandoDeclarado() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: docker/03
+                titulo: Com compose
+                dificuldade: guiado
+                projetoCompose: lab-03
+                ---
+                # corpo
+                """);
+
+        assertEquals("lab-03", new LeitorDeCenario().ler(diretorio).projetoCompose());
+    }
+
+    @Test
+    void projetoComposeEhNuloQuandoAusente() throws Exception {
+        escreverCenarioCompleto();
+
+        assertNull(new LeitorDeCenario().ler(diretorio).projetoCompose());
+    }
+
+    @Test
     void leAsercaoDeImagem() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("verificacao.yaml"), """

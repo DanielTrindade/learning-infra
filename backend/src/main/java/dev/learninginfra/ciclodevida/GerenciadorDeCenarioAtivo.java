@@ -64,6 +64,17 @@ public class GerenciadorDeCenarioAtivo {
     }
 
     private void derrubar(Cenario anterior) {
+        if (anterior.usaCompose()) {
+            SaidaDeComando saida = executor.executar(
+                    List.of("docker", "compose", "-p", anterior.projetoCompose(), "down", "-v"));
+            if (!saida.sucesso()) {
+                throw new IllegalStateException(
+                        "não consegui derrubar o projeto Compose `" + anterior.projetoCompose()
+                        + "` do Cenário " + anterior.id() + ": " + saida.stderr().strip()
+                        + " — resolva isso antes de continuar, senão a próxima Verificação pode "
+                        + "passar por sobra de ambiente");
+            }
+        }
         for (String container : anterior.containers()) {
             SaidaDeComando saida = executor.executar(List.of("docker", "rm", "-f", container));
             if (!saida.sucesso() && !pareceInexistente(saida)) {

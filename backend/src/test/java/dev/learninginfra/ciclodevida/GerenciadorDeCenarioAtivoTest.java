@@ -45,6 +45,67 @@ class GerenciadorDeCenarioAtivoTest {
                 repositorio);
     }
 
+    private Cenario cenarioCompose(String id, String projeto) throws Exception {
+        Path diretorio = raiz.resolve("content").resolve(id.replace('/', '-'));
+        Files.createDirectories(diretorio.resolve("workspace"));
+        return new Cenario(id, "titulo", Dificuldade.GUIADO, List.of(), "# corpo",
+                diretorio, List.of(), projeto);
+    }
+
+    @Test
+    void iniciarDerrubaOProjetoComposeDoCenarioAnterior() throws Exception {
+        Cenario primeiro = cenarioCompose("docker/03", "lab-03");
+        Cenario segundo = cenario("docker/04", List.of());
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+        Mockito.when(repositorio.buscar("docker/03")).thenReturn(Optional.of(primeiro));
+
+        GerenciadorDeCenarioAtivo gerenciador = gerenciador(repositorio);
+        gerenciador.iniciar(primeiro);
+        comandosExecutados.clear();
+        gerenciador.iniciar(segundo);
+
+        assertEquals(
+                List.of(List.of("docker", "compose", "-p", "lab-03", "down", "-v")),
+                comandosExecutados);
+    }
+
+    @Test
+    void cenarioSemProjetoComposeNaoChamaCompose() throws Exception {
+        Cenario primeiro = cenario("docker/01", List.of("lab-web"));
+        Cenario segundo = cenario("docker/02", List.of());
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+        Mockito.when(repositorio.buscar("docker/01")).thenReturn(Optional.of(primeiro));
+
+        GerenciadorDeCenarioAtivo gerenciador = gerenciador(repositorio);
+        gerenciador.iniciar(primeiro);
+        comandosExecutados.clear();
+        gerenciador.iniciar(segundo);
+
+        assertTrue(comandosExecutados.stream().noneMatch(c -> c.contains("compose")));
+    }
+
+    @Test
+    void falhaDoComposeDownEhRuidosa() throws Exception {
+        Cenario primeiro = cenarioCompose("docker/03", "lab-03");
+        Cenario segundo = cenario("docker/04", List.of());
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+        Mockito.when(repositorio.buscar("docker/03")).thenReturn(Optional.of(primeiro));
+
+        ExecutorDeComando executorQueFalha = comando ->
+                comando.contains("compose") ? new SaidaDeComando(1, "", "daemon fora do ar")
+                                            : new SaidaDeComando(0, "", "");
+        var gerenciador = new GerenciadorDeCenarioAtivo(
+                raiz.resolve("work").toString(),
+                executorQueFalha,
+                new RepositorioDeProgresso(raiz.resolve("data/progresso.json").toString()),
+                repositorio);
+
+        gerenciador.iniciar(primeiro);
+
+        var erro = assertThrows(IllegalStateException.class, () -> gerenciador.iniciar(segundo));
+        assertTrue(erro.getMessage().contains("lab-03"));
+    }
+
     @Test
     void materializaOWorkspaceNoDiretorioDeTrabalho() throws Exception {
         Cenario primeiro = cenario("docker/01", List.of("lab-web"));
