@@ -1452,7 +1452,7 @@ cd .. && git add backend/src && git commit -m "feat: cenário ativo, teardown e 
 
 ### Task 5: API REST
 
-> **CONCLUÍDA e validada em 2026-08-06** — commit pendente, 4 testes verdes. O teste
+> **CONCLUÍDA e validada em 2026-08-06** — commit `d9c0220`, 4 testes verdes. O teste
 > usa fixture próprio, então a tarefa não depende mais da Task 8. Não reexecute.
 
 **Files:**
