@@ -103,6 +103,18 @@ public class GerenciadorDeCenarioAtivo {
                         + "passar por sobra de ambiente");
             }
         }
+        // Volumes por último: um volume em uso por container vivo não é removível.
+        for (String volume : anterior.volumes()) {
+            SaidaDeComando saida = executor.executar(
+                    List.of("docker", "volume", "rm", "-f", volume));
+            if (!saida.sucesso()) {
+                throw new IllegalStateException(
+                        "não consegui remover o volume `" + volume + "` do Cenário "
+                        + anterior.id() + ": " + saida.stderr().strip()
+                        + " — sem isso a próxima Verificação deste Cenário passaria sozinha, "
+                        + "com o dado da vez anterior");
+            }
+        }
     }
 
     private boolean pareceInexistente(SaidaDeComando saida) {

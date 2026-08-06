@@ -104,6 +104,26 @@ class GerenciadorDeCenarioAtivoTest {
     }
 
     @Test
+    void iniciarRemoveOsVolumesDoCenarioAnterior() throws Exception {
+        Path diretorio = raiz.resolve("content").resolve("docker-05");
+        Files.createDirectories(diretorio.resolve("workspace"));
+        Cenario primeiro = new Cenario("docker/05", "titulo", Dificuldade.ASSISTIDO,
+                List.of(), "# corpo", diretorio, List.of(), null, List.of("lab-05-dados"));
+        Cenario segundo = cenario("docker/06", List.of());
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+        Mockito.when(repositorio.buscar("docker/05")).thenReturn(Optional.of(primeiro));
+
+        GerenciadorDeCenarioAtivo gerenciador = gerenciador(repositorio);
+        gerenciador.iniciar(primeiro);
+        comandosExecutados.clear();
+        gerenciador.iniciar(segundo);
+
+        assertEquals(
+                List.of(List.of("docker", "volume", "rm", "-f", "lab-05-dados")),
+                comandosExecutados);
+    }
+
+    @Test
     void iniciarDerrubaOProjetoComposeDoCenarioAnterior() throws Exception {
         Cenario primeiro = cenarioCompose("docker/03", "lab-03");
         Cenario segundo = cenario("docker/04", List.of());

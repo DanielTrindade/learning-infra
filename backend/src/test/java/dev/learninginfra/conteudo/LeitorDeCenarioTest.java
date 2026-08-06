@@ -113,6 +113,46 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leAsercoesDeVolumeEDeComando() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: volume_existe
+                    nome: lab-05-dados
+                  - tipo: comando_produz
+                    descricao: o dado sobreviveu ao container
+                    comando: ["docker", "run", "--rm", "alpine", "echo", "tamandua"]
+                    contem: tamandua
+                """);
+
+        List<Assercao> asercoes = new LeitorDeCenario().ler(diretorio).asercoes();
+
+        assertEquals(new Assercao.VolumeExiste("lab-05-dados"), asercoes.get(0));
+        assertEquals(
+                new Assercao.ComandoProduz(
+                        List.of("docker", "run", "--rm", "alpine", "echo", "tamandua"),
+                        "tamandua",
+                        "o dado sobreviveu ao container"),
+                asercoes.get(1));
+    }
+
+    @Test
+    void leOsVolumesDeclarados() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: docker/05
+                titulo: Com volume
+                dificuldade: assistido
+                volumes: [lab-05-dados]
+                ---
+                # corpo
+                """);
+
+        assertEquals(List.of("lab-05-dados"), new LeitorDeCenario().ler(diretorio).volumes());
+    }
+
+    @Test
     void recusaTipoDeAsercaoDesconhecido() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("verificacao.yaml"), """

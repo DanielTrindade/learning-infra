@@ -1,0 +1,8 @@
+asercoes:
+  - tipo: volume_existe
+    nome: lab-05-dados
+
+  - tipo: comando_produz
+    descricao: o dado gravado ainda existe depois que o container morreu
+    comando: ["docker", "run", "--rm", "-v", "lab-05-dados:/dados", "alpine", "cat", "/dados/bicho.txt"]
+    contem: tamandua

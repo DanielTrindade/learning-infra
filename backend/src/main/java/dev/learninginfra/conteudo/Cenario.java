@@ -13,12 +13,20 @@ public record Cenario(
         String markdown,
         Path diretorio,
         List<Assercao> asercoes,
-        String projetoCompose) {
+        String projetoCompose,
+        List<String> volumes) {
 
-    /** Cenário sem projeto Compose — a maioria. */
+    /** Cenário sem projeto Compose e sem volumes — a maioria. */
     public Cenario(String id, String titulo, Dificuldade dificuldade, List<String> containers,
                    String markdown, Path diretorio, List<Assercao> asercoes) {
-        this(id, titulo, dificuldade, containers, markdown, diretorio, asercoes, null);
+        this(id, titulo, dificuldade, containers, markdown, diretorio, asercoes, null, List.of());
+    }
+
+    /** Cenário com projeto Compose e sem volumes. */
+    public Cenario(String id, String titulo, Dificuldade dificuldade, List<String> containers,
+                   String markdown, Path diretorio, List<Assercao> asercoes, String projetoCompose) {
+        this(id, titulo, dificuldade, containers, markdown, diretorio, asercoes, projetoCompose,
+                List.of());
     }
 
     public boolean usaCompose() {

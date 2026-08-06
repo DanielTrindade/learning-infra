@@ -140,6 +140,71 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void volumeExistePassaQuandoInspectDaCerto() {
+        var resultado = motorQueResponde("[{}]", 0)
+                .verificar(List.of(new Assercao.VolumeExiste("lab-05-dados")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void volumeInexistenteFalhaDizendoQueNaoFoiCriado() {
+        var resultado = motorQueResponde("", 1)
+                .verificar(List.of(new Assercao.VolumeExiste("lab-05-dados")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não existe"));
+    }
+
+    @Test
+    void comandoProduzPassaQuandoASaidaTemOTexto() {
+        var resultado = motorQueResponde("tamandua\n", 0).verificar(List.of(
+                new Assercao.ComandoProduz(List.of("echo", "tamandua"), "tamandua", "o dado sobreviveu")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void comandoProduzDistingueComandoQueFalhouDeSaidaErrada() {
+        var falhou = motorQueResponde("", 1).verificar(List.of(
+                new Assercao.ComandoProduz(List.of("cat", "/nada"), "tamandua", "o dado sobreviveu")));
+        var saidaErrada = motorQueResponde("preguica\n", 0).verificar(List.of(
+                new Assercao.ComandoProduz(List.of("cat", "/x"), "tamandua", "o dado sobreviveu")));
+
+        assertTrue(falhou.asercoes().getFirst().detalhe().contains("não completou"));
+        assertTrue(saidaErrada.asercoes().getFirst().detalhe().contains("sem o texto"));
+    }
+
+    @Test
+    void comandoProduzMostraOErroRealEnaoOProgressoDeDownload() {
+        ExecutorDeComando docker = comando -> new SaidaDeComando(1, "", """
+                Unable to find image 'alpine:latest' locally
+                latest: Pulling from library/alpine
+                Status: Downloaded newer image for alpine:latest
+                cat: can't open '/dados/bicho.txt': No such file or directory
+                """);
+        var resultado = new MotorDeVerificacao(docker).verificar(List.of(
+                new Assercao.ComandoProduz(List.of("docker", "run"), "tamandua", "o dado sobreviveu")));
+
+        var detalhe = resultado.asercoes().getFirst().detalhe();
+        assertTrue(detalhe.contains("can't open"), "veio: " + detalhe);
+        assertFalse(detalhe.contains("Pulling from"), "veio: " + detalhe);
+    }
+
+    @Test
+    void comandoProduzUsaADescricaoDoCenarioENaoOComando() {
+        var resultado = motorQueResponde("tamandua\n", 0).verificar(List.of(
+                new Assercao.ComandoProduz(
+                        List.of("docker", "run", "-v", "lab-05-dados:/dados", "alpine", "cat", "/dados/x"),
+                        "tamandua",
+                        "o dado sobreviveu ao container")));
+
+        var descricao = resultado.asercoes().getFirst().descricao();
+        assertEquals("o dado sobreviveu ao container", descricao);
+        assertFalse(descricao.contains("-v"), "a descrição não pode entregar a sintaxe do exercício");
+    }
+
+    @Test
     void todasAsAsercoesSaoAvaliadasMesmoQuandoAPrimeiraFalha() {
         var resultado = motorQueResponde("false\n", 0).verificar(List.of(
                 new Assercao.ContainerRodando("lab-web"),

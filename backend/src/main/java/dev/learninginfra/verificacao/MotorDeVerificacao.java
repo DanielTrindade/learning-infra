@@ -56,7 +56,27 @@ public class MotorDeVerificacao {
             case Assercao.HttpResponde a -> avaliarStatus(a);
             case Assercao.HttpCorpoContem a -> avaliarCorpo(a);
             case Assercao.ImagemExiste a -> avaliarImagem(a);
+            case Assercao.VolumeExiste a -> avaliarVolume(a);
+            case Assercao.ComandoProduz a -> avaliarComando(a);
         };
+    }
+
+    private ResultadoDeAsercao avaliarVolume(Assercao.VolumeExiste a) {
+        SaidaDeComando saida = executor.executar(List.of("docker", "volume", "inspect", a.nome()));
+        return saida.sucesso()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a, "o volume `" + a.nome() + "` não existe");
+    }
+
+    private ResultadoDeAsercao avaliarComando(Assercao.ComandoProduz a) {
+        SaidaDeComando saida = executor.executar(a.comando());
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "a checagem não completou: " + ultimaLinha(saida.stderr()));
+        }
+        return saida.stdout().contains(a.contem())
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a, "rodou, mas a saída veio sem o texto esperado");
     }
 
     private ResultadoDeAsercao avaliarImagem(Assercao.ImagemExiste a) {
@@ -98,6 +118,21 @@ public class MotorDeVerificacao {
         return tentativa.resposta().body().contains(a.texto())
                 ? ResultadoDeAsercao.aprovada(a)
                 : ResultadoDeAsercao.reprovada(a, "respondeu, mas sem o texto esperado");
+    }
+
+    /**
+     * O erro que interessa é a última linha do stderr. O {@code docker} escreve
+     * progresso de download de imagem ali também, e sem isto o motivo real da falha
+     * aparece afogado sob quatro linhas de "Pulling from library/alpine".
+     */
+    private String ultimaLinha(String texto) {
+        String[] linhas = texto.strip().split("\\R");
+        for (int i = linhas.length - 1; i >= 0; i--) {
+            if (!linhas[i].isBlank()) {
+                return linhas[i].strip();
+            }
+        }
+        return "sem detalhe";
     }
 
     /** Resposta obtida, ou a razão pela qual não veio — as duas são informação para o leitor. */

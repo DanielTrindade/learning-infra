@@ -30,11 +30,12 @@ public class LeitorDeCenario {
                 exigirTexto(meta, "id"),
                 exigirTexto(meta, "titulo"),
                 Dificuldade.deTexto(exigirTexto(meta, "dificuldade")),
-                lerContainers(meta),
+                lerListaOpcional(meta, "containers"),
                 corpo,
                 diretorioDoCenario,
                 asercoes,
-                textoOpcional(meta, "projetoCompose"));
+                textoOpcional(meta, "projetoCompose"),
+                lerListaOpcional(meta, "volumes"));
     }
 
     private String[] separarFrontmatter(String bruto, Path diretorio) {
@@ -74,15 +75,29 @@ public class LeitorDeCenario {
             case "http_corpo_contem" -> new Assercao.HttpCorpoContem(
                     exigirTexto(item, "url"), exigirTexto(item, "texto"));
             case "imagem_existe" -> new Assercao.ImagemExiste(exigirTexto(item, "referencia"));
+            case "volume_existe" -> new Assercao.VolumeExiste(exigirTexto(item, "nome"));
+            case "comando_produz" -> new Assercao.ComandoProduz(
+                    lerLista(item, "comando"),
+                    exigirTexto(item, "contem"),
+                    exigirTexto(item, "descricao"));
             default -> throw new IllegalArgumentException(
                     "tipo de asserção desconhecido: " + tipo + " em " + arquivo);
         };
     }
 
     @SuppressWarnings("unchecked")
-    private List<String> lerContainers(Map<String, Object> meta) {
-        Object valor = meta.get("containers");
+    private List<String> lerListaOpcional(Map<String, Object> mapa, String chave) {
+        Object valor = mapa.get(chave);
         return valor == null ? List.of() : List.copyOf((List<String>) valor);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> lerLista(Map<String, Object> mapa, String chave) {
+        Object valor = mapa.get(chave);
+        if (valor == null) {
+            throw new IllegalArgumentException("campo obrigatório ausente: " + chave);
+        }
+        return List.copyOf((List<String>) valor);
     }
 
     private String textoOpcional(Map<String, Object> mapa, String chave) {
