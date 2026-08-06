@@ -1358,7 +1358,9 @@ public class GerenciadorDeCenarioAtivo {
 
     private boolean pareceInexistente(SaidaDeComando saida) {
         String erro = saida.stderr().toLowerCase();
-        return erro.contains("no such container") || erro.contains("not found");
+        return erro.contains("no such container")
+                || erro.contains("no such object")
+                || erro.contains("not found");
     }
 
     private void copiarWorkspace(Cenario cenario, Path destino) {
@@ -1410,6 +1412,14 @@ public class GerenciadorDeCenarioAtivo {
 ```
 
 `iniciar` devolve o caminho **absoluto e normalizado** de propósito: o leitor precisa colar esse caminho num `docker run -v`, e caminho relativo não serve para o daemon.
+
+Comportamento do `docker rm -f` verificado na engine 29.6.1: **remover um container
+inexistente escreve `Error response from daemon: No such container: ...` no stderr mas
+sai com código 0.** Ou seja, `rm -f` já é idempotente, e `pareceInexistente` nunca é
+alcançado nesse caso — `sucesso()` já é `true`. O guarda continua no código de
+propósito, para o caso de uma versão da engine passar a devolver código diferente de
+zero; não o remova achando que é redundante. Note também que o `docker inspect` usa a
+frase diferente `no such object`, que é por que o guarda cobre as duas.
 
 - [ ] **Step 7: Rodar os testes**
 
