@@ -1,0 +1,53 @@
+:root { color-scheme: light dark; }
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+main { max-width: 46rem; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+
+.dificuldade {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  opacity: 0.7;
+}
+
+pre {
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  border-radius: 6px;
+  background: rgba(127, 127, 127, 0.14);
+}
+
+code { font-family: ui-monospace, monospace; font-size: 0.9em; }
+
+.erro { color: #b00020; }
+
+.acoes { display: flex; gap: 0.75rem; margin: 1.5rem 0; }
+
+.acoes button {
+  padding: 0.5rem 1rem;
+  font: inherit;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+}
+
+.acoes button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.diretorio { font-size: 0.9rem; opacity: 0.85; }
+
+.checklist { margin-top: 2.5rem; border-top: 1px solid rgba(127,127,127,0.3); padding-top: 1rem; }
+.checklist ul { list-style: none; padding: 0; }
+.checklist li { display: flex; gap: 0.6rem; padding: 0.35rem 0; align-items: baseline; }
+.checklist .passou { color: #1a7f37; }
+.checklist .falhou { color: #b00020; }
+.checklist em { opacity: 0.85; }

@@ -1697,6 +1697,10 @@ git commit -m "feat: API REST de cenários"
 
 ### Task 6: Frontend — ler o Cenário
 
+> **CONCLUÍDA e validada em 2026-08-06** — Vite 8, React 19.2, react-markdown 10.1.
+> `npm run build` (tsc + vite) verde, e o proxy `/api` confirmado por curl contra o
+> backend real. Porta corrigida de 5173 para 5180. Não reexecute.
+
 **Files:**
 - Create: `frontend/package.json`, `frontend/vite.config.ts`, `frontend/tsconfig.json`, `frontend/index.html`
 - Create: `frontend/src/main.tsx`, `frontend/src/api.ts`, `frontend/src/App.tsx`, `frontend/src/PaginaDoCenario.tsx`, `frontend/src/estilos.css`
@@ -1723,13 +1727,33 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    // strictPort faz o Vite falhar se a porta estiver ocupada, em vez de deslizar
+    // silenciosamente para outra — o que faria você abrir o app errado.
+    port: 5180,
+    strictPort: true,
     proxy: {
       '/api': 'http://127.0.0.1:8099',
     },
   },
 })
 ```
+
+Três coisas verificadas em execução real, todas capazes de custar uma hora:
+
+- **Não use 5173.** É a porta padrão do Vite, então qualquer outro projeto seu já a
+  ocupa. Sem `strictPort`, o Vite escolhe outra porta em silêncio e imprime a nova no
+  log — mas se você abrir a 5173 por hábito, vai ver **outro app**, achar que o seu
+  quebrou, e depurar o programa errado. Com `strictPort: true` ele falha na cara.
+- **O Vite escuta só em IPv6.** Ele fica em `[::1]:5180`, não em `127.0.0.1:5180`.
+  Testar com `curl http://127.0.0.1:5180` falha com *connection refused* mesmo com o
+  servidor no ar. Use `http://localhost:5180`. (O backend Spring é o oposto: está em
+  `127.0.0.1`, e é por isso que o alvo do proxy usa esse endereço.)
+- **Matar `npm run dev` pode deixar o `vite` órfão.** O `npm` é só um wrapper; o
+  processo filho sobrevive, continua segurando a porta e até recarrega o
+  `vite.config.ts` sozinho quando você o edita. Se a porta parecer ocupada por
+  ninguém, procure o PID com `Get-NetTCPConnection -LocalPort 5180 -State Listen` e
+  confira o `CommandLine` antes de matar — você provavelmente tem outros projetos
+  Node rodando.
 
 - [ ] **Step 3: Escrever o cliente da API**
 
@@ -1898,7 +1922,12 @@ cd backend && ./mvnw spring-boot:run
 cd frontend && npm run dev
 ```
 
-Abra `http://localhost:5173`. Até a Task 8 existir, a página mostra o erro de 404 — isso confirma que o front está falando com o backend.
+Abra `http://localhost:5180`. Até a Task 8 existir, a página mostra o erro de 404 —
+isso confirma que o front está falando com o backend.
+
+Para checar sem navegador, o proxy é o que importa: `curl http://localhost:5180/api/cenarios`
+deve devolver `[]` com HTTP 200 antes da Task 8. Se devolver o HTML da página em vez
+de JSON, o `proxy` do `vite.config.ts` não está sendo aplicado.
 
 - [ ] **Step 8: Commit**
 
@@ -1910,6 +1939,9 @@ git commit -m "feat: front-end lendo e renderizando o cenário"
 ---
 
 ### Task 7: Frontend — iniciar, verificar e o checklist
+
+> **CONCLUÍDA e validada em 2026-08-06** — `npm run build` verde. A tela só pode ser
+> vista de verdade depois da Task 8, que traz o conteúdo. Não reexecute.
 
 **Files:**
 - Create: `frontend/src/ChecklistDeVerificacao.tsx`
