@@ -90,7 +90,7 @@ Responsabilidade por pacote: `execucao` só sabe rodar processos e não conhece 
 
 **Interfaces:**
 - Consumes: nada.
-- Produces: a aplicação Spring Boot sobe em `127.0.0.1:8080`. Propriedade de configuração `learninginfra.diretorio-de-conteudo` (default `../content`), `learninginfra.diretorio-de-trabalho` (default `../work`), `learninginfra.arquivo-de-progresso` (default `../data/progresso.json`).
+- Produces: a aplicação Spring Boot sobe em `127.0.0.1:8099`. Propriedade de configuração `learninginfra.diretorio-de-conteudo` (default `../content`), `learninginfra.diretorio-de-trabalho` (default `../work`), `learninginfra.arquivo-de-progresso` (default `../data/progresso.json`).
 
 - [ ] **Step 1: Inicializar o repositório git**
 
@@ -166,7 +166,8 @@ Substitua `backend/src/main/resources/application.properties` por `application.y
 ```yaml
 server:
   address: 127.0.0.1
-  port: 8080
+  # 8080 é deliberadamente evitada: é a porta que os Cenários de Docker usam.
+  port: 8099
 
 learninginfra:
   diretorio-de-conteudo: ../content
@@ -175,6 +176,13 @@ learninginfra:
 ```
 
 `server.address: 127.0.0.1` não é cosmético — o backend executa comandos e mexe em containers da máquina. Ele nunca deve escutar em `0.0.0.0`.
+
+A porta **8099** também não é arbitrária. A 8080 é a porta canônica dos tutoriais de
+Docker e é a que o Cenário #1 manda publicar (`docker run -p 8080:80`). Se o backend
+ocupasse a 8080, o `docker run` do leitor falharia com *port is already allocated* —
+ou pior, a Asserção `http_responde` bateria no próprio backend em vez do nginx e
+passaria pelo motivo errado. Mantenha o backend fora de qualquer porta que os
+Cenários usem.
 
 - [ ] **Step 5: Ajustar o teste de contexto**
 
@@ -1647,7 +1655,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://127.0.0.1:8080',
+      '/api': 'http://127.0.0.1:8099',
     },
   },
 })
