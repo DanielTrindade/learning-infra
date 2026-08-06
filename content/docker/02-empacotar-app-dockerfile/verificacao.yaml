@@ -1,0 +1,11 @@
+asercoes:
+  - tipo: imagem_existe
+    referencia: lab-app:1.0
+  - tipo: container_rodando
+    nome: lab-app
+  - tipo: http_responde
+    url: http://localhost:8089
+    status: 200
+  - tipo: http_corpo_contem
+    url: http://localhost:8089
+    texto: Empacotei minha app

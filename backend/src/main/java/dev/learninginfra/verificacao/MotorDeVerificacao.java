@@ -36,7 +36,17 @@ public class MotorDeVerificacao {
             case Assercao.ContainerRodando a -> avaliarContainer(a);
             case Assercao.HttpResponde a -> avaliarStatus(a);
             case Assercao.HttpCorpoContem a -> avaliarCorpo(a);
+            case Assercao.ImagemExiste a -> avaliarImagem(a);
         };
+    }
+
+    private ResultadoDeAsercao avaliarImagem(Assercao.ImagemExiste a) {
+        SaidaDeComando saida = executor.executar(
+                List.of("docker", "image", "inspect", a.referencia()));
+        return saida.sucesso()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        "a imagem `" + a.referencia() + "` não foi construída ainda");
     }
 
     private ResultadoDeAsercao avaliarContainer(Assercao.ContainerRodando a) {

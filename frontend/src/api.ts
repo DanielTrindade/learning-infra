@@ -30,6 +30,8 @@ async function pedir<T>(url: string, metodo: 'GET' | 'POST' = 'GET'): Promise<T>
   return resposta.json() as Promise<T>
 }
 
+export const listarCenarios = () => pedir<CenarioDetalhado[]>('/api/cenarios')
+
 export const buscarCenario = (id: string) => pedir<CenarioDetalhado>(`/api/cenarios/${id}`)
 
 export const iniciarCenario = (id: string) =>

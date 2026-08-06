@@ -72,6 +72,7 @@ public class LeitorDeCenario {
                     exigirTexto(item, "url"), (Integer) item.getOrDefault("status", 200));
             case "http_corpo_contem" -> new Assercao.HttpCorpoContem(
                     exigirTexto(item, "url"), exigirTexto(item, "texto"));
+            case "imagem_existe" -> new Assercao.ImagemExiste(exigirTexto(item, "referencia"));
             default -> throw new IllegalArgumentException(
                     "tipo de asserção desconhecido: " + tipo + " em " + arquivo);
         };

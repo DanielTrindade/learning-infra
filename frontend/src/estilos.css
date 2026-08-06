@@ -51,3 +51,29 @@ code { font-family: ui-monospace, monospace; font-size: 0.9em; }
 .checklist .passou { color: #1a7f37; }
 .checklist .falhou { color: #b00020; }
 .checklist em { opacity: 0.85; }
+
+.voltar { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; }
+
+.trilha h2 { text-transform: capitalize; font-size: 1.1rem; opacity: 0.7; }
+
+ul.cenarios { list-style: none; padding: 0; }
+
+ul.cenarios li { margin: 0.4rem 0; }
+
+ul.cenarios a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+ul.cenarios a:hover { border-color: currentColor; }
+
+ul.cenarios .titulo { flex: 1; }
+
+.selo { color: #1a7f37; font-weight: bold; }
+.selo.ativo { color: #b8860b; }

@@ -99,6 +99,23 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void imagemExistePassaQuandoInspectDaCerto() {
+        var resultado = motorQueResponde("sha256:abc\n", 0)
+                .verificar(List.of(new Assercao.ImagemExiste("lab-app:1.0")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void imagemInexistenteFalhaDizendoQueFaltaConstruir() {
+        var resultado = motorQueResponde("", 1)
+                .verificar(List.of(new Assercao.ImagemExiste("lab-app:1.0")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não foi construída"));
+    }
+
+    @Test
     void todasAsAsercoesSaoAvaliadasMesmoQuandoAPrimeiraFalha() {
         var resultado = motorQueResponde("false\n", 0).verificar(List.of(
                 new Assercao.ContainerRodando("lab-web"),

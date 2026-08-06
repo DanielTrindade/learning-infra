@@ -76,6 +76,20 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leAsercaoDeImagem() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: imagem_existe
+                    referencia: lab-app:1.0
+                """);
+
+        List<Assercao> asercoes = new LeitorDeCenario().ler(diretorio).asercoes();
+
+        assertEquals(List.of(new Assercao.ImagemExiste("lab-app:1.0")), asercoes);
+    }
+
+    @Test
     void recusaTipoDeAsercaoDesconhecido() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("verificacao.yaml"), """

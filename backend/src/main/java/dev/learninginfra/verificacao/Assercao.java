@@ -24,4 +24,11 @@ public sealed interface Assercao {
             return "o corpo de " + url + " contém \"" + texto + "\"";
         }
     }
+
+    record ImagemExiste(String referencia) implements Assercao {
+        @Override
+        public String descricao() {
+            return "a imagem `" + referencia + "` existe localmente";
+        }
+    }
 }
