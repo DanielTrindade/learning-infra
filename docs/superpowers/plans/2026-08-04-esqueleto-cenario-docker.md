@@ -2111,6 +2111,21 @@ git commit -m "feat: iniciar, verificar e checklist de asserções"
 
 ### Task 8: O conteúdo do Cenário #1
 
+> **CONCLUÍDA e validada em 2026-08-06** — cenário percorrido de ponta a ponta contra
+> o Docker real: as três Asserções reprovam antes do exercício e aprovam depois, e o
+> progresso é gravado. A porta do Cenário mudou de 8080 para 8088; veja o aviso abaixo.
+> Não reexecute.
+
+> **Aviso sobre portas de host em Cenários.** A 8080 parecia a escolha óbvia por ser
+> canônica em tutoriais de Docker, e estava ocupada por outra aplicação da máquina.
+> Isso produz o pior tipo de falha: a Asserção `http_responde` recebe um **404 do app
+> errado** e reporta *"respondeu 404"*, que soa como nginx mal configurado. O leitor
+> depura o próprio exercício por meia hora. Pior ainda, o `-p 8080:80` do Passo 3
+> falharia com *port is already allocated*. Ao escrever qualquer Cenário novo, escolha
+> a porta conferindo o que já roda na máquina — e prefira faixas improváveis a portas
+> famosas. Uma melhoria futura da plataforma seria a Verificação distinguir "nada
+> respondeu" de "respondeu, mas não é seu container".
+
 **Files:**
 - Create: `content/docker/01-servir-html-nginx/cenario.md`
 - Create: `content/docker/01-servir-html-nginx/verificacao.yaml`
@@ -2129,7 +2144,7 @@ git commit -m "feat: iniciar, verificar e checklist de asserções"
 <meta charset="utf-8">
 <title>Meu primeiro container</title>
 <h1>Meu primeiro container</h1>
-<p>Se você está lendo isto pela porta 8080, o nginx está servindo o seu diretório.</p>
+<p>Se você está lendo isto pela porta 8088, o nginx está servindo o seu diretório.</p>
 ```
 
 - [ ] **Step 2: Escrever a Verificação**
@@ -2141,10 +2156,10 @@ asercoes:
   - tipo: container_rodando
     nome: lab-web
   - tipo: http_responde
-    url: http://localhost:8080
+    url: http://localhost:8088
     status: 200
   - tipo: http_corpo_contem
-    url: http://localhost:8080
+    url: http://localhost:8088
     texto: Meu primeiro container
 ```
 
@@ -2209,7 +2224,7 @@ Confirme:
 docker ps
 ```
 
-Agora tente abrir `http://localhost:8080` no navegador. **Não vai funcionar** — e a
+Agora tente abrir `http://localhost:8088` no navegador. **Não vai funcionar** — e a
 razão é o próximo passo.
 
 ## Passo 3 — mapear a porta
@@ -2221,13 +2236,13 @@ Remova o container anterior e recrie com o mapeamento:
 
 ```sh
 docker rm -f lab-web
-docker run -d --name lab-web -p 8080:80 nginx
+docker run -d --name lab-web -p 8088:80 nginx
 ```
 
-- `-p 8080:80` significa **porta 8080 do seu host** → **porta 80 do container**. A
+- `-p 8088:80` significa **porta 8088 do seu host** → **porta 80 do container**. A
   ordem é sempre `host:container`. Inverter é o erro mais comum aqui.
 
-Abra `http://localhost:8080`. Você deve ver a página padrão do nginx.
+Abra `http://localhost:8088`. Você deve ver a página padrão do nginx.
 
 ## Passo 4 — montar o seu diretório
 
@@ -2238,7 +2253,7 @@ Use o caminho de trabalho que apareceu ao iniciar o cenário, acrescido de `\sit
 
 ```sh
 docker rm -f lab-web
-docker run -d --name lab-web -p 8080:80 -v C:\caminho\completo\ate\work\site:/usr/share/nginx/html:ro nginx
+docker run -d --name lab-web -p 8088:80 -v C:\caminho\completo\ate\work\site:/usr/share/nginx/html:ro nginx
 ```
 
 - `-v origem:destino` monta um diretório do host dentro do container. A ordem é
@@ -2247,12 +2262,12 @@ docker run -d --name lab-web -p 8080:80 -v C:\caminho\completo\ate\work\site:/us
 - `:ro` monta somente-leitura. O nginx não precisa escrever ali, e restringir o que
   um container pode fazer é um hábito que vale desde o primeiro dia.
 
-Recarregue `http://localhost:8080`. Agora é o seu HTML.
+Recarregue `http://localhost:8088`. Agora é o seu HTML.
 
 ## Verifique
 
 Clique em **Verificar**. Três Asserções serão checadas: o container `lab-web` está
-rodando, a porta 8080 responde 200, e o corpo contém o título do seu HTML.
+rodando, a porta 8088 responde 200, e o corpo contém o título do seu HTML.
 
 Se alguma falhar, o detalhe ao lado diz exatamente qual das três quebrou — o que
 quase sempre aponta o passo que faltou.

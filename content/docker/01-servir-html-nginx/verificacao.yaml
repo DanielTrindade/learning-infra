@@ -1,0 +1,9 @@
+asercoes:
+  - tipo: container_rodando
+    nome: lab-web
+  - tipo: http_responde
+    url: http://localhost:8088
+    status: 200
+  - tipo: http_corpo_contem
+    url: http://localhost:8088
+    texto: Meu primeiro container
