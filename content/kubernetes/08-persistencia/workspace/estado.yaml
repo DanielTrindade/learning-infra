@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dados
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: escritor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: escritor
+  template:
+    metadata:
+      labels:
+        app: escritor
+    spec:
+      containers:
+        - name: escritor
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - test -f /dados/bicho.txt || echo capivara > /dados/bicho.txt; sleep 3600
+          volumeMounts:
+            - name: dados
+              mountPath: /dados
+      volumes:
+        - name: dados
+          persistentVolumeClaim:
+            claimName: dados
+

@@ -1,0 +1,14 @@
+asercoes:
+  - tipo: kubernetes_jsonpath
+    descricao: o Pod `web` está em execução no cluster
+    recurso: pod
+    nome: web
+    expressao: "{.status.phase}"
+    contem: Running
+
+  - tipo: kubernetes_jsonpath
+    descricao: o Pod `web` tem a label usada para selecioná-lo
+    recurso: pod
+    nome: web
+    expressao: "{.metadata.labels.app}"
+    contem: web

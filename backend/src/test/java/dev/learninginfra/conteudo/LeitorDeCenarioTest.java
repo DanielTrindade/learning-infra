@@ -153,6 +153,148 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leMetadadosDeKubernetes() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: kubernetes/06-probes
+                titulo: Uma aplicação viva mas indisponível
+                dificuldade: mestre
+                contextoKubernetes: docker-desktop
+                namespaceKubernetes: learning-infra-k8s-06
+                manifestosIniciais: setup
+                ---
+                # corpo
+                """);
+
+        Cenario cenario = new LeitorDeCenario().ler(diretorio);
+
+        assertEquals("docker-desktop", cenario.contextoKubernetes());
+        assertEquals("learning-infra-k8s-06", cenario.namespaceKubernetes());
+        assertEquals("setup", cenario.manifestosIniciais());
+        assertTrue(cenario.usaKubernetes());
+        assertTrue(cenario.temManifestosIniciais());
+    }
+
+    @Test
+    void recusaNamespaceKubernetesSemContexto() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: kubernetes/01
+                titulo: Incompleto
+                dificuldade: guiado
+                namespaceKubernetes: learning-infra-k8s-01
+                ---
+                # corpo
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("devem aparecer juntos"));
+    }
+
+    @Test
+    void leAsercoesTipadasDeKubernetesComContextoDoCenario() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: kubernetes/10-rbac
+                titulo: RBAC
+                dificuldade: assistido
+                contextoKubernetes: docker-desktop
+                namespaceKubernetes: li-k8s-10
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: kubernetes_condicao
+                    recurso: deployment
+                    nome: web
+                    condicao: Available
+                    timeout: 12
+                    descricao: o Deployment está disponível
+                  - tipo: kubernetes_jsonpath
+                    recurso: pod
+                    nome: web
+                    expressao: "{.status.phase}"
+                    contem: Running
+                    descricao: o Pod está rodando
+                  - tipo: kubernetes_rbac
+                    serviceAccount: auditor
+                    verbo: delete
+                    recurso: pods
+                    permitido: false
+                    descricao: o auditor não apaga Pods
+                """);
+
+        List<Assercao> asercoes = new LeitorDeCenario().ler(diretorio).asercoes();
+
+        assertEquals(3, asercoes.size());
+        assertEquals("docker-desktop", ((Assercao.KubernetesCondicao) asercoes.get(0)).contexto());
+        assertEquals(12, ((Assercao.KubernetesCondicao) asercoes.get(0)).timeoutSegundos());
+        assertEquals(10, ((Assercao.KubernetesJsonpath) asercoes.get(1)).timeoutSegundos());
+        assertFalse(((Assercao.KubernetesRbac) asercoes.get(2)).permitido());
+    }
+
+    @Test
+    void leMetadadosEAsercaoDeAwsSemAceitarEndpointDoConteudo() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: aws/02-s3
+                titulo: S3
+                dificuldade: guiado
+                ministack: true
+                infraestruturaRealAws: true
+                inicializacaoAws: init
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: aws_consulta
+                    servico: s3api
+                    operacao: get-bucket-versioning
+                    argumentos: ["--bucket", "learning-infra-arquivos"]
+                    consulta: Status
+                    esperado: Enabled
+                    descricao: o bucket mantém histórico de versões
+                """);
+
+        Cenario cenario = new LeitorDeCenario().ler(diretorio);
+        var asercao = (Assercao.AwsConsulta) cenario.asercoes().getFirst();
+
+        assertTrue(cenario.usaAws());
+        assertTrue(cenario.infraestruturaRealAws());
+        assertEquals("init", cenario.inicializacaoAws());
+        assertEquals("http://127.0.0.1:4566", asercao.endpoint());
+        assertEquals("us-east-1", asercao.regiao());
+        assertEquals(List.of("--bucket", "learning-infra-arquivos"), asercao.argumentos());
+    }
+
+    @Test
+    void recusaAsercaoAwsForaDeUmCenarioMinistack() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: aws_consulta
+                    servico: s3api
+                    operacao: list-buckets
+                    consulta: "Buckets[0].Name"
+                    esperado: arquivos
+                    descricao: existe um bucket
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("ministack: true"));
+    }
+
+    @Test
     void recusaTipoDeAsercaoDesconhecido() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("verificacao.yaml"), """

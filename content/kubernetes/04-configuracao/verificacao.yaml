@@ -1,0 +1,10 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: o nginx recebeu a página da ConfigMap
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-04", "exec", "deployment/web", "--", "cat", "/usr/share/nginx/html/index.html"]
+    contem: ambiente kubernetes
+
+  - tipo: comando_produz
+    descricao: o processo recebeu o token vindo do Secret
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-04", "exec", "deployment/web", "--", "printenv", "LAB_TOKEN"]
+    contem: tamandua

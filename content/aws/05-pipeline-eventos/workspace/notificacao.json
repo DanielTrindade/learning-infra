@@ -1,0 +1,10 @@
+{
+  "QueueConfigurations": [
+    {
+      "Id": "objetos-criados",
+      "QueueArn": "SUBSTITUA_PELO_ARN_DA_FILA",
+      "Events": ["s3:ObjectCreated:*"]
+    }
+  ]
+}
+

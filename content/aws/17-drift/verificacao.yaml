@@ -1,0 +1,16 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-attributes
+    argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-drift", "--attribute-names", "VisibilityTimeout"]
+    consulta: Attributes.VisibilityTimeout
+    esperado: "45"
+    descricao: o timeout foi corrigido pela fonte declarativa
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: list-queue-tags
+    argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-drift"]
+    consulta: "Tags.GerenciadoPor"
+    esperado: CloudFormation
+    descricao: a fila declara quem é responsável por seu ciclo de vida
+

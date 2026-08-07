@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: banco
+spec:
+  clusterIP: None
+  selector:
+    app: banco
+  ports:
+    - name: pares
+      port: 8080
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: banco
+spec:
+  serviceName: banco
+  replicas: 2
+  selector:
+    matchLabels:
+      app: banco
+  template:
+    metadata:
+      labels:
+        app: banco
+    spec:
+      containers:
+        - name: membro
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - test -f /dados/identidade || hostname > /dados/identidade; sleep 3600
+          volumeMounts:
+            - name: dados
+              mountPath: /dados
+  volumeClaimTemplates:
+    - metadata:
+        name: dados
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 32Mi
+

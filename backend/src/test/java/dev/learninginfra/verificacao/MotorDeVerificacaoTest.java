@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -213,5 +214,108 @@ class MotorDeVerificacaoTest {
         assertEquals(2, resultado.asercoes().size());
         assertFalse(resultado.asercoes().get(0).passou());
         assertTrue(resultado.asercoes().get(1).passou());
+    }
+
+    @Test
+    void condicaoKubernetesUsaWaitComTimeout() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "condition met", "");
+        };
+        var asercao = new Assercao.KubernetesCondicao(
+                "docker-desktop", "li-k8s-01", "deployment", "web",
+                "Available", "True", 12, "o Deployment está disponível");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(asercao));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("kubectl", "--context", "docker-desktop", "--namespace",
+                "li-k8s-01", "wait", "deployment/web", "--for=condition=Available=True",
+                "--timeout=12s"), comandos.getFirst());
+    }
+
+    @Test
+    void jsonpathKubernetesEsperaOValorComTimeout() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "condition met", "");
+        };
+        var asercao = new Assercao.KubernetesJsonpath(
+                "docker-desktop", "li-k8s-01", "pod", "web", "{.status.phase}",
+                "Running", 8, "o Pod está rodando");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(asercao));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("kubectl", "--context", "docker-desktop", "--namespace",
+                "li-k8s-01", "wait", "pod/web", "--for=jsonpath={.status.phase}=Running",
+                "--timeout=8s"), comandos.getFirst());
+    }
+
+    @Test
+    void rbacKubernetesValidaPermissaoENegacaoSemAceitarFalhaDeConexao() {
+        var permitido = new Assercao.KubernetesRbac(
+                "docker-desktop", "li-k8s-10", "auditor", "get", "pods", true,
+                "o auditor lê Pods");
+        var negado = new Assercao.KubernetesRbac(
+                "docker-desktop", "li-k8s-10", "auditor", "delete", "pods", false,
+                "o auditor não apaga Pods");
+
+        assertTrue(motorQueResponde("yes\n", 0).verificar(List.of(permitido)).concluido());
+        assertTrue(motorQueResponde("no\n", 1).verificar(List.of(negado)).concluido());
+        assertFalse(motorQueResponde("", 1).verificar(List.of(negado)).concluido());
+    }
+
+    @Test
+    void consultaAwsFixaEndpointRegiaoERequisicaoSemCredenciaisReais() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        List<Map<String, String>> ambientes = new java.util.ArrayList<>();
+        ExecutorDeComando executor = new ExecutorDeComando() {
+            @Override
+            public SaidaDeComando executar(List<String> comando) {
+                throw new AssertionError("a consulta AWS deve declarar o ambiente sintético");
+            }
+
+            @Override
+            public SaidaDeComando executar(
+                    List<String> comando, Map<String, String> ambiente) {
+                comandos.add(comando);
+                ambientes.add(ambiente);
+                return new SaidaDeComando(0, "Enabled\n", "");
+            }
+        };
+        var asercao = new Assercao.AwsConsulta(
+                "http://127.0.0.1:4566", "us-east-1", "s3api", "get-bucket-versioning",
+                List.of("--bucket", "learning-infra-arquivos"), "Status", "Enabled",
+                "o bucket mantém histórico de versões");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(asercao));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of(
+                "aws", "--endpoint-url", "http://127.0.0.1:4566",
+                "--region", "us-east-1", "--no-cli-pager",
+                "s3api", "get-bucket-versioning",
+                "--bucket", "learning-infra-arquivos",
+                "--query", "Status", "--output", "text"), comandos.getFirst());
+        assertEquals("000000000000", ambientes.getFirst().get("AWS_ACCESS_KEY_ID"));
+        assertEquals("test", ambientes.getFirst().get("AWS_SECRET_ACCESS_KEY"));
+        assertEquals("true", ambientes.getFirst().get("AWS_EC2_METADATA_DISABLED"));
+    }
+
+    @Test
+    void consultaAwsDistingueFalhaDaApiDeValorIncorreto() {
+        var asercao = new Assercao.AwsConsulta(
+                "http://127.0.0.1:4566", "us-east-1", "dynamodb", "describe-table",
+                List.of("--table-name", "pedidos"), "Table.TableStatus", "ACTIVE",
+                "a tabela está ativa");
+
+        var apiFalhou = motorQueResponde("", 1).verificar(List.of(asercao));
+        var valorErrado = motorQueResponde("CREATING\n", 0).verificar(List.of(asercao));
+
+        assertTrue(apiFalhou.asercoes().getFirst().detalhe().contains("não consegui consultar"));
+        assertTrue(valorErrado.asercoes().getFirst().detalhe().contains("CREATING"));
     }
 }

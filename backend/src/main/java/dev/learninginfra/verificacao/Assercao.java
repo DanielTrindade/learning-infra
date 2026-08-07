@@ -47,4 +47,47 @@ public sealed interface Assercao {
     record ComandoProduz(java.util.List<String> comando, String contem, String descricao)
             implements Assercao {
     }
+
+    record KubernetesCondicao(
+            String contexto,
+            String namespace,
+            String recurso,
+            String nome,
+            String condicao,
+            String status,
+            int timeoutSegundos,
+            String descricao) implements Assercao {
+    }
+
+    record KubernetesJsonpath(
+            String contexto,
+            String namespace,
+            String recurso,
+            String nome,
+            String expressao,
+            String contem,
+            int timeoutSegundos,
+            String descricao) implements Assercao {
+    }
+
+    record KubernetesRbac(
+            String contexto,
+            String namespace,
+            String serviceAccount,
+            String verbo,
+            String recurso,
+            boolean permitido,
+            String descricao) implements Assercao {
+    }
+
+    record AwsConsulta(
+            String endpoint,
+            String regiao,
+            String servico,
+            String operacao,
+            java.util.List<String> argumentos,
+            String consulta,
+            String esperado,
+            String descricao) implements Assercao {
+    }
 }

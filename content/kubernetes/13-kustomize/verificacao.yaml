@@ -1,0 +1,19 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    descricao: o overlay de produção mantém três réplicas disponíveis
+    recurso: deployment
+    nome: catalogo
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: o overlay mantém exatamente três réplicas disponíveis
+    recurso: deployment
+    nome: catalogo
+    expressao: "{.status.availableReplicas}"
+    contem: "3"
+
+  - tipo: comando_produz
+    descricao: a aplicação recebeu a configuração do ambiente de produção
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-13", "exec", "deployment/catalogo", "--", "printenv", "AMBIENTE"]
+    contem: producao

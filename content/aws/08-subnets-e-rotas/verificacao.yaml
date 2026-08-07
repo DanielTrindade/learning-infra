@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-route-tables
+    argumentos: ["--filters", "Name=tag:Name,Values=learning-infra-rt-publica"]
+    consulta: "RouteTables[0].Routes[?DestinationCidrBlock=='0.0.0.0/0'].GatewayId | [0]"
+    esperado: igw-
+    descricao: a route table pública aponta diretamente para um Internet Gateway
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-route-tables
+    argumentos: ["--filters", "Name=tag:Name,Values=learning-infra-rt-privada"]
+    consulta: "RouteTables[0].Routes[?DestinationCidrBlock=='0.0.0.0/0'].NatGatewayId | [0]"
+    esperado: nat-
+    descricao: a route table privada usa um NAT Gateway para saída
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-nat-gateways
+    argumentos: ["--filter", "Name=tag:Name,Values=learning-infra-nat"]
+    consulta: "NatGateways[0].State"
+    esperado: available
+    descricao: o NAT Gateway estrutural está disponível no plano de controle
+

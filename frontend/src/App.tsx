@@ -8,15 +8,27 @@ export default function App() {
   const id = rota.startsWith('cenarios/') ? rota.slice('cenarios/'.length) : null
 
   return (
-    <main>
-      {id ? (
-        <>
-          <a className="voltar" href="#/">← todos os laboratórios</a>
-          <PaginaDoCenario id={id} />
-        </>
-      ) : (
-        <Catalogo />
-      )}
-    </main>
+    <div className="app-shell">
+      <header className="barra-superior">
+        <a className="marca" href="#/" aria-label="Learning Infra — início">
+          <span className="marca-simbolo" aria-hidden="true">
+            <span />
+            <span />
+          </span>
+          <span>
+            <strong>Learning Infra</strong>
+            <small>Cenários locais</small>
+          </span>
+        </a>
+        <span className="contexto-local">
+          <span aria-hidden="true" />
+          ambiente local
+        </span>
+      </header>
+
+      <main className={id ? 'app-main app-main-aula' : 'app-main'}>
+        {id ? <PaginaDoCenario id={id} /> : <Catalogo />}
+      </main>
+    </div>
   )
 }

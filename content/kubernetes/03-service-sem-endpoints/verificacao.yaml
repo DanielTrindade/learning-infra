@@ -1,0 +1,10 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: o Service `web` possui ao menos um endpoint pronto
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-03", "get", "endpointslice", "-l", "kubernetes.io/service-name=web", "-o", "jsonpath={.items[0].endpoints[0].conditions.ready}"]
+    contem: "true"
+
+  - tipo: comando_produz
+    descricao: o cliente alcança o nginx pelo nome estável do Service
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-03", "exec", "deployment/cliente", "--", "wget", "-qO-", "http://web"]
+    contem: Welcome to nginx

@@ -1,0 +1,19 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    descricao: as duas réplicas do nginx estão disponíveis
+    recurso: deployment
+    nome: web
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: as duas réplicas desejadas estão disponíveis
+    recurso: deployment
+    nome: web
+    expressao: "{.status.availableReplicas}"
+    contem: "2"
+
+  - tipo: comando_produz
+    descricao: o cliente recebe a aplicação pelo Service
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-05", "exec", "deployment/cliente", "--", "wget", "-qO-", "http://web"]
+    contem: aplicação pronta

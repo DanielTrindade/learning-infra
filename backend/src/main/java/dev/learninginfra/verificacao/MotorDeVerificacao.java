@@ -13,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class MotorDeVerificacao {
@@ -23,6 +24,11 @@ public class MotorDeVerificacao {
      * é comum. Um limite apertado reprovaria como "morto" um serviço que está de pé.
      */
     private static final Duration ESPERA_PADRAO = Duration.ofSeconds(10);
+    private static final Map<String, String> AMBIENTE_AWS_LOCAL = Map.of(
+            "AWS_ACCESS_KEY_ID", "000000000000",
+            "AWS_SECRET_ACCESS_KEY", "test",
+            "AWS_SESSION_TOKEN", "",
+            "AWS_EC2_METADATA_DISABLED", "true");
 
     private final ExecutorDeComando executor;
     private final Duration espera;
@@ -58,7 +64,72 @@ public class MotorDeVerificacao {
             case Assercao.ImagemExiste a -> avaliarImagem(a);
             case Assercao.VolumeExiste a -> avaliarVolume(a);
             case Assercao.ComandoProduz a -> avaliarComando(a);
+            case Assercao.KubernetesCondicao a -> avaliarCondicaoKubernetes(a);
+            case Assercao.KubernetesJsonpath a -> avaliarJsonpathKubernetes(a);
+            case Assercao.KubernetesRbac a -> avaliarRbacKubernetes(a);
+            case Assercao.AwsConsulta a -> avaliarConsultaAws(a);
         };
+    }
+
+    private ResultadoDeAsercao avaliarConsultaAws(Assercao.AwsConsulta a) {
+        List<String> comando = new java.util.ArrayList<>(List.of(
+                "aws", "--endpoint-url", a.endpoint(), "--region", a.regiao(),
+                "--no-cli-pager", a.servico(), a.operacao()));
+        comando.addAll(a.argumentos());
+        comando.addAll(List.of("--query", a.consulta(), "--output", "text"));
+
+        SaidaDeComando saida = executor.executar(
+                List.copyOf(comando), AMBIENTE_AWS_LOCAL);
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "não consegui consultar o MiniStack: " + ultimoDetalhe(saida));
+        }
+        return saida.stdout().strip().contains(a.esperado())
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        "valor observado: `" + saida.stdout().strip() + "`");
+    }
+
+    private ResultadoDeAsercao avaliarCondicaoKubernetes(Assercao.KubernetesCondicao a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "kubectl", "--context", a.contexto(), "--namespace", a.namespace(),
+                "wait", a.recurso() + "/" + a.nome(),
+                "--for=condition=" + a.condicao() + "=" + a.status(),
+                "--timeout=" + a.timeoutSegundos() + "s"));
+        return saida.sucesso()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        "a Condition não convergiu: " + ultimoDetalhe(saida));
+    }
+
+    private ResultadoDeAsercao avaliarJsonpathKubernetes(Assercao.KubernetesJsonpath a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "kubectl", "--context", a.contexto(), "--namespace", a.namespace(),
+                "wait", a.recurso() + "/" + a.nome(),
+                "--for=jsonpath=" + a.expressao() + "=" + a.contem(),
+                "--timeout=" + a.timeoutSegundos() + "s"));
+        return saida.sucesso()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        "a propriedade observada não convergiu: " + ultimoDetalhe(saida));
+    }
+
+    private ResultadoDeAsercao avaliarRbacKubernetes(Assercao.KubernetesRbac a) {
+        String identidade = "system:serviceaccount:" + a.namespace() + ":" + a.serviceAccount();
+        SaidaDeComando saida = executor.executar(List.of(
+                "kubectl", "--context", a.contexto(), "auth", "can-i",
+                a.verbo(), a.recurso(), "--as=" + identidade, "--namespace", a.namespace()));
+        String resposta = saida.stdout().strip().toLowerCase();
+        if (!resposta.equals("yes") && !resposta.equals("no")) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "não consegui consultar a autorização: " + ultimoDetalhe(saida));
+        }
+        boolean observado = resposta.equals("yes");
+        return observado == a.permitido()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        observado ? "a identidade tem permissão além do necessário"
+                                  : "a identidade ainda não recebeu a permissão necessária");
     }
 
     private ResultadoDeAsercao avaliarVolume(Assercao.VolumeExiste a) {
@@ -133,6 +204,10 @@ public class MotorDeVerificacao {
             }
         }
         return "sem detalhe";
+    }
+
+    private String ultimoDetalhe(SaidaDeComando saida) {
+        return ultimaLinha(saida.stderr().isBlank() ? saida.stdout() : saida.stderr());
     }
 
     /** Resposta obtida, ou a razão pela qual não veio — as duas são informação para o leitor. */

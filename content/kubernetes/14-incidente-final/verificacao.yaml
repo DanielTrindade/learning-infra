@@ -1,0 +1,24 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    descricao: as duas réplicas da API estão disponíveis
+    recurso: deployment
+    nome: api
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: as duas réplicas desejadas da API estão disponíveis
+    recurso: deployment
+    nome: api
+    expressao: "{.status.availableReplicas}"
+    contem: "2"
+
+  - tipo: comando_produz
+    descricao: o Service possui endpoints prontos
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-14", "get", "endpointslice", "-l", "kubernetes.io/service-name=api", "-o", "jsonpath={.items[0].endpoints[0].conditions.ready}"]
+    contem: "true"
+
+  - tipo: comando_produz
+    descricao: o cliente recebe a resposta correta pelo Service
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-14", "exec", "deployment/cliente", "--", "wget", "-qO-", "http://api"]
+    contem: sagui

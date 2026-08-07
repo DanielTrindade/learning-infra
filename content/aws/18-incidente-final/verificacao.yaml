@@ -1,0 +1,44 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: get-bucket-versioning
+    argumentos: ["--bucket", "learning-infra-incidente-arquivos"]
+    consulta: Status
+    esperado: Enabled
+    descricao: o bucket crítico preserva versões anteriores
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-attributes
+    argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-incidente", "--attribute-names", "VisibilityTimeout", "RedrivePolicy"]
+    consulta: Attributes.VisibilityTimeout
+    esperado: "60"
+    descricao: o consumidor recebe tempo suficiente para processar a mensagem
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-attributes
+    argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-incidente", "--attribute-names", "RedrivePolicy"]
+    consulta: Attributes.RedrivePolicy
+    esperado: learning-infra-incidente-dlq
+    descricao: falhas reincidentes terminam na DLQ
+  - tipo: aws_consulta
+    servico: dynamodb
+    operacao: describe-table
+    argumentos: ["--table-name", "learning-infra-incidente-eventos"]
+    consulta: "Table.KeySchema[?KeyType=='RANGE'].AttributeName | [0]"
+    esperado: ocorridoEm
+    descricao: eventos de uma origem podem ser consultados em ordem
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-subnets
+    argumentos: ["--filters", "Name=tag:Projeto,Values=learning-infra-incidente"]
+    consulta: "length(Subnets)"
+    esperado: "4"
+    descricao: a topologia declara quatro subnets em duas AZs
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-security-groups
+    argumentos: ["--filters", "Name=group-name,Values=learning-infra-incidente-api"]
+    consulta: "SecurityGroups[0].IpPermissions[?FromPort==`8080`].IpRanges[0].CidrIp | [0]"
+    esperado: 10.80.0.0/16
+    descricao: a API não aceita tráfego de toda a internet
+

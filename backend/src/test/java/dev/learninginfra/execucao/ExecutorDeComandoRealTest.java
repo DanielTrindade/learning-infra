@@ -3,6 +3,7 @@ package dev.learninginfra.execucao;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,5 +23,15 @@ class ExecutorDeComandoRealTest {
                 .executar(List.of("docker", "inspect", "container-que-nao-existe-jamais"));
 
         assertFalse(saida.sucesso());
+    }
+
+    @Test
+    void acrescentaAmbienteSomenteAoProcessoFilho() {
+        SaidaDeComando saida = new ExecutorDeComandoReal().executar(
+                List.of("cmd.exe", "/c", "echo", "%LEARNING_INFRA_TEST%"),
+                Map.of("LEARNING_INFRA_TEST", "credencial-sintetica"));
+
+        assertTrue(saida.sucesso());
+        assertEquals("credencial-sintetica", saida.stdout().strip());
     }
 }

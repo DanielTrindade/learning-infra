@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.20.0.0/16
+      Tags:
+        - Key: Name
+          Value: learning-infra-vpc
+
+  PublicaA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.20.0.0/24
+      AvailabilityZone: us-east-1a
+      Tags:
+        - {Key: Name, Value: learning-infra-publica-a}
+        - {Key: Projeto, Value: learning-infra}
+        - {Key: Papel, Value: publica}
+
+  PrivadaA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.20.10.0/24
+      AvailabilityZone: us-east-1a
+      Tags:
+        - {Key: Name, Value: learning-infra-privada-a}
+        - {Key: Projeto, Value: learning-infra}
+        - {Key: Papel, Value: privada}
+
+  # Complete PublicaB e PrivadaB sem sobrepor os CIDRs existentes.
+

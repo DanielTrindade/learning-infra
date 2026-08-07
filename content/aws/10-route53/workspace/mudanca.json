@@ -1,0 +1,15 @@
+{
+  "Comment": "Publica a aplicação interna",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "app.learning.internal.",
+        "Type": "A",
+        "TTL": 60,
+        "ResourceRecords": [{"Value": "10.50.10.25"}]
+      }
+    }
+  ]
+}
+

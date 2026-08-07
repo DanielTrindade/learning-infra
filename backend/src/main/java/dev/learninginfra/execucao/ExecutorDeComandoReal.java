@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,8 +21,15 @@ public class ExecutorDeComandoReal implements ExecutorDeComando {
 
     @Override
     public SaidaDeComando executar(List<String> comando) {
+        return executar(comando, Map.of());
+    }
+
+    @Override
+    public SaidaDeComando executar(List<String> comando, Map<String, String> ambiente) {
         try {
-            Process processo = new ProcessBuilder(comando).start();
+            ProcessBuilder construtor = new ProcessBuilder(comando);
+            construtor.environment().putAll(ambiente);
+            Process processo = construtor.start();
             try (ExecutorService leitores = Executors.newVirtualThreadPerTaskExecutor()) {
                 Future<String> stdout = leitores.submit(() -> ler(processo.getInputStream()));
                 Future<String> stderr = leitores.submit(() -> ler(processo.getErrorStream()));

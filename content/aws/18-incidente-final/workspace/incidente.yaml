@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Corrija os contratos antes de implantar.
+Resources:
+  Arquivos:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: learning-infra-incidente-arquivos
+      # Falta versionamento.
+
+  Fila:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: learning-infra-incidente
+      VisibilityTimeout: 5
+      # Falta DLQ e RedrivePolicy.
+
+  Tabela:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: learning-infra-incidente-eventos
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: origem, AttributeType: S}
+      KeySchema:
+        - {AttributeName: origem, KeyType: HASH}
+      # Falta ocorridoEm como RANGE key.
+
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.80.0.0/16
+      Tags:
+        - {Key: Name, Value: learning-infra-incidente}
+
+  # Faltam quatro subnets com tag Projeto=learning-infra-incidente.
+  # Falta o security group learning-infra-incidente-api restrito à VPC.

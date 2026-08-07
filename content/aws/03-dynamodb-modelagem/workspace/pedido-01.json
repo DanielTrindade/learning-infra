@@ -1,0 +1,7 @@
+{
+  "clienteId": {"S": "cli-42"},
+  "pedidoEm": {"S": "2026-08-07T10:00:00Z"},
+  "pedidoId": {"S": "ped-001"},
+  "status": {"S": "PAGO"},
+  "total": {"N": "149.90"}
+}

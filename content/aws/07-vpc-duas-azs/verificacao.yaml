@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-vpcs
+    argumentos: ["--filters", "Name=tag:Name,Values=learning-infra-vpc"]
+    consulta: "Vpcs[0].CidrBlock"
+    esperado: 10.20.0.0/16
+    descricao: a VPC usa o bloco CIDR planejado
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-subnets
+    argumentos: ["--filters", "Name=tag:Projeto,Values=learning-infra"]
+    consulta: "length(Subnets)"
+    esperado: "4"
+    descricao: existem duas subnets públicas e duas privadas
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-subnets
+    argumentos: ["--filters", "Name=tag:Projeto,Values=learning-infra"]
+    consulta: "sort(Subnets[*].AvailabilityZone)"
+    esperado: us-east-1b
+    descricao: a topologia ocupa duas zonas de disponibilidade
+

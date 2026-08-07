@@ -1,0 +1,12 @@
+asercoes:
+  - tipo: kubernetes_jsonpath
+    descricao: o pedido de armazenamento está ligado a um volume
+    recurso: pvc
+    nome: dados
+    expressao: "{.status.phase}"
+    contem: Bound
+
+  - tipo: comando_produz
+    descricao: o dado persistente está disponível no Pod atual
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-08", "exec", "deployment/escritor", "--", "cat", "/dados/bicho.txt"]
+    contem: capivara

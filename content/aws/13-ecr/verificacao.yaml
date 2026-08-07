@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: ecr
+    operacao: describe-repositories
+    argumentos: ["--repository-names", "learning-infra-api"]
+    consulta: "repositories[0].imageTagMutability"
+    esperado: IMMUTABLE
+    descricao: o repositório rejeita sobrescrita de tags publicadas
+  - tipo: aws_consulta
+    servico: ecr
+    operacao: describe-repositories
+    argumentos: ["--repository-names", "learning-infra-api"]
+    consulta: "repositories[0].imageScanningConfiguration.scanOnPush"
+    esperado: "True"
+    descricao: o contrato solicita scanning a cada push
+  - tipo: aws_consulta
+    servico: ecr
+    operacao: describe-images
+    argumentos: ["--repository-name", "learning-infra-api", "--image-ids", "imageTag=1.0"]
+    consulta: "imageDetails[0].imageTags[0]"
+    esperado: "1.0"
+    descricao: a versão 1.0 foi publicada no registry local
+

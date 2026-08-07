@@ -1,0 +1,20 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: elbv2
+    operacao: describe-load-balancers
+    argumentos: ["--names", "learning-infra-alb"]
+    consulta: "LoadBalancers[0].State.Code"
+    esperado: active
+    descricao: o ALB está ativo no plano de controle
+  - tipo: aws_consulta
+    servico: elbv2
+    operacao: describe-target-groups
+    argumentos: ["--names", "learning-infra-web"]
+    consulta: "TargetGroups[0].TargetType"
+    esperado: ip
+    descricao: o target group aceita o endereço do processo local
+  - tipo: comando_produz
+    comando: ["curl.exe", "--silent", "--show-error", "--resolve", "learning-infra-alb.alb.localhost:4566:127.0.0.1", "http://learning-infra-alb.alb.localhost:4566/saude"]
+    contem: learning-infra-alb-ok
+    descricao: uma requisição atravessa o ALB e chega à task ECS
+

@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: cloudformation
+    operacao: describe-stacks
+    argumentos: ["--stack-name", "learning-infra-dados"]
+    consulta: "Stacks[0].StackStatus"
+    esperado: COMPLETE
+    descricao: o stack declarativo convergiu sem rollback
+  - tipo: aws_consulta
+    servico: cloudformation
+    operacao: list-stack-resources
+    argumentos: ["--stack-name", "learning-infra-dados"]
+    consulta: "length(StackResourceSummaries)"
+    esperado: "3"
+    descricao: bucket, fila e tabela pertencem ao stack
+  - tipo: aws_consulta
+    servico: dynamodb
+    operacao: describe-table
+    argumentos: ["--table-name", "learning-infra-eventos"]
+    consulta: "Table.KeySchema[?KeyType=='RANGE'].AttributeName | [0]"
+    esperado: ocorridoEm
+    descricao: a tabela possui sort key para ordenar eventos
+

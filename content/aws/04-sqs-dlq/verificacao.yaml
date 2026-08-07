@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-url
+    argumentos: ["--queue-name", "learning-infra-processamento"]
+    consulta: QueueUrl
+    esperado: learning-infra-processamento
+    descricao: a fila principal existe
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-attributes
+    argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-processamento", "--attribute-names", "VisibilityTimeout", "RedrivePolicy"]
+    consulta: Attributes.VisibilityTimeout
+    esperado: "30"
+    descricao: a mensagem fica invisível por trinta segundos durante o processamento
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-attributes
+    argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-processamento", "--attribute-names", "RedrivePolicy"]
+    consulta: Attributes.RedrivePolicy
+    esperado: learning-infra-processamento-dlq
+    descricao: mensagens reincidentes são encaminhadas para a DLQ
+

@@ -1,0 +1,19 @@
+asercoes:
+  - tipo: kubernetes_jsonpath
+    descricao: as duas réplicas do StatefulSet estão prontas
+    recurso: statefulset
+    nome: banco
+    expressao: "{.status.readyReplicas}"
+    contem: "2"
+
+  - tipo: kubernetes_jsonpath
+    descricao: o Service expõe os Pods sem ClusterIP
+    recurso: service
+    nome: banco
+    expressao: "{.spec.clusterIP}"
+    contem: None
+
+  - tipo: comando_produz
+    descricao: o primeiro membro preserva sua identidade no volume próprio
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-12", "exec", "banco-0", "--", "cat", "/dados/identidade"]
+    contem: banco-0

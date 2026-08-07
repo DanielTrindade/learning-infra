@@ -1,0 +1,16 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: route53
+    operacao: list-hosted-zones-by-name
+    argumentos: ["--dns-name", "learning.internal"]
+    consulta: "HostedZones[0].Config.PrivateZone"
+    esperado: "True"
+    descricao: a zona learning.internal é privada
+  - tipo: comando_produz
+    comando: ["powershell.exe", "-NoProfile", "-Command", "$e='http://127.0.0.1:4566'; $id=aws --endpoint-url $e --region us-east-1 --no-sign-request route53 list-hosted-zones-by-name --dns-name learning.internal --query 'HostedZones[0].Id' --output text; aws --endpoint-url $e --region us-east-1 --no-sign-request route53 list-resource-record-sets --hosted-zone-id $id --query \"ResourceRecordSets[?Name=='app.learning.internal.'].ResourceRecords[0].Value | [0]\" --output text"]
+    contem: 10.50.10.25
+    descricao: o registro da aplicação aponta para o endereço planejado
+  - tipo: comando_produz
+    comando: ["powershell.exe", "-NoProfile", "-Command", "$e='http://127.0.0.1:4566'; $id=aws --endpoint-url $e --region us-east-1 --no-sign-request route53 list-hosted-zones-by-name --dns-name learning.internal --query 'HostedZones[0].Id' --output text; aws --endpoint-url $e --region us-east-1 --no-sign-request route53 list-resource-record-sets --hosted-zone-id $id --query \"ResourceRecordSets[?Name=='app.learning.internal.'].TTL | [0]\" --output text"]
+    contem: "60"
+    descricao: o registro usa TTL de sessenta segundos

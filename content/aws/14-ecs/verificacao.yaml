@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: ecs
+    operacao: describe-clusters
+    argumentos: ["--clusters", "learning-infra-ecs"]
+    consulta: "clusters[0].status"
+    esperado: ACTIVE
+    descricao: o cluster ECS está ativo no plano de controle
+  - tipo: aws_consulta
+    servico: ecs
+    operacao: list-tasks
+    argumentos: ["--cluster", "learning-infra-ecs", "--family", "learning-infra-web"]
+    consulta: "length(taskArns)"
+    esperado: "1"
+    descricao: existe uma task da família learning-infra-web
+  - tipo: comando_produz
+    comando: ["docker", "ps", "--filter", "label=ministack=ecs", "--filter", "label=com.amazonaws.ecs.task-definition-family=learning-infra-web", "--format", "{{.Status}}"]
+    contem: Up
+    descricao: a task corresponde a um container Docker realmente rodando
+  - tipo: http_responde
+    url: http://127.0.0.1:18080
+    status: 200
+

@@ -1,0 +1,21 @@
+asercoes:
+  - tipo: kubernetes_jsonpath
+    descricao: o template usa a imagem conhecida do nginx
+    recurso: deployment
+    nome: web
+    expressao: "{.spec.template.spec.containers[0].image}"
+    contem: nginx:1.27-alpine
+
+  - tipo: kubernetes_condicao
+    descricao: as três réplicas da versão corrigida estão disponíveis
+    recurso: deployment
+    nome: web
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: as três réplicas desejadas chegaram à versão corrigida
+    recurso: deployment
+    nome: web
+    expressao: "{.status.availableReplicas}"
+    contem: "3"

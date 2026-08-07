@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-instances
+    argumentos: ["--filters", "Name=tag:Name,Values=learning-infra-api"]
+    consulta: "Reservations[0].Instances[0].State.Name"
+    esperado: running
+    descricao: a instância está registrada como running no plano de controle
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-instances
+    argumentos: ["--filters", "Name=tag:Name,Values=learning-infra-api"]
+    consulta: "Reservations[0].Instances[0].InstanceType"
+    esperado: t3.micro
+    descricao: a instância usa o tipo solicitado
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-security-groups
+    argumentos: ["--filters", "Name=group-name,Values=learning-infra-api-sg"]
+    consulta: "SecurityGroups[0].IpPermissions[?FromPort==`8080`].IpRanges[0].CidrIp | [0]"
+    esperado: 10.40.0.0/16
+    descricao: a porta da API não está exposta para toda a internet
+

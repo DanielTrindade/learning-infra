@@ -1,0 +1,35 @@
+asercoes:
+  - tipo: kubernetes_rbac
+    descricao: a ServiceAccount pode consultar Pods
+    serviceAccount: auditor
+    verbo: get
+    recurso: pods
+    permitido: true
+
+  - tipo: kubernetes_rbac
+    descricao: a ServiceAccount não pode apagar Pods
+    serviceAccount: auditor
+    verbo: delete
+    recurso: pods
+    permitido: false
+
+  - tipo: kubernetes_condicao
+    descricao: o processo de auditoria está disponível sem privilégios extras
+    recurso: deployment
+    nome: auditor
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: o processo é obrigado a executar fora do usuário root
+    recurso: deployment
+    nome: auditor
+    expressao: "{.spec.template.spec.securityContext.runAsNonRoot}"
+    contem: "true"
+
+  - tipo: kubernetes_jsonpath
+    descricao: o container não pode elevar privilégios
+    recurso: deployment
+    nome: auditor
+    expressao: "{.spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation}"
+    contem: "false"

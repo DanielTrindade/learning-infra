@@ -1,0 +1,14 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    descricao: o Deployment está disponível depois do ajuste de recursos
+    recurso: deployment
+    nome: web
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: o container declara requests honestos de CPU e memória
+    recurso: deployment
+    nome: web
+    expressao: "{.spec.template.spec.containers[0].resources.requests.cpu}:{.spec.template.spec.containers[0].resources.requests.memory}"
+    contem: 25m:32Mi

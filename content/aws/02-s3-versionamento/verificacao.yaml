@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: get-bucket-versioning
+    argumentos: ["--bucket", "learning-infra-arquivos"]
+    consulta: Status
+    esperado: Enabled
+    descricao: o bucket mantém histórico de versões
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: list-object-versions
+    argumentos: ["--bucket", "learning-infra-arquivos", "--prefix", "clientes/perfil.json"]
+    consulta: "length(Versions)"
+    esperado: "2"
+    descricao: existem duas versões do perfil do cliente
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: list-object-versions
+    argumentos: ["--bucket", "learning-infra-arquivos", "--prefix", "clientes/perfil.json"]
+    consulta: "Versions[?IsLatest].Key | [0]"
+    esperado: clientes/perfil.json
+    descricao: uma versão está marcada como a mais recente
+

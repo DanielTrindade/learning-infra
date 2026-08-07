@@ -1,0 +1,15 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: list-buckets
+    consulta: "Buckets[?Name=='learning-infra-identidade'].Name | [0]"
+    esperado: learning-infra-identidade
+    descricao: o bucket-marcador existe somente no endpoint local
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: get-bucket-location
+    argumentos: ["--bucket", "learning-infra-identidade"]
+    consulta: LocationConstraint
+    esperado: None
+    descricao: o bucket foi criado na região local esperada
+

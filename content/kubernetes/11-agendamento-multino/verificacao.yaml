@@ -1,0 +1,28 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    descricao: as duas réplicas distribuídas estão disponíveis
+    recurso: deployment
+    nome: api
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: as duas réplicas desejadas estão disponíveis
+    recurso: deployment
+    nome: api
+    expressao: "{.status.availableReplicas}"
+    contem: "2"
+
+  - tipo: kubernetes_jsonpath
+    descricao: a separação usa o hostname como domínio de topologia
+    recurso: deployment
+    nome: api
+    expressao: "{.spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey}"
+    contem: kubernetes.io/hostname
+
+  - tipo: kubernetes_jsonpath
+    descricao: o orçamento limita uma indisponibilidade voluntária
+    recurso: pdb
+    nome: api
+    expressao: "{.spec.maxUnavailable}"
+    contem: "1"

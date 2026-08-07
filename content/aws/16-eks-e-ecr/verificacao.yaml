@@ -1,0 +1,19 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: eks
+    operacao: describe-cluster
+    argumentos: ["--name", "learning-infra-eks"]
+    consulta: cluster.status
+    esperado: ACTIVE
+    descricao: o plano de controle EKS local está ativo
+  - tipo: aws_consulta
+    servico: ecr
+    operacao: describe-images
+    argumentos: ["--repository-name", "learning-infra-eks-app", "--image-ids", "imageTag=1.0"]
+    consulta: "imageDetails[0].imageTags[0]"
+    esperado: "1.0"
+    descricao: a imagem do workload foi publicada no ECR local
+  - tipo: comando_produz
+    comando: ["docker", "exec", "ministack-eks-us-east-1-learning-infra-eks", "kubectl", "--kubeconfig", "/etc/rancher/k3s/k3s.yaml", "-n", "learning-infra", "get", "deployment", "app", "-o", "jsonpath={.status.availableReplicas}"]
+    contem: "2"
+    descricao: o cluster k3s executa duas réplicas da aplicação

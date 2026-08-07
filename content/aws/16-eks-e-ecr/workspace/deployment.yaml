@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: learning-infra
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: learning-infra
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: learning-infra
+  template:
+    metadata:
+      labels:
+        app: learning-infra
+    spec:
+      containers:
+        - name: app
+          image: SUBSTITUA_PELA_URI_ECR:1.0
+          ports:
+            - containerPort: 80
+

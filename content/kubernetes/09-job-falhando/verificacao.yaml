@@ -1,0 +1,12 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    descricao: o Job terminou com sucesso
+    recurso: job
+    nome: relatorio
+    condicao: Complete
+    timeout: 12
+
+  - tipo: comando_produz
+    descricao: o processamento produziu o resultado esperado
+    comando: ["kubectl", "--context", "docker-desktop", "-n", "learning-infra-k8s-09", "logs", "job/relatorio"]
+    contem: relatorio pronto

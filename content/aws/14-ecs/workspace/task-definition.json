@@ -1,0 +1,18 @@
+{
+  "family": "learning-infra-web",
+  "networkMode": "bridge",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "256",
+  "memory": "128",
+  "containerDefinitions": [
+    {
+      "name": "web",
+      "image": "nginx:1.27-alpine",
+      "essential": true,
+      "portMappings": [
+        {"containerPort": 80, "hostPort": 18080, "protocol": "tcp"}
+      ]
+    }
+  ]
+}
+

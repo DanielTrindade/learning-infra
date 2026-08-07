@@ -1,0 +1,26 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: rds
+    operacao: describe-db-clusters
+    argumentos: ["--db-cluster-identifier", "learning-infra-aurora"]
+    consulta: "DBClusters[0].Status"
+    esperado: available
+    descricao: o DB Cluster compatível chegou ao estado available
+  - tipo: aws_consulta
+    servico: rds
+    operacao: describe-db-clusters
+    argumentos: ["--db-cluster-identifier", "learning-infra-aurora"]
+    consulta: "DBClusters[0].Engine"
+    esperado: aurora-postgresql
+    descricao: o cluster usa a API Aurora PostgreSQL
+  - tipo: aws_consulta
+    servico: rds
+    operacao: describe-db-clusters
+    argumentos: ["--db-cluster-identifier", "learning-infra-aurora"]
+    consulta: "DBClusters[0].DBClusterMembers[0].DBInstanceIdentifier"
+    esperado: learning-infra-aurora-writer
+    descricao: o cluster possui uma instância writer declarada
+  - tipo: comando_produz
+    comando: ["docker", "ps", "--filter", "label=ministack=rds", "--filter", "label=cluster_id=learning-infra-aurora", "--format", "{{.Status}}"]
+    contem: Up
+    descricao: há um banco compatível real por trás do plano de controle

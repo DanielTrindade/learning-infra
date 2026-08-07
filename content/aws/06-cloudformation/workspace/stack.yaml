@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Stack de dados do laboratório Learning Infra
+Resources:
+  Arquivos:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: learning-infra-cfn-arquivos
+
+  Eventos:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: learning-infra-cfn-eventos
+      # Defina VisibilityTimeout explicitamente.
+
+  Tabela:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: learning-infra-eventos
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: origem
+          AttributeType: S
+        # Acrescente ocorridoEm.
+      KeySchema:
+        - AttributeName: origem
+          KeyType: HASH
+        # Acrescente a RANGE key ocorridoEm.

@@ -1,0 +1,21 @@
+asercoes:
+  - tipo: kubernetes_jsonpath
+    descricao: o Deployment deseja três réplicas
+    recurso: deployment
+    nome: web
+    expressao: "{.spec.replicas}"
+    contem: "3"
+
+  - tipo: kubernetes_condicao
+    descricao: as três réplicas do Deployment estão disponíveis
+    recurso: deployment
+    nome: web
+    condicao: Available
+    timeout: 12
+
+  - tipo: kubernetes_jsonpath
+    descricao: as três réplicas desejadas estão disponíveis
+    recurso: deployment
+    nome: web
+    expressao: "{.status.availableReplicas}"
+    contem: "3"

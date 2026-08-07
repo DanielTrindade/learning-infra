@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: auditor
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: leitor-de-pods
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: [] # complete com os três verbos de leitura e observação
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: auditor-le-pods
+subjects:
+  - kind: ServiceAccount
+    name: auditor
+    namespace: learning-infra-k8s-10
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: leitor-de-pods
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auditor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auditor
+  template:
+    metadata:
+      labels:
+        app: auditor
+    spec:
+      serviceAccountName: auditor
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: auditor
+          image: busybox:1.36
+          command: ["sh", "-c", "sleep 3600"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

@@ -1,0 +1,20 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: rds
+    operacao: describe-db-instances
+    argumentos: ["--db-instance-identifier", "learning-infra-postgres"]
+    consulta: "DBInstances[0].DBInstanceStatus"
+    esperado: available
+    descricao: a instância RDS chegou ao estado available
+  - tipo: aws_consulta
+    servico: rds
+    operacao: describe-db-instances
+    argumentos: ["--db-instance-identifier", "learning-infra-postgres"]
+    consulta: "DBInstances[0].PubliclyAccessible"
+    esperado: "False"
+    descricao: a instância não foi declarada publicamente acessível
+  - tipo: comando_produz
+    comando: ["docker", "ps", "--filter", "label=ministack=rds", "--filter", "label=db_id=learning-infra-postgres", "--format", "{{.Status}}"]
+    contem: Up
+    descricao: o data plane PostgreSQL está rodando em um sidecar real
+

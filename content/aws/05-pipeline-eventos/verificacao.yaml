@@ -1,0 +1,22 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: get-bucket-notification-configuration
+    argumentos: ["--bucket", "learning-infra-entrada"]
+    consulta: "QueueConfigurations[0].Events[0]"
+    esperado: s3:ObjectCreated
+    descricao: o bucket publica eventos de criação na fila
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-attributes
+    argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-eventos", "--attribute-names", "ApproximateNumberOfMessages"]
+    consulta: "to_string(to_number(Attributes.ApproximateNumberOfMessages) > `0`)"
+    esperado: "true"
+    descricao: a fila contém pelo menos um evento do objeto enviado
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: head-object
+    argumentos: ["--bucket", "learning-infra-entrada", "--key", "entradas/evento-001.json"]
+    consulta: ContentType
+    esperado: application/json
+    descricao: o objeto que originou o evento existe no S3

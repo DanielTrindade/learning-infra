@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: dynamodb
+    operacao: describe-table
+    argumentos: ["--table-name", "learning-infra-pedidos"]
+    consulta: Table.TableStatus
+    esperado: ACTIVE
+    descricao: a tabela de pedidos está ativa
+  - tipo: aws_consulta
+    servico: dynamodb
+    operacao: describe-table
+    argumentos: ["--table-name", "learning-infra-pedidos"]
+    consulta: "Table.KeySchema[*].AttributeName"
+    esperado: clienteId
+    descricao: clienteId participa da chave primária
+  - tipo: aws_consulta
+    servico: dynamodb
+    operacao: get-item
+    argumentos: ["--table-name", "learning-infra-pedidos", "--key", "{\"clienteId\":{\"S\":\"cli-42\"},\"pedidoEm\":{\"S\":\"2026-08-07T10:00:00Z\"}}"]
+    consulta: Item.status.S
+    esperado: PAGO
+    descricao: o pedido esperado foi gravado sem sobrescrita acidental
+

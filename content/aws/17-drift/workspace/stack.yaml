@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  Fila:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: learning-infra-drift
+      VisibilityTimeout: 45
+      Tags:
+        - Key: GerenciadoPor
+          Value: CloudFormation
+
