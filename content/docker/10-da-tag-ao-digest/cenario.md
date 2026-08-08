@@ -82,7 +82,7 @@ mostrado pelo push — você o lê da imagem local:
 docker inspect --format='{{index .RepoDigests 0}}' lab-10-app:1.0
 ```
 
-O resultado tem a forma `localhost:5000/lab-10-app@sha256:<44 caracteres hexadecimais>`.
+O resultado tem a forma `localhost:5000/lab-10-app@sha256:<64 caracteres hexadecimais>`.
 Guarde esse valor inteiro: é o seu bilhete de volta para a 1.0.
 
 ## Passo 3 — o bug
