@@ -132,10 +132,19 @@ seguirão esse formato, sem transformar teoria em um Cenário artificial. A deci
 na [ADR 0003](docs/adr/0003-fundamentos-pertencem-a-trilha.md), e a expansão está no
 [plano de Fundamentos e Questionário por Trilha](docs/superpowers/plans/2026-08-07-fundamentos-questionario-por-trilha.md).
 
-Depois do corte teórico, a expansão prática de Docker está planejada em seis Cenários:
-build e multi-stage, redes internas, healthcheck, mínimo privilégio, registry/digest e um
-incidente final integrado. Cada um terá plano e comandos validados separadamente antes
-de entrar no catálogo.
+A expansão prática de Docker foi implementada e está no catálogo, nos Cenários 06 a 11:
+
+| Cenário | Dificuldade | O que ensina |
+|---|---|---|
+| 06 — Uma imagem cara e lenta | Assistido | `.dockerignore`, ordenação de camadas e multi-stage |
+| 07 — Só quem precisa se enxerga | Autônomo | redes de borda e interna, DNS por nome de serviço |
+| 08 — Rodando ainda não é pronto | Assistido | healthcheck e `depends_on.condition: service_healthy` |
+| 09 — O container com privilégios demais | Assistido | usuário não-root, read-only, `tmpfs` e `cap_drop` |
+| 10 — Da tag ao digest | Assistido | registry local, push, pull e rollback por digest |
+| 11 — Incidente final de Docker | Mestre | diagnóstico de stack com falhas combinadas |
+
+A segunda rodada de conteúdo avançado — CI/CD, scan, SBOM e cadeia de fornecimento —
+permanece planejada, mas não bloqueia a expansão atual.
 
 ## O que a plataforma mexe na sua máquina
 
@@ -168,9 +177,13 @@ fora do `work/`.
 
 ### Portas usadas pelos Cenários
 
-Reserve estas: **8088** (#1), **8089** (#2), **8090** (#3), **8091** (#4). O #5 não usa
-porta. A Trilha AWS usa **4566** (MiniStack), **18080–18081** (tasks ECS), **15432+**
-(RDS) e **16443+** (EKS/k3s). O backend fica na **8099** e o frontend na **5180**.
+Reserve estas: **8088** (#1), **8089** (#2), **8090** (#3), **8091** (#4), **8092**
+(#6), **8093** (#7), **8094** e **8095** (#8, api e web), **8096** (#9), **8097** (#10)
+e **8098** (#11). O #5 não usa porta. O Cenário 10 também usa a **5000** (registry local
+descartável) e o Cenário 11 usa a **9098** para a porta que o `db` expõe indevidamente
+no estado quebrado. A Trilha AWS usa **4566** (MiniStack), **18080–18081** (tasks ECS),
+**15432+** (RDS) e **16443+** (EKS/k3s). O backend fica na **8099** e o frontend na
+**5180**.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está
