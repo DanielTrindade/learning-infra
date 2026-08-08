@@ -272,6 +272,23 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void imagemNoRegistryInspecionaOComInsecureContraORegistryHttpLocal() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "{\"schemaVersion\":2}\n", "");
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ImagemNoRegistry(
+                        "localhost:5000/lab-10-app:1.0", "a v1.0 está publicada no registry")));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("docker", "manifest", "inspect", "--insecure",
+                "localhost:5000/lab-10-app:1.0"), comandos.getFirst());
+    }
+
+    @Test
     void comandoProduzPassaQuandoASaidaTemOTexto() {
         var resultado = motorQueResponde("tamandua\n", 0).verificar(List.of(
                 new Assercao.ComandoProduz(List.of("echo", "tamandua"), "tamandua", "o dado sobreviveu")));

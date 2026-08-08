@@ -229,7 +229,7 @@ public class MotorDeVerificacao {
 
     private ResultadoDeAsercao avaliarImagemNoRegistry(Assercao.ImagemNoRegistry a) {
         SaidaDeComando saida = executor.executar(
-                List.of("docker", "manifest", "inspect", a.referencia()));
+                List.of("docker", "manifest", "inspect", "--insecure", a.referencia()));
         return saida.sucesso()
                 ? ResultadoDeAsercao.aprovada(a)
                 : ResultadoDeAsercao.reprovada(a,
