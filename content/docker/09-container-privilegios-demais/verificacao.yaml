@@ -1,0 +1,17 @@
+asercoes:
+  - tipo: container_rodando
+    nome: lab-09-app-1
+
+  - tipo: http_responde
+    url: http://localhost:8096
+    status: 200
+
+  - tipo: http_corpo_contem
+    url: http://localhost:8096
+    texto: Cenário 09 seguro
+
+  - tipo: container_configuracao
+    nome: lab-09-app-1
+    usuario: node
+    somenteLeitura: true
+    capabilitiesRemovidas: [ALL]

@@ -137,6 +137,65 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leAsercoesDeSaudeEDeRede() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: container_saudavel
+                    nome: lab-08-db-1
+                  - tipo: container_em_rede
+                    nome: lab-07-db-1
+                    rede: lab-07-interna
+                    presente: true
+                """);
+
+        List<Assercao> asercoes = new LeitorDeCenario().ler(diretorio).asercoes();
+
+        assertEquals(new Assercao.ContainerSaudavel("lab-08-db-1"), asercoes.get(0));
+        assertEquals(
+                new Assercao.ContainerEmRede("lab-07-db-1", "lab-07-interna", true),
+                asercoes.get(1));
+    }
+
+    @Test
+    void leContainerConfiguracaoComCamposOpcionais() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: container_configuracao
+                    nome: lab-09-app-1
+                    usuario: node
+                    somenteLeitura: true
+                    capabilitiesRemovidas: [ALL]
+                """);
+
+        var asercao = new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals(
+                new Assercao.ContainerConfiguracao(
+                        "lab-09-app-1", "node", true, java.util.List.of("ALL")),
+                asercao);
+    }
+
+    @Test
+    void leImagemNoRegistryComDescricaoDoCenario() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: imagem_no_registry
+                    referencia: localhost:5000/lab-10-app:1.0
+                    descricao: a v1.0 está publicada no registry
+                """);
+
+        var asercao = new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals(
+                new Assercao.ImagemNoRegistry("localhost:5000/lab-10-app:1.0",
+                        "a v1.0 está publicada no registry"),
+                asercao);
+    }
+
+    @Test
     void leOsVolumesDeclarados() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("cenario.md"), """

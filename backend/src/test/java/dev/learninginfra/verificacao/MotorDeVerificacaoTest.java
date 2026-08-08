@@ -82,6 +82,101 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void containerSaudavelPassaQuandoHealthDizHealthy() {
+        var resultado = motorQueResponde("healthy\n", 0)
+                .verificar(List.of(new Assercao.ContainerSaudavel("lab-08-db-1")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerSaudavelFalhaQuandoNaoEstaHealthy() {
+        var resultado = motorQueResponde("starting\n", 0)
+                .verificar(List.of(new Assercao.ContainerSaudavel("lab-08-db-1")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("starting"));
+    }
+
+    @Test
+    void containerEmRedePassaQuandoOPertence() {
+        var resultado = motorQueResponde("lab-07-borda lab-07-interna\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-api-1", "lab-07-borda", true)));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerEmRedeFalhaQuandoNaoPertenceMasDeveria() {
+        var resultado = motorQueResponde("lab-07-borda\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-db-1", "lab-07-interna", true)));
+
+        assertFalse(resultado.concluido());
+    }
+
+    @Test
+    void containerForaDaRedePassaComPresenteFalse() {
+        var resultado = motorQueResponde("lab-07-interna\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-db-1", "lab-07-borda", false)));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerEmRedeIgnoraNomeParcial() {
+        var resultado = motorQueResponde("lab-07\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-api-1", "lab-07-borda", true)));
+
+        assertFalse(resultado.concluido(), "nome parcial de rede não pode aprovar");
+    }
+
+    @Test
+    void containerConfiguracaoValidaUsuarioSomenteLeituraECapabilities() {
+        // O motor consulta o daemon 3 vezes; responda na ordem pedida com um executor por campo.
+        var executor = new ExecutorDeComando() {
+            int chamadas = 0;
+
+            @Override
+            public SaidaDeComando executar(java.util.List<String> comando) {
+                chamadas++;
+                return new SaidaDeComando(0,
+                        switch (chamadas) {
+                            case 1 -> "node\n";
+                            case 2 -> "true\n";
+                            default -> "[\"ALL\"]\n";
+                        }, "");
+            }
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ContainerConfiguracao(
+                        "lab-09-app-1", "node", true, java.util.List.of("ALL"))));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerConfiguracaoReprovaUsuarioErrado() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "root\n", "");
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ContainerConfiguracao("lab-09-app-1", "node", null, null)));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("node"));
+    }
+
+    @Test
+    void containerConfiguracaoReprovaCapabilityNaoRemovida() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "[]\n", "");
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ContainerConfiguracao(
+                        "lab-09-app-1", null, null, java.util.List.of("ALL"))));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("ALL"));
+    }
+
+    @Test
     void httpRespondePassaContraServidorDeVerdade() {
         var resultado = motorQueResponde("true\n", 0)
                 .verificar(List.of(new Assercao.HttpResponde(base, 200)));
@@ -155,6 +250,42 @@ class MotorDeVerificacaoTest {
 
         assertFalse(resultado.concluido());
         assertTrue(resultado.asercoes().getFirst().detalhe().contains("não existe"));
+    }
+
+    @Test
+    void imagemNoRegistryPassaQuandoManifestInspectDaCerto() {
+        var resultado = motorQueResponde("{\"schemaVersion\":2}\n", 0)
+                .verificar(List.of(new Assercao.ImagemNoRegistry(
+                        "localhost:5000/lab-10-app:1.0", "a v1.0 está publicada no registry")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void imagemForaDoRegistryFalhaDizendoQueNaoFoiPublicada() {
+        var resultado = motorQueResponde("", 1)
+                .verificar(List.of(new Assercao.ImagemNoRegistry(
+                        "localhost:5000/lab-10-app:1.0", "a v1.0 está publicada no registry")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("registry"));
+    }
+
+    @Test
+    void imagemNoRegistryInspecionaOComInsecureContraORegistryHttpLocal() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "{\"schemaVersion\":2}\n", "");
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ImagemNoRegistry(
+                        "localhost:5000/lab-10-app:1.0", "a v1.0 está publicada no registry")));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("docker", "manifest", "inspect", "--insecure",
+                "localhost:5000/lab-10-app:1.0"), comandos.getFirst());
     }
 
     @Test

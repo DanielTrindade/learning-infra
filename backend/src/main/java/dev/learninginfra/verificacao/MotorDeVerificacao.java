@@ -59,9 +59,13 @@ public class MotorDeVerificacao {
     private ResultadoDeAsercao avaliar(Assercao asercao) {
         return switch (asercao) {
             case Assercao.ContainerRodando a -> avaliarContainer(a);
+            case Assercao.ContainerSaudavel a -> avaliarSaude(a);
+            case Assercao.ContainerEmRede a -> avaliarEmRede(a);
+            case Assercao.ContainerConfiguracao a -> avaliarConfiguracao(a);
             case Assercao.HttpResponde a -> avaliarStatus(a);
             case Assercao.HttpCorpoContem a -> avaliarCorpo(a);
             case Assercao.ImagemExiste a -> avaliarImagem(a);
+            case Assercao.ImagemNoRegistry a -> avaliarImagemNoRegistry(a);
             case Assercao.VolumeExiste a -> avaliarVolume(a);
             case Assercao.ComandoProduz a -> avaliarComando(a);
             case Assercao.KubernetesCondicao a -> avaliarCondicaoKubernetes(a);
@@ -139,6 +143,79 @@ public class MotorDeVerificacao {
                 : ResultadoDeAsercao.reprovada(a, "o volume `" + a.nome() + "` não existe");
     }
 
+    private ResultadoDeAsercao avaliarSaude(Assercao.ContainerSaudavel a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "docker", "inspect", "-f", "{{.State.Health.Status}}", a.nome()));
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+        }
+        String status = saida.stdout().strip();
+        return status.equals("healthy")
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a, "não está saudável — status atual: `" + status + "`");
+    }
+
+    private ResultadoDeAsercao avaliarEmRede(Assercao.ContainerEmRede a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "docker", "inspect", "-f",
+                "{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}", a.nome()));
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+        }
+        boolean pertence = java.util.Arrays.stream(saida.stdout().strip().split("\\s+"))
+                .anyMatch(rede -> rede.equals(a.rede()));
+        boolean ok = pertence == a.presente();
+        return ok
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        pertence
+                                ? "está na rede `" + a.rede() + "` e não deveria"
+                                : "não está na rede `" + a.rede() + "`");
+    }
+
+    private ResultadoDeAsercao avaliarConfiguracao(Assercao.ContainerConfiguracao a) {
+        if (a.usuario() != null) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "inspect", "-f", "{{.Config.User}}", a.nome()));
+            if (!saida.sucesso()) {
+                return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+            }
+            if (!saida.stdout().strip().equals(a.usuario())) {
+                return ResultadoDeAsercao.reprovada(a,
+                        "esperava o usuário `" + a.usuario() + "`, veio `"
+                                + saida.stdout().strip() + "`");
+            }
+        }
+        if (a.somenteLeitura() != null) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "inspect", "-f", "{{.HostConfig.ReadonlyRootfs}}", a.nome()));
+            if (!saida.sucesso()) {
+                return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+            }
+            String esperado = String.valueOf(a.somenteLeitura());
+            if (!saida.stdout().strip().equals(esperado)) {
+                return ResultadoDeAsercao.reprovada(a,
+                        "filesystem somente leitura era `" + esperado + "`, veio `"
+                                + saida.stdout().strip() + "`");
+            }
+        }
+        if (a.capabilitiesRemovidas() != null && !a.capabilitiesRemovidas().isEmpty()) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "inspect", "-f", "{{json .HostConfig.CapDrop}}", a.nome()));
+            if (!saida.sucesso()) {
+                return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+            }
+            String drop = saida.stdout().toLowerCase();
+            for (String capability : a.capabilitiesRemovidas()) {
+                if (!drop.contains(capability.toLowerCase())) {
+                    return ResultadoDeAsercao.reprovada(a,
+                            "a capability `" + capability + "` não foi removida");
+                }
+            }
+        }
+        return ResultadoDeAsercao.aprovada(a);
+    }
+
     private ResultadoDeAsercao avaliarComando(Assercao.ComandoProduz a) {
         SaidaDeComando saida = executor.executar(a.comando());
         if (!saida.sucesso()) {
@@ -148,6 +225,16 @@ public class MotorDeVerificacao {
         return saida.stdout().contains(a.contem())
                 ? ResultadoDeAsercao.aprovada(a)
                 : ResultadoDeAsercao.reprovada(a, "rodou, mas a saída veio sem o texto esperado");
+    }
+
+    private ResultadoDeAsercao avaliarImagemNoRegistry(Assercao.ImagemNoRegistry a) {
+        SaidaDeComando saida = executor.executar(
+                List.of("docker", "manifest", "inspect", "--insecure", a.referencia()));
+        return saida.sucesso()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        "a imagem `" + a.referencia() + "` não está no registry — "
+                        + "confirme que o registry está no ar e que a imagem foi publicada");
     }
 
     private ResultadoDeAsercao avaliarImagem(Assercao.ImagemExiste a) {

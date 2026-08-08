@@ -1,0 +1,17 @@
+services:
+  web:
+    build: ./web
+    ports:
+      - "8093:3000"
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    ports:
+      - "8094:3000"
+
+  db:
+    build: ./db
+    ports:
+      - "8095:3000"

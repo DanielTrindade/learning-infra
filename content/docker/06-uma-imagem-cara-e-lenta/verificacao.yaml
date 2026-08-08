@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: imagem_existe
+    referencia: lab-06-app:final
+
+  - tipo: container_rodando
+    nome: lab-06-app
+
+  - tipo: http_responde
+    url: http://localhost:8092
+    status: 200
+
+  - tipo: http_corpo_contem
+    url: http://localhost:8092
+    texto: Cenário 06 otimizado
+
+  - tipo: container_configuracao
+    nome: lab-06-app
+    usuario: node
+
+  - tipo: comando_produz
+    descricao: a imagem final não carrega o script de build
+    comando: ["docker", "run", "--rm", "--entrypoint", "sh", "lab-06-app:final", "-c", "test ! -f build.js && echo sem-build-tools"]
+    contem: sem-build-tools

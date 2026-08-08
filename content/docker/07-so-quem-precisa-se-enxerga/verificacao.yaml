@@ -1,0 +1,45 @@
+asercoes:
+  - tipo: container_rodando
+    nome: lab-07-web-1
+  - tipo: container_rodando
+    nome: lab-07-api-1
+  - tipo: container_rodando
+    nome: lab-07-db-1
+
+  - tipo: http_responde
+    url: http://localhost:8093
+    status: 200
+
+  - tipo: http_corpo_contem
+    url: http://localhost:8093
+    texto: "O api disse: pinguim-magalhaes"
+
+  - tipo: container_em_rede
+    nome: lab-07-web-1
+    rede: lab-07-borda
+    presente: true
+
+  - tipo: container_em_rede
+    nome: lab-07-api-1
+    rede: lab-07-borda
+    presente: true
+
+  - tipo: container_em_rede
+    nome: lab-07-api-1
+    rede: lab-07-interna
+    presente: true
+
+  - tipo: container_em_rede
+    nome: lab-07-db-1
+    rede: lab-07-interna
+    presente: true
+
+  - tipo: container_em_rede
+    nome: lab-07-db-1
+    rede: lab-07-borda
+    presente: false
+
+  - tipo: comando_produz
+    descricao: o banco não publica nenhuma porta no host
+    comando: ["docker", "inspect", "-f", "{{json .HostConfig.PortBindings}}", "lab-07-db-1"]
+    contem: "{}"

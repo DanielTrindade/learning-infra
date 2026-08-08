@@ -1,0 +1,24 @@
+services:
+  web:
+    build: ./web
+    ports:
+      - "8098:3000"
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    depends_on:
+      - db
+
+  db:
+    build: ./db
+    ports:
+      - "9098:3000"
+    environment:
+      ANIMAL: tatu-bola
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080"]
+      interval: 2s
+      timeout: 2s
+      retries: 3

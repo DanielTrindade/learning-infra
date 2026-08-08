@@ -126,7 +126,20 @@ public class LeitorDeCenario {
             case "http_corpo_contem" -> new Assercao.HttpCorpoContem(
                     exigirTexto(item, "url"), exigirTexto(item, "texto"));
             case "imagem_existe" -> new Assercao.ImagemExiste(exigirTexto(item, "referencia"));
+            case "imagem_no_registry" -> new Assercao.ImagemNoRegistry(
+                    exigirTexto(item, "referencia"),
+                    exigirTexto(item, "descricao"));
             case "volume_existe" -> new Assercao.VolumeExiste(exigirTexto(item, "nome"));
+            case "container_saudavel" -> new Assercao.ContainerSaudavel(exigirTexto(item, "nome"));
+            case "container_em_rede" -> new Assercao.ContainerEmRede(
+                    exigirTexto(item, "nome"),
+                    exigirTexto(item, "rede"),
+                    exigirBooleano(item, "presente"));
+            case "container_configuracao" -> new Assercao.ContainerConfiguracao(
+                    exigirTexto(item, "nome"),
+                    textoOpcional(item, "usuario"),
+                    (Boolean) item.getOrDefault("somenteLeitura", null),
+                    lerListaOpcional(item, "capabilitiesRemovidas"));
             case "comando_produz" -> new Assercao.ComandoProduz(
                     lerLista(item, "comando"),
                     exigirTexto(item, "contem"),
