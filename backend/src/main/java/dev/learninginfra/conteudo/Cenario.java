@@ -58,6 +58,10 @@ public record Cenario(
         return projetoCompose != null && !projetoCompose.isBlank();
     }
 
+    public boolean usaDocker() {
+        return id.startsWith("docker/");
+    }
+
     public boolean usaKubernetes() {
         return contextoKubernetes != null && !contextoKubernetes.isBlank()
                 && namespaceKubernetes != null && !namespaceKubernetes.isBlank();
