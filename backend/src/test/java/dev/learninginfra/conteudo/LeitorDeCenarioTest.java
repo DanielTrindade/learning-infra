@@ -178,6 +178,24 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leImagemNoRegistryComDescricaoDoCenario() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: imagem_no_registry
+                    referencia: localhost:5000/lab-10-app:1.0
+                    descricao: a v1.0 está publicada no registry
+                """);
+
+        var asercao = new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals(
+                new Assercao.ImagemNoRegistry("localhost:5000/lab-10-app:1.0",
+                        "a v1.0 está publicada no registry"),
+                asercao);
+    }
+
+    @Test
     void leOsVolumesDeclarados() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("cenario.md"), """

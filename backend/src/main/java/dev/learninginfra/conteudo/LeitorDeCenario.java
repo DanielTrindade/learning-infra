@@ -126,6 +126,9 @@ public class LeitorDeCenario {
             case "http_corpo_contem" -> new Assercao.HttpCorpoContem(
                     exigirTexto(item, "url"), exigirTexto(item, "texto"));
             case "imagem_existe" -> new Assercao.ImagemExiste(exigirTexto(item, "referencia"));
+            case "imagem_no_registry" -> new Assercao.ImagemNoRegistry(
+                    exigirTexto(item, "referencia"),
+                    exigirTexto(item, "descricao"));
             case "volume_existe" -> new Assercao.VolumeExiste(exigirTexto(item, "nome"));
             case "container_saudavel" -> new Assercao.ContainerSaudavel(exigirTexto(item, "nome"));
             case "container_em_rede" -> new Assercao.ContainerEmRede(

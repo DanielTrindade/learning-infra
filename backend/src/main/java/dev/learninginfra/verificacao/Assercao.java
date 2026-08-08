@@ -82,6 +82,10 @@ public sealed interface Assercao {
         }
     }
 
+    /** A imagem está publicada no registry referenciado. A descrição vem do Cenário. */
+    record ImagemNoRegistry(String referencia, String descricao) implements Assercao {
+    }
+
     /**
      * O escape hatch do vocabulário: roda um comando e confere a saída. A descrição vem
      * do Cenário, e não do comando, porque o comando costuma revelar a resposta do

@@ -65,6 +65,7 @@ public class MotorDeVerificacao {
             case Assercao.HttpResponde a -> avaliarStatus(a);
             case Assercao.HttpCorpoContem a -> avaliarCorpo(a);
             case Assercao.ImagemExiste a -> avaliarImagem(a);
+            case Assercao.ImagemNoRegistry a -> avaliarImagemNoRegistry(a);
             case Assercao.VolumeExiste a -> avaliarVolume(a);
             case Assercao.ComandoProduz a -> avaliarComando(a);
             case Assercao.KubernetesCondicao a -> avaliarCondicaoKubernetes(a);
@@ -224,6 +225,16 @@ public class MotorDeVerificacao {
         return saida.stdout().contains(a.contem())
                 ? ResultadoDeAsercao.aprovada(a)
                 : ResultadoDeAsercao.reprovada(a, "rodou, mas a saída veio sem o texto esperado");
+    }
+
+    private ResultadoDeAsercao avaliarImagemNoRegistry(Assercao.ImagemNoRegistry a) {
+        SaidaDeComando saida = executor.executar(
+                List.of("docker", "manifest", "inspect", a.referencia()));
+        return saida.sucesso()
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        "a imagem `" + a.referencia() + "` não está no registry — "
+                        + "confirme que o registry está no ar e que a imagem foi publicada");
     }
 
     private ResultadoDeAsercao avaliarImagem(Assercao.ImagemExiste a) {

@@ -253,6 +253,25 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void imagemNoRegistryPassaQuandoManifestInspectDaCerto() {
+        var resultado = motorQueResponde("{\"schemaVersion\":2}\n", 0)
+                .verificar(List.of(new Assercao.ImagemNoRegistry(
+                        "localhost:5000/lab-10-app:1.0", "a v1.0 está publicada no registry")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void imagemForaDoRegistryFalhaDizendoQueNaoFoiPublicada() {
+        var resultado = motorQueResponde("", 1)
+                .verificar(List.of(new Assercao.ImagemNoRegistry(
+                        "localhost:5000/lab-10-app:1.0", "a v1.0 está publicada no registry")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("registry"));
+    }
+
+    @Test
     void comandoProduzPassaQuandoASaidaTemOTexto() {
         var resultado = motorQueResponde("tamandua\n", 0).verificar(List.of(
                 new Assercao.ComandoProduz(List.of("echo", "tamandua"), "tamandua", "o dado sobreviveu")));
