@@ -1,0 +1,28 @@
+asercoes:
+  - tipo: container_rodando
+    nome: lab-11-web-1
+  - tipo: container_rodando
+    nome: lab-11-api-1
+  - tipo: container_saudavel
+    nome: lab-11-db-1
+
+  - tipo: http_responde
+    url: http://localhost:8098
+    status: 200
+
+  - tipo: http_corpo_contem
+    url: http://localhost:8098
+    texto: "O api disse: tatu-bola"
+
+  - tipo: container_em_rede
+    nome: lab-11-db-1
+    rede: lab-11-borda
+    presente: false
+
+  - tipo: volume_existe
+    nome: lab-11-dados
+
+  - tipo: comando_produz
+    descricao: o dado do banco sobreviveu no volume
+    comando: ["docker", "run", "--rm", "-v", "lab-11-dados:/dados", "alpine", "cat", "/dados/animal.txt"]
+    contem: tatu-bola
