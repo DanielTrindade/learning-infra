@@ -67,7 +67,7 @@ das Asserções — do começo ao fim, ela é um roteiro de diagnóstico, não u
 
 ## Verifique
 
-Nove Asserções: os três containers de pé e o `db` saudável; a 8098 respondendo 200 com o
+Oito Asserções: os três containers de pé e o `db` saudável; a 8098 respondendo 200 com o
 corpo esperado; o `db` fora da rede que dá para a rua; e o valor que o banco guarda
 sobrevivendo no volume `lab-11-dados`. Algumas já passam agora — e é exatamente isso que
 torna o problema enganoso.
