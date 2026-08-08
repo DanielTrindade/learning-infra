@@ -11,10 +11,7 @@ export default function App() {
     <div className="app-shell">
       <header className="barra-superior">
         <a className="marca" href="#/" aria-label="Learning Infra — início">
-          <span className="marca-simbolo" aria-hidden="true">
-            <span />
-            <span />
-          </span>
+          <img className="marca-simbolo" src="/favicon.svg" alt="" />
           <span>
             <strong>Learning Infra</strong>
             <small>Cenários locais</small>

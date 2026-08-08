@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listarCenarios, type CenarioDetalhado } from './api'
-import hero from './assets/hero.png'
+import hero from './assets/hero-infra.svg'
 import {
   carregarTrilhaAtual,
   estadoDoCenario,
