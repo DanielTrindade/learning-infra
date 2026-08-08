@@ -137,6 +137,27 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leAsercoesDeSaudeEDeRede() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: container_saudavel
+                    nome: lab-08-db-1
+                  - tipo: container_em_rede
+                    nome: lab-07-db-1
+                    rede: lab-07-interna
+                    presente: true
+                """);
+
+        List<Assercao> asercoes = new LeitorDeCenario().ler(diretorio).asercoes();
+
+        assertEquals(new Assercao.ContainerSaudavel("lab-08-db-1"), asercoes.get(0));
+        assertEquals(
+                new Assercao.ContainerEmRede("lab-07-db-1", "lab-07-interna", true),
+                asercoes.get(1));
+    }
+
+    @Test
     void leOsVolumesDeclarados() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("cenario.md"), """

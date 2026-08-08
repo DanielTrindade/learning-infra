@@ -59,6 +59,8 @@ public class MotorDeVerificacao {
     private ResultadoDeAsercao avaliar(Assercao asercao) {
         return switch (asercao) {
             case Assercao.ContainerRodando a -> avaliarContainer(a);
+            case Assercao.ContainerSaudavel a -> avaliarSaude(a);
+            case Assercao.ContainerEmRede a -> avaliarEmRede(a);
             case Assercao.HttpResponde a -> avaliarStatus(a);
             case Assercao.HttpCorpoContem a -> avaliarCorpo(a);
             case Assercao.ImagemExiste a -> avaliarImagem(a);
@@ -137,6 +139,36 @@ public class MotorDeVerificacao {
         return saida.sucesso()
                 ? ResultadoDeAsercao.aprovada(a)
                 : ResultadoDeAsercao.reprovada(a, "o volume `" + a.nome() + "` não existe");
+    }
+
+    private ResultadoDeAsercao avaliarSaude(Assercao.ContainerSaudavel a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "docker", "inspect", "-f", "{{.State.Health.Status}}", a.nome()));
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+        }
+        String status = saida.stdout().strip();
+        return status.equals("healthy")
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a, "não está saudável — status atual: `" + status + "`");
+    }
+
+    private ResultadoDeAsercao avaliarEmRede(Assercao.ContainerEmRede a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "docker", "inspect", "-f",
+                "{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}", a.nome()));
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+        }
+        boolean pertence = java.util.Arrays.stream(saida.stdout().strip().split("\\s+"))
+                .anyMatch(rede -> rede.equals(a.rede()));
+        boolean ok = pertence == a.presente();
+        return ok
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        pertence
+                                ? "está na rede `" + a.rede() + "` e não deveria"
+                                : "não está na rede `" + a.rede() + "`");
     }
 
     private ResultadoDeAsercao avaliarComando(Assercao.ComandoProduz a) {

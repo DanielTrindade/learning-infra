@@ -127,6 +127,11 @@ public class LeitorDeCenario {
                     exigirTexto(item, "url"), exigirTexto(item, "texto"));
             case "imagem_existe" -> new Assercao.ImagemExiste(exigirTexto(item, "referencia"));
             case "volume_existe" -> new Assercao.VolumeExiste(exigirTexto(item, "nome"));
+            case "container_saudavel" -> new Assercao.ContainerSaudavel(exigirTexto(item, "nome"));
+            case "container_em_rede" -> new Assercao.ContainerEmRede(
+                    exigirTexto(item, "nome"),
+                    exigirTexto(item, "rede"),
+                    exigirBooleano(item, "presente"));
             case "comando_produz" -> new Assercao.ComandoProduz(
                     lerLista(item, "comando"),
                     exigirTexto(item, "contem"),

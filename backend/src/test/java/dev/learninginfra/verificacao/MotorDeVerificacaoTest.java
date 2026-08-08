@@ -82,6 +82,55 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void containerSaudavelPassaQuandoHealthDizHealthy() {
+        var resultado = motorQueResponde("healthy\n", 0)
+                .verificar(List.of(new Assercao.ContainerSaudavel("lab-08-db-1")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerSaudavelFalhaQuandoNaoEstaHealthy() {
+        var resultado = motorQueResponde("starting\n", 0)
+                .verificar(List.of(new Assercao.ContainerSaudavel("lab-08-db-1")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("starting"));
+    }
+
+    @Test
+    void containerEmRedePassaQuandoOPertence() {
+        var resultado = motorQueResponde("lab-07-borda lab-07-interna\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-api-1", "lab-07-borda", true)));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerEmRedeFalhaQuandoNaoPertenceMasDeveria() {
+        var resultado = motorQueResponde("lab-07-borda\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-db-1", "lab-07-interna", true)));
+
+        assertFalse(resultado.concluido());
+    }
+
+    @Test
+    void containerForaDaRedePassaComPresenteFalse() {
+        var resultado = motorQueResponde("lab-07-interna\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-db-1", "lab-07-borda", false)));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerEmRedeIgnoraNomeParcial() {
+        var resultado = motorQueResponde("lab-07\n", 0)
+                .verificar(List.of(new Assercao.ContainerEmRede("lab-07-api-1", "lab-07-borda", true)));
+
+        assertFalse(resultado.concluido(), "nome parcial de rede não pode aprovar");
+    }
+
+    @Test
     void httpRespondePassaContraServidorDeVerdade() {
         var resultado = motorQueResponde("true\n", 0)
                 .verificar(List.of(new Assercao.HttpResponde(base, 200)));

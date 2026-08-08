@@ -39,6 +39,22 @@ public sealed interface Assercao {
         }
     }
 
+    record ContainerSaudavel(String nome) implements Assercao {
+        @Override
+        public String descricao() {
+            return "o container `" + nome + "` está saudável";
+        }
+    }
+
+    record ContainerEmRede(String nome, String rede, boolean presente) implements Assercao {
+        @Override
+        public String descricao() {
+            return presente
+                    ? "o container `" + nome + "` está na rede `" + rede + "`"
+                    : "o container `" + nome + "` não está na rede `" + rede + "`";
+        }
+    }
+
     /**
      * O escape hatch do vocabulário: roda um comando e confere a saída. A descrição vem
      * do Cenário, e não do comando, porque o comando costuma revelar a resposta do
