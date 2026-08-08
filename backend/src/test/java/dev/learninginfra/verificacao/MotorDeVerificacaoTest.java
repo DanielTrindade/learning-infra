@@ -131,6 +131,52 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void containerConfiguracaoValidaUsuarioSomenteLeituraECapabilities() {
+        // O motor consulta o daemon 3 vezes; responda na ordem pedida com um executor por campo.
+        var executor = new ExecutorDeComando() {
+            int chamadas = 0;
+
+            @Override
+            public SaidaDeComando executar(java.util.List<String> comando) {
+                chamadas++;
+                return new SaidaDeComando(0,
+                        switch (chamadas) {
+                            case 1 -> "node\n";
+                            case 2 -> "true\n";
+                            default -> "[\"ALL\"]\n";
+                        }, "");
+            }
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ContainerConfiguracao(
+                        "lab-09-app-1", "node", true, java.util.List.of("ALL"))));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void containerConfiguracaoReprovaUsuarioErrado() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "root\n", "");
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ContainerConfiguracao("lab-09-app-1", "node", null, null)));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("node"));
+    }
+
+    @Test
+    void containerConfiguracaoReprovaCapabilityNaoRemovida() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "[]\n", "");
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ContainerConfiguracao(
+                        "lab-09-app-1", null, null, java.util.List.of("ALL"))));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("ALL"));
+    }
+
+    @Test
     void httpRespondePassaContraServidorDeVerdade() {
         var resultado = motorQueResponde("true\n", 0)
                 .verificar(List.of(new Assercao.HttpResponde(base, 200)));

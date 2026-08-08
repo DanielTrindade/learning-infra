@@ -61,6 +61,7 @@ public class MotorDeVerificacao {
             case Assercao.ContainerRodando a -> avaliarContainer(a);
             case Assercao.ContainerSaudavel a -> avaliarSaude(a);
             case Assercao.ContainerEmRede a -> avaliarEmRede(a);
+            case Assercao.ContainerConfiguracao a -> avaliarConfiguracao(a);
             case Assercao.HttpResponde a -> avaliarStatus(a);
             case Assercao.HttpCorpoContem a -> avaliarCorpo(a);
             case Assercao.ImagemExiste a -> avaliarImagem(a);
@@ -169,6 +170,49 @@ public class MotorDeVerificacao {
                         pertence
                                 ? "está na rede `" + a.rede() + "` e não deveria"
                                 : "não está na rede `" + a.rede() + "`");
+    }
+
+    private ResultadoDeAsercao avaliarConfiguracao(Assercao.ContainerConfiguracao a) {
+        if (a.usuario() != null) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "inspect", "-f", "{{.Config.User}}", a.nome()));
+            if (!saida.sucesso()) {
+                return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+            }
+            if (!saida.stdout().strip().equals(a.usuario())) {
+                return ResultadoDeAsercao.reprovada(a,
+                        "esperava o usuário `" + a.usuario() + "`, veio `"
+                                + saida.stdout().strip() + "`");
+            }
+        }
+        if (a.somenteLeitura() != null) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "inspect", "-f", "{{.HostConfig.ReadonlyRootfs}}", a.nome()));
+            if (!saida.sucesso()) {
+                return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+            }
+            String esperado = String.valueOf(a.somenteLeitura());
+            if (!saida.stdout().strip().equals(esperado)) {
+                return ResultadoDeAsercao.reprovada(a,
+                        "filesystem somente leitura era `" + esperado + "`, veio `"
+                                + saida.stdout().strip() + "`");
+            }
+        }
+        if (a.capabilitiesRemovidas() != null && !a.capabilitiesRemovidas().isEmpty()) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "inspect", "-f", "{{json .HostConfig.CapDrop}}", a.nome()));
+            if (!saida.sucesso()) {
+                return ResultadoDeAsercao.reprovada(a, "o container `" + a.nome() + "` não existe");
+            }
+            String drop = saida.stdout().toLowerCase();
+            for (String capability : a.capabilitiesRemovidas()) {
+                if (!drop.contains(capability.toLowerCase())) {
+                    return ResultadoDeAsercao.reprovada(a,
+                            "a capability `" + capability + "` não foi removida");
+                }
+            }
+        }
+        return ResultadoDeAsercao.aprovada(a);
     }
 
     private ResultadoDeAsercao avaliarComando(Assercao.ComandoProduz a) {

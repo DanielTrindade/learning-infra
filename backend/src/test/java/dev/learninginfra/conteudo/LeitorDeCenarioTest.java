@@ -158,6 +158,26 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leContainerConfiguracaoComCamposOpcionais() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: container_configuracao
+                    nome: lab-09-app-1
+                    usuario: node
+                    somenteLeitura: true
+                    capabilitiesRemovidas: [ALL]
+                """);
+
+        var asercao = new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals(
+                new Assercao.ContainerConfiguracao(
+                        "lab-09-app-1", "node", true, java.util.List.of("ALL")),
+                asercao);
+    }
+
+    @Test
     void leOsVolumesDeclarados() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("cenario.md"), """

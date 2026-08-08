@@ -56,6 +56,33 @@ public sealed interface Assercao {
     }
 
     /**
+     * Verifica a configuração de execução de um container: usuário, filesystem somente
+     * leitura e capabilities removidas. Campos nulos não são verificados. A descrição
+     * deriva dos campos presentes.
+     */
+    record ContainerConfiguracao(
+            String nome,
+            String usuario,
+            Boolean somenteLeitura,
+            java.util.List<String> capabilitiesRemovidas) implements Assercao {
+
+        @Override
+        public String descricao() {
+            java.util.List<String> partes = new java.util.ArrayList<>();
+            if (usuario != null) {
+                partes.add("roda como `" + usuario + "`");
+            }
+            if (somenteLeitura != null && somenteLeitura) {
+                partes.add("com filesystem somente leitura");
+            }
+            if (capabilitiesRemovidas != null && !capabilitiesRemovidas.isEmpty()) {
+                partes.add("sem as capabilities " + capabilitiesRemovidas);
+            }
+            return "o container `" + nome + "` " + String.join(", ", partes);
+        }
+    }
+
+    /**
      * O escape hatch do vocabulário: roda um comando e confere a saída. A descrição vem
      * do Cenário, e não do comando, porque o comando costuma revelar a resposta do
      * exercício. O acessor do componente já implementa {@link Assercao#descricao()}.

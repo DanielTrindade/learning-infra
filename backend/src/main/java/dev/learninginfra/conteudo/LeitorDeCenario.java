@@ -132,6 +132,11 @@ public class LeitorDeCenario {
                     exigirTexto(item, "nome"),
                     exigirTexto(item, "rede"),
                     exigirBooleano(item, "presente"));
+            case "container_configuracao" -> new Assercao.ContainerConfiguracao(
+                    exigirTexto(item, "nome"),
+                    textoOpcional(item, "usuario"),
+                    (Boolean) item.getOrDefault("somenteLeitura", null),
+                    lerListaOpcional(item, "capabilitiesRemovidas"));
             case "comando_produz" -> new Assercao.ComandoProduz(
                     lerLista(item, "comando"),
                     exigirTexto(item, "contem"),
