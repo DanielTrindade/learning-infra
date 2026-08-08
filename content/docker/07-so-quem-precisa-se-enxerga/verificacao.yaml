@@ -38,3 +38,8 @@ asercoes:
     nome: lab-07-db-1
     rede: lab-07-borda
     presente: false
+
+  - tipo: comando_produz
+    descricao: o banco não publica nenhuma porta no host
+    comando: ["docker", "inspect", "-f", "{{json .HostConfig.PortBindings}}", "lab-07-db-1"]
+    contem: "{}"

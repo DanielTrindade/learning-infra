@@ -59,7 +59,7 @@ container deveria estar — ou **não** estar.
 
 ## O que a Verificação vai cobrar
 
-Oito coisas: os três containers de pé, a 8093 respondendo 200, o corpo com
+Onze coisas: os três containers de pé, a 8093 respondendo 200, o corpo com
 **`O api disse: pinguim-magalhaes`**, o `web` na rede `lab-07-borda`, o `api` nas duas
 redes, o `db` na `lab-07-interna` **e não** na `lab-07-borda`.
 

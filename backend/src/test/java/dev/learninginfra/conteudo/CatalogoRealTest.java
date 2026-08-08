@@ -40,7 +40,7 @@ class CatalogoRealTest {
         assertThat(docker).hasSize(11);
         assertThat(docker).allMatch(Cenario::usaDocker);
         assertThat(docker.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
-                .isEqualTo(54);
+                .isEqualTo(56);
     }
 
     @Test

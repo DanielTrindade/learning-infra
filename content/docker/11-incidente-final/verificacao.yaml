@@ -26,3 +26,8 @@ asercoes:
     descricao: o dado do banco sobreviveu no volume
     comando: ["docker", "run", "--rm", "-v", "lab-11-dados:/dados", "alpine", "cat", "/dados/animal.txt"]
     contem: tatu-bola
+
+  - tipo: comando_produz
+    descricao: o banco não publica nenhuma porta no host
+    comando: ["docker", "inspect", "-f", "{{json .HostConfig.PortBindings}}", "lab-11-db-1"]
+    contem: "{}"
