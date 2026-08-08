@@ -98,28 +98,52 @@ Abra **<http://localhost:5180>**.
 > outro projeto, e o `strictPort` está ligado justamente para o Vite falhar em vez de
 > deslizar em silêncio para outra porta e te fazer abrir o app errado.
 
-## Fazendo uma lição
+## Estudando uma Trilha
 
-1. Escolha um Cenário no catálogo. A etiqueta de dificuldade diz o quanto ele entrega:
+1. Escolha uma Trilha no catálogo. Quando houver **Fundamentos**, comece pelo artigo para
+   construir o modelo mental ou vá direto à prática — a recomendação não bloqueia os
+   Cenários.
+2. Responda o Questionário sem consultar o texto. Com 80% de aproveitamento, os
+   Fundamentos são concluídos; abaixo disso, o feedback leva às seções que vale revisar.
+   As tentativas são ilimitadas e o melhor resultado fica salvo.
+3. Escolha um Cenário. A etiqueta de Dificuldade diz o quanto ele entrega:
    `Guiado` dá todos os comandos, `Assistido` dá o objetivo e a forma, `Autônomo` dá só
    o objetivo, `Mestre` entrega um ambiente quebrado sem dizer o que quebrou.
-2. Clique em **Iniciar cenário**. Isso derruba o ambiente do Cenário anterior e prepara
+4. Clique em **Iniciar cenário**. Isso derruba o ambiente do Cenário anterior e prepara
    o seu diretório de trabalho — o caminho absoluto aparece na tela, e é ele que você
    usa nos comandos com `-v`.
-3. **Clique em Verificar antes de fazer qualquer coisa.** Todas as Asserções devem
+5. **Clique em Verificar antes de fazer qualquer coisa.** Todas as Asserções devem
    falhar. Se alguma passar de cara, ou o Cenário está mal escrito ou sobrou ambiente —
    nos dois casos é bug, não sucesso.
-4. Faça o exercício no seu terminal.
-5. Clique em **Verificar**. O checklist mostra cada Asserção separadamente, com o motivo
+6. Faça o exercício no seu terminal.
+7. Clique em **Verificar**. O checklist mostra cada Asserção separadamente, com o motivo
    ao lado das que falharam.
+
+## Fundamentos e evolução das Trilhas
+
+A Trilha Docker já oferece **Fundamentos**: um artigo sobre o problema resolvido pela
+ferramenta, arquitetura, imagens, containers, isolamento, rede, persistência, Compose e
+distribuição. Seu Questionário tem 12 situações, aproveitamento recomendado de 80%,
+feedback por questão e links para revisar cada conceito.
+
+Kubernetes e AWS já são Trilhas explícitas e continuam com seus Cenários atuais. Elas
+receberão Fundamentos pelo mesmo contrato nas próximas entregas; futuras Trilhas também
+seguirão esse formato, sem transformar teoria em um Cenário artificial. A decisão está
+na [ADR 0003](docs/adr/0003-fundamentos-pertencem-a-trilha.md), e a expansão está no
+[plano de Fundamentos e Questionário por Trilha](docs/superpowers/plans/2026-08-07-fundamentos-questionario-por-trilha.md).
+
+Depois do corte teórico, a expansão prática de Docker está planejada em seis Cenários:
+build e multi-stage, redes internas, healthcheck, mínimo privilégio, registry/digest e um
+incidente final integrado. Cada um terá plano e comandos validados separadamente antes
+de entrar no catálogo.
 
 ## O que a plataforma mexe na sua máquina
 
 | Caminho | O que é |
 |---|---|
 | `work/` | Diretório de trabalho. **Apagado e recriado a cada Iniciar** — não guarde nada seu aqui. |
-| `data/progresso.json` | Qual Cenário está ativo e quais você concluiu. |
-| `content/` | Os Cenários. É aqui que você edita ou escreve conteúdo. |
+| `data/progresso.json` | Qual Cenário está ativo, conclusões práticas e tentativas dos Fundamentos. |
+| `content/` | Manifestos das Trilhas, Fundamentos, Questionários e Cenários. |
 | namespace `learning-infra-k8s-*` | Ambiente descartável de um Cenário Kubernetes. |
 | container `learning-infra-ministack` | Endpoint AWS local e efêmero do Cenário ativo. |
 | containers `ministack-*` | PostgreSQL, tasks ECS ou k3s criados nos Cenários com infraestrutura substituta. |
@@ -180,7 +204,21 @@ docker volume rm -f <volume>
 
 ## Escrevendo um Cenário
 
-Cada Cenário é um diretório em `content/<trilha>/<slug>/`:
+Cada diretório `content/<trilha>/` precisa de um `trilha.yaml`. Um diretório com Cenários
+e sem manifesto é rejeitado para que a Trilha nunca volte a ser inferida implicitamente:
+
+```yaml
+id: docker
+titulo: Docker
+fundamentos:
+  titulo: Fundamentos do Docker
+  artigo: fundamentos.md
+  questionario: questionario.yaml
+  aproveitamentoMinimo: 80
+```
+
+As referências de Fundamentos são opcionais durante a migração de uma Trilha. Cada
+Cenário continua sendo um diretório em `content/<trilha>/<slug>/`:
 
 - `cenario.md` — frontmatter com `id`, `titulo`, `dificuldade` e, se precisar,
   `containers`, `projetoCompose` e `volumes` (o que o teardown vai remover). O corpo é o
@@ -255,6 +293,8 @@ cd frontend && npm run build   # typecheck e bundle
   decisões curriculares da Trilha Kubernetes, com fontes primárias.
 - [`docs/research/aws-local-lab.md`](docs/research/aws-local-lab.md) — matriz de
   compatibilidade do MiniStack, riscos e decisões curriculares da Trilha AWS.
+- [`docs/research/docker-course.md`](docs/research/docker-course.md) — pesquisa curricular
+  da Trilha Docker e base para Fundamentos, Questionário e novos Cenários.
 - [`docs/superpowers/plans/`](docs/superpowers/plans/) — os planos de implementação, com
   o comportamento do CLI do Docker verificado em execução real. São documentos de
   construção, não de uso.

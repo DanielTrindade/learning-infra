@@ -1,9 +1,12 @@
 package dev.learninginfra.conteudo;
 
+import dev.learninginfra.progresso.RepositorioDeProgresso;
+import dev.learninginfra.trilha.CatalogoDeTrilhas;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,6 +34,30 @@ class CatalogoRealTest {
         assertThat(aws).allMatch(Cenario::usaAws);
         assertThat(aws.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
                 .isEqualTo(57);
+    }
+
+    @Test
+    void carregaTresTrilhasComFundamentosPublicadosSomenteEmDocker() {
+        Path conteudo = localizarConteudo();
+        var cenarios = new RepositorioDeCenarios(
+                conteudo.toString(), new LeitorDeCenario());
+        var catalogo = new CatalogoDeTrilhas(
+                conteudo.toString(),
+                cenarios,
+                new RepositorioDeProgresso("target/progresso-catalogo-real.json"),
+                Clock.systemUTC());
+
+        var trilhas = catalogo.listar();
+
+        assertThat(trilhas).extracting(trilha -> trilha.id())
+                .containsExactly("aws", "docker", "kubernetes");
+        assertThat(catalogo.buscar("docker").orElseThrow().fundamentos())
+                .satisfies(fundamentos -> {
+                    assertThat(fundamentos.questionario().questoes()).hasSize(12);
+                    assertThat(fundamentos.markdown()).contains("## Como o Docker funciona");
+                });
+        assertThat(catalogo.buscar("aws").orElseThrow().fundamentos()).isNull();
+        assertThat(catalogo.buscar("kubernetes").orElseThrow().fundamentos()).isNull();
     }
 
     private Path localizarConteudo() {

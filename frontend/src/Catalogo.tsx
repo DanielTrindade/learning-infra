@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react'
-import { listarCenarios, type CenarioDetalhado } from './api'
+import { useEffect, useState, type CSSProperties } from 'react'
+import {
+  listarTrilhas,
+  type CenarioResumo,
+  type FundamentosResumo,
+  type TrilhaResumo,
+} from './api'
 import hero from './assets/hero-infra.svg'
 import {
   carregarTrilhaAtual,
   estadoDoCenario,
-  idDaTrilha,
-  nomeDaTrilha,
   numeroDoCenario,
   rotulosDificuldade,
   rotulosEstado,
@@ -18,10 +21,12 @@ type Filtro = 'todos' | EstadoDoCenario
 type ResumoDaTrilha = {
   id: string
   nome: string
-  aulas: CenarioDetalhado[]
+  aulas: CenarioResumo[]
+  fundamentos: FundamentosResumo | null
   concluidas: number
   emAndamento: number
   naoIniciadas: number
+  total: number
   percentual: number
   concluida: boolean
   temProgresso: boolean
@@ -58,22 +63,31 @@ function salvarTrilhasAbertas(trilhas: Set<string>) {
   }
 }
 
-function resumirTrilha(id: string, cenarios: CenarioDetalhado[]): ResumoDaTrilha {
-  const aulas = cenarios.filter((cenario) => idDaTrilha(cenario.id) === id)
-  const concluidas = aulas.filter((cenario) => estadoDoCenario(cenario) === 'concluido').length
-  const emAndamento = aulas.filter((cenario) => estadoDoCenario(cenario) === 'andamento').length
-  const naoIniciadas = aulas.length - concluidas - emAndamento
+function estadoDosFundamentos(fundamentos: FundamentosResumo): EstadoDoCenario {
+  if (fundamentos.estado === 'CONCLUIDO') return 'concluido'
+  if (fundamentos.estado === 'EM_ANDAMENTO') return 'andamento'
+  return 'nao-iniciado'
+}
+
+function resumirTrilha(trilha: TrilhaResumo): ResumoDaTrilha {
+  const emAndamentoNosCenarios = trilha.cenarios
+    .filter((cenario) => estadoDoCenario(cenario) === 'andamento').length
+  const fundamentosEmAndamento = trilha.fundamentos?.estado === 'EM_ANDAMENTO' ? 1 : 0
+  const emAndamento = emAndamentoNosCenarios + fundamentosEmAndamento
+  const naoIniciadas = trilha.total - trilha.concluidos - emAndamento
 
   return {
-    id,
-    nome: nomeDaTrilha(id),
-    aulas,
-    concluidas,
+    id: trilha.id,
+    nome: trilha.titulo,
+    aulas: trilha.cenarios,
+    fundamentos: trilha.fundamentos,
+    concluidas: trilha.concluidos,
     emAndamento,
     naoIniciadas,
-    percentual: Math.round((concluidas / aulas.length) * 100),
-    concluida: concluidas === aulas.length,
-    temProgresso: concluidas > 0 || emAndamento > 0,
+    total: trilha.total,
+    percentual: trilha.percentual,
+    concluida: trilha.concluida,
+    temProgresso: trilha.concluidos > 0 || emAndamento > 0,
   }
 }
 
@@ -95,25 +109,47 @@ function EstadoDeCarregamento() {
   )
 }
 
+function BarraDeProgressoLinear({
+  percentual,
+  emAndamento,
+  total,
+  rotulo,
+  grande,
+}: {
+  percentual: number
+  emAndamento: number
+  total: number
+  rotulo: string
+  grande?: boolean
+}) {
+  const percentualComAndamento = Math.min(100, percentual + (emAndamento / Math.max(total, 1)) * 100)
+  return (
+    <div className={grande ? 'barra-linear barra-linear-grande' : 'barra-linear'} role="img" aria-label={rotulo}>
+      <span
+        className="barra-linear-andamento"
+        style={{ '--fator': percentualComAndamento / 100 } as CSSProperties}
+      />
+      <span
+        className="barra-linear-concluido"
+        style={{ '--fator': percentual / 100 } as CSSProperties}
+      />
+    </div>
+  )
+}
+
 function ResumoVisualDaTrilha({ resumo }: { resumo: ResumoDaTrilha }) {
   return (
     <div className="trilha-progresso">
       <div className="trilha-progresso-topo">
         <strong>{resumo.percentual}%</strong>
-        <span>{resumo.concluidas} de {resumo.aulas.length} concluídos</span>
+        <span>{resumo.concluidas} de {resumo.total} concluídos</span>
       </div>
-      <div
-        className="trilha-barra"
-        role="img"
-        aria-label={`${resumo.percentual}% da trilha concluída`}
-      >
-        {resumo.aulas.map((cenario) => (
-          <span
-            key={cenario.id}
-            className={`trilha-segmento trilha-segmento-${estadoDoCenario(cenario)}`}
-          />
-        ))}
-      </div>
+      <BarraDeProgressoLinear
+        percentual={resumo.percentual}
+        emAndamento={resumo.emAndamento}
+        total={resumo.total}
+        rotulo={`${resumo.percentual}% da trilha concluída`}
+      />
       <div className="trilha-estados" aria-hidden="true">
         <span className="trilha-estado-concluido"><b>{resumo.concluidas}</b> concluídos</span>
         <span className="trilha-estado-andamento"><b>{resumo.emAndamento}</b> em andamento</span>
@@ -125,17 +161,45 @@ function ResumoVisualDaTrilha({ resumo }: { resumo: ResumoDaTrilha }) {
 
 function ListaDeCenarios({
   aulas,
+  fundamentos,
   aberta,
   id,
+  idDaTrilha,
   podeIniciar,
 }: {
-  aulas: CenarioDetalhado[]
+  aulas: CenarioResumo[]
+  fundamentos: FundamentosResumo | null
   aberta: boolean
   id: string
+  idDaTrilha: string
   podeIniciar: boolean
 }) {
   return (
-    <ol className="cenarios" id={id} hidden={!aberta}>
+    <div className={aberta ? 'cenarios-envelope' : 'cenarios-envelope cenarios-envelope-fechado'}>
+      <ol className="cenarios" id={id}>
+      {fundamentos && (
+        <li className={`cenario fundamentos-item cenario-${estadoDosFundamentos(fundamentos)}`}>
+          <span className="linha-progresso" aria-hidden="true" />
+          <MarcadorDeEstado estado={estadoDosFundamentos(fundamentos)} />
+          <a href={`#/trilhas/${idDaTrilha}/fundamentos`}>
+            <span className="cenario-numero">Fundamentos</span>
+            <span className="cenario-corpo">
+              <strong>{fundamentos.titulo}</strong>
+              <span className="cenario-meta">
+                <span className={`estado-texto estado-${estadoDosFundamentos(fundamentos)}`}>
+                  {rotulosEstado[estadoDosFundamentos(fundamentos)]}
+                </span>
+                <span aria-hidden="true">·</span>
+                <span>artigo + Questionário</span>
+                {fundamentos.tentativas > 0 && (
+                  <><span aria-hidden="true">·</span><span>melhor resultado {fundamentos.melhorPercentual}%</span></>
+                )}
+              </span>
+            </span>
+            <span className="cenario-seta" aria-hidden="true">→</span>
+          </a>
+        </li>
+      )}
       {aulas.map((cenario) => {
         const estado = estadoDoCenario(cenario)
         const conteudo = (
@@ -149,7 +213,7 @@ function ListaDeCenarios({
                 <span>{rotulosDificuldade[cenario.dificuldade]}</span>
                 <span aria-hidden="true">·</span>
                 <span>
-                  {cenario.asercoes.length} {cenario.asercoes.length === 1 ? 'verificação' : 'verificações'}
+                  {cenario.quantidadeDeAsercoes} {cenario.quantidadeDeAsercoes === 1 ? 'verificação' : 'verificações'}
                 </span>
                 {!podeIniciar && (
                   <><span aria-hidden="true">·</span><span>adira para iniciar</span></>
@@ -170,12 +234,13 @@ function ListaDeCenarios({
           </li>
         )
       })}
-    </ol>
+      </ol>
+    </div>
   )
 }
 
 export function Catalogo() {
-  const [cenarios, setCenarios] = useState<CenarioDetalhado[] | null>(null)
+  const [trilhas, setTrilhas] = useState<TrilhaResumo[] | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [trilhaAtual, setTrilhaAtual] = useState<string | null>(carregarTrilhaAtual)
@@ -185,7 +250,7 @@ export function Catalogo() {
   )
 
   useEffect(() => {
-    listarCenarios().then(setCenarios).catch((e) => setErro(String(e)))
+    listarTrilhas().then(setTrilhas).catch((e) => setErro(String(e)))
   }, [])
 
   if (erro) {
@@ -199,20 +264,19 @@ export function Catalogo() {
     )
   }
 
-  if (!cenarios) return <EstadoDeCarregamento />
+  if (!trilhas) return <EstadoDeCarregamento />
 
-  if (cenarios.length === 0) {
+  if (trilhas.length === 0) {
     return (
       <div className="estado-pagina">
         <span className="estado-icone" aria-hidden="true">＋</span>
         <strong>Seu catálogo ainda está vazio.</strong>
-        <span>Crie um Cenário em <code>content/</code> para começar.</span>
+        <span>Crie uma Trilha com <code>trilha.yaml</code> para começar.</span>
       </div>
     )
   }
 
-  const idsDasTrilhas = [...new Set(cenarios.map((cenario) => idDaTrilha(cenario.id)))]
-  const resumos = idsDasTrilhas.map((id) => resumirTrilha(id, cenarios))
+  const resumos = trilhas.map(resumirTrilha)
   const trilhasConcluidas = resumos.filter((resumo) => resumo.concluida)
   const trilhasDisponiveis = resumos.filter((resumo) => !resumo.concluida)
   const trilhaDoAmbienteAtivo = trilhasDisponiveis.find((resumo) =>
@@ -241,6 +305,13 @@ export function Catalogo() {
   ) ?? resumoDaTrilhaAtual?.aulas.find(
     (cenario) => estadoDoCenario(cenario) === 'nao-iniciado',
   ) ?? resumoDaTrilhaAtual?.aulas[0]
+  const fundamentosPendentes = resumoDaTrilhaAtual?.fundamentos
+    && resumoDaTrilhaAtual.fundamentos.estado !== 'CONCLUIDO'
+  const hrefDoFoco = fundamentosPendentes
+    ? `#/trilhas/${resumoDaTrilhaAtual?.id}/fundamentos`
+    : focoDaTrilhaAtual
+      ? `#/cenarios/${focoDaTrilhaAtual.id}`
+      : null
 
   function alterarTrilhasAbertas(transformar: (atuais: Set<string>) => Set<string>) {
     setTrilhasAbertas((atuais) => {
@@ -292,14 +363,17 @@ export function Catalogo() {
     <>
       <section className="hero-catalogo" aria-labelledby="titulo-catalogo">
         <div className="hero-texto">
-          <p className="terminal-label"><span aria-hidden="true">$</span> aprender fazendo</p>
           <h1 id="titulo-catalogo">Infraestrutura se aprende com a mão no terminal.</h1>
           <p className="hero-descricao">
             Escolha uma trilha, avance no seu ritmo e prove cada conceito no ambiente local.
           </p>
-          {focoDaTrilhaAtual ? (
-            <a className="botao botao-primario" href={`#/cenarios/${focoDaTrilhaAtual.id}`}>
-              {estadoDoCenario(focoDaTrilhaAtual) === 'andamento' ? 'Continuar Cenário' : 'Continuar trilha'}
+          {hrefDoFoco ? (
+            <a className="botao botao-primario" href={hrefDoFoco}>
+              {fundamentosPendentes
+                ? 'Começar pelos Fundamentos'
+                : focoDaTrilhaAtual && estadoDoCenario(focoDaTrilhaAtual) === 'andamento'
+                  ? 'Continuar Cenário'
+                  : 'Continuar trilha'}
               <span aria-hidden="true">→</span>
             </a>
           ) : (
@@ -316,11 +390,6 @@ export function Catalogo() {
 
         <div className="hero-visual" aria-hidden="true">
           <img src={hero} alt="" />
-          <div className="hero-comando">
-            <span>learning-infra</span>
-            <code><b>$</b> docker compose up</code>
-            <small><i /> ambiente pronto</small>
-          </div>
         </div>
       </section>
 
@@ -335,28 +404,18 @@ export function Catalogo() {
               <button type="button" onClick={() => rolarAte('titulo-trilhas')}>Trocar trilha</button>
               <p className="progresso-resumo">
                 <strong>{resumoDaTrilhaAtual.percentual}%</strong>
-                <span>{resumoDaTrilhaAtual.concluidas} de {resumoDaTrilhaAtual.aulas.length} concluídos</span>
+                <span>{resumoDaTrilhaAtual.concluidas} de {resumoDaTrilhaAtual.total} concluídos</span>
               </p>
             </div>
           </div>
 
-          <div
-            className="barra-cenarios"
-            aria-label={`${resumoDaTrilhaAtual.percentual}% da trilha ${resumoDaTrilhaAtual.nome} concluída`}
-          >
-            {resumoDaTrilhaAtual.aulas.map((cenario) => {
-              const estado = estadoDoCenario(cenario)
-              return (
-                <a
-                  href={`#/cenarios/${cenario.id}`}
-                  className={`segmento segmento-${estado}`}
-                  key={cenario.id}
-                  title={`${cenario.titulo}: ${rotulosEstado[estado]}`}
-                  aria-label={`${cenario.titulo}: ${rotulosEstado[estado]}`}
-                />
-              )
-            })}
-          </div>
+          <BarraDeProgressoLinear
+            grande
+            percentual={resumoDaTrilhaAtual.percentual}
+            emAndamento={resumoDaTrilhaAtual.emAndamento}
+            total={resumoDaTrilhaAtual.total}
+            rotulo={`${resumoDaTrilhaAtual.percentual}% da trilha ${resumoDaTrilhaAtual.nome} concluída`}
+          />
 
           <dl className="resumo-estados">
             <div className="resumo-concluido">
@@ -375,7 +434,6 @@ export function Catalogo() {
         </section>
       ) : (
         <section className="painel-progresso painel-sem-trilha" aria-labelledby="titulo-progresso">
-          <span className="painel-sem-trilha-prompt" aria-hidden="true">course.select()</span>
           <div>
             <p className="eyebrow">Seu roteiro</p>
             <h2 id="titulo-progresso">Escolha uma trilha para começar</h2>
@@ -420,7 +478,9 @@ export function Catalogo() {
             </div>
           ) : (
             trilhasDisponiveis.map((resumo) => {
-              const aulas = cenariosVisiveis.filter((cenario) => idDaTrilha(cenario.id) === resumo.id)
+              const aulas = resumo.aulas.filter((cenario) =>
+                cenariosVisiveis.some((visivel) => visivel.id === cenario.id),
+              )
               if (aulas.length === 0) return null
 
               const ehAtual = resumo.id === idDaTrilhaAtual
@@ -436,7 +496,13 @@ export function Catalogo() {
                   className={`trilha ${aberta ? '' : 'trilha-colapsada'} ${ehAtual ? 'trilha-atual' : ''}`}
                   aria-labelledby={idDoTitulo}
                 >
-                  <header className="trilha-cabecalho">
+                  <header
+                    className="trilha-cabecalho"
+                    onClick={(evento) => {
+                      if ((evento.target as HTMLElement).closest('button, a')) return
+                      alternarTrilha(resumo.id)
+                    }}
+                  >
                     <div className="trilha-identidade">
                       <span className="trilha-icone" aria-hidden="true">▣</span>
                       <div>
@@ -472,15 +538,30 @@ export function Catalogo() {
                         title={aberta ? 'Recolher aulas' : 'Mostrar aulas'}
                         onClick={() => alternarTrilha(resumo.id)}
                       >
-                        <span className="trilha-chevron" aria-hidden="true">⌄</span>
+                        <svg
+                          className="trilha-chevron"
+                          viewBox="0 0 16 16"
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 6.25l4 4 4-4" />
+                        </svg>
                       </button>
                     </div>
                   </header>
 
                   <ListaDeCenarios
                     aulas={aulas}
+                    fundamentos={filtro === 'todos' ? resumo.fundamentos : null}
                     aberta={aberta}
                     id={idDosCenarios}
+                    idDaTrilha={resumo.id}
                     podeIniciar={ehAtual}
                   />
                 </section>
@@ -502,14 +583,12 @@ export function Catalogo() {
           <div className="trilhas-concluidas-grade">
             {trilhasConcluidas.map((resumo) => (
               <article className="trilha-concluida" key={resumo.id}>
-                <div className="trilha-concluida-status">
-                  <code>exit 0</code>
-                  <span><i aria-hidden="true" /> concluída</span>
-                </div>
+                <span className="trilha-concluida-status"><i aria-hidden="true" /> Trilha concluída</span>
                 <h3>{resumo.nome}</h3>
-                <p>{resumo.aulas.length} Cenários aprovados</p>
-                <div className="trilha-concluida-linha" aria-hidden="true" />
-                <a href={`#/cenarios/${resumo.aulas[0].id}`}>Revisar conteúdo <span aria-hidden="true">→</span></a>
+                <p>{resumo.total} etapas concluídas</p>
+                <a href={resumo.fundamentos
+                  ? `#/trilhas/${resumo.id}/fundamentos`
+                  : `#/cenarios/${resumo.aulas[0].id}`}>Revisar conteúdo <span aria-hidden="true">→</span></a>
               </article>
             ))}
           </div>

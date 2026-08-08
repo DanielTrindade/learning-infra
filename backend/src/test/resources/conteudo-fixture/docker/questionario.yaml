@@ -1,0 +1,21 @@
+questoes:
+  - id: imagem-ou-container
+    enunciado: Qual objeto é usado como modelo para criar execuções?
+    alternativas:
+      - id: imagem
+        texto: A imagem
+      - id: container
+        texto: O container
+    alternativaCorreta: imagem
+    explicacao: A imagem é o modelo; o container é uma instância executável.
+    revisar: imagens-e-containers
+  - id: persistencia
+    enunciado: Onde ficam dados que precisam sobreviver à remoção do container?
+    alternativas:
+      - id: camada
+        texto: Apenas na camada gravável
+      - id: volume
+        texto: Em um volume
+    alternativaCorreta: volume
+    explicacao: Volumes têm ciclo de vida independente do container.
+    revisar: imagens-e-containers

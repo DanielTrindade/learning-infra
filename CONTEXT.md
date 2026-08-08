@@ -9,13 +9,23 @@ Usuário único: o autor.
 ### Conteúdo
 
 **Trilha**:
-Agrupamento sequencial de Cenários sobre uma mesma tecnologia. Exemplos: Docker,
-Kubernetes, AWS, IaC.
+Roteiro sequencial sobre uma mesma tecnologia, formado por seus Fundamentos e por
+uma sequência de Cenários. Exemplos: Docker, Kubernetes, AWS, IaC.
 _Avoid_: Módulo, curso, track
 
+**Fundamentos**:
+A abertura conceitual de uma Trilha. Reúne o texto que constrói o modelo mental e
+o Questionário que confirma a compreensão; não prepara nem altera ambiente local.
+_Avoid_: Artigo, aula teórica, introdução
+
+**Questionário**:
+A checagem formativa dos Fundamentos. Avalia decisões e conceitos, devolve feedback
+para revisão e pode ser refeita; não substitui uma Verificação prática.
+_Avoid_: Prova, teste teórico, quiz
+
 **Cenário**:
-A unidade atômica de conteúdo e a única coisa que aparece no catálogo. Contém o
-texto didático e os exercícios verificáveis no mesmo documento, e carrega uma
+A unidade prática de uma Trilha. Contém o texto didático e os exercícios
+verificáveis no mesmo documento, prepara um ambiente local e carrega uma
 Dificuldade.
 _Avoid_: Aula, aula-tutorial, lição, lab, laboratório, exercício, cenário-exercício
 

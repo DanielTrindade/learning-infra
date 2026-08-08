@@ -7,6 +7,7 @@ import {
   type CenarioDetalhado,
   type ResultadoDaVerificacao,
 } from './api'
+import { BlocoDeCodigo, IconeCheck, IconeCopiar } from './BlocoDeCodigo'
 import { ChecklistDeVerificacao } from './ChecklistDeVerificacao'
 import {
   estadoDoCenario,
@@ -194,7 +195,15 @@ export function PaginaDoCenario({ id }: { id: string }) {
               <div className="diretorio">
                 <span>Diretório de trabalho</span>
                 <code>{diretorio}</code>
-                <button type="button" onClick={copiarDiretorio}>
+                <button
+                  type="button"
+                  className={diretorioCopiado ? 'copiar-caminho copiado' : 'copiar-caminho'}
+                  onClick={copiarDiretorio}
+                >
+                  <span className="copiar-caminho-icones" aria-hidden="true">
+                    <IconeCopiar />
+                    <IconeCheck />
+                  </span>
                   {diretorioCopiado ? 'Copiado' : 'Copiar caminho'}
                 </button>
               </div>
@@ -237,6 +246,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
             components={{
               h1: () => null,
               h2: ({ children }) => <h2 id={slugificar(textoDoNo(children))}>{children}</h2>,
+              pre: ({ children }) => <BlocoDeCodigo>{children}</BlocoDeCodigo>,
             }}
           >
             {cenario.markdown}

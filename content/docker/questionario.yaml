@@ -1,0 +1,156 @@
+questoes:
+  - id: imagem-ou-container
+    enunciado: Uma equipe precisa criar vinte execuções idênticas de uma aplicação. Qual objeto deve ser versionado e usado como modelo?
+    alternativas:
+      - id: imagem
+        texto: A imagem, porque é o artefato somente leitura usado para criar containers.
+      - id: container
+        texto: Um container já iniciado, porque ele é o modelo imutável.
+      - id: volume
+        texto: Um volume, porque ele contém runtime e bibliotecas.
+    alternativaCorreta: imagem
+    explicacao: A imagem é o artefato construído e distribuído; cada container é uma instância configurada dessa imagem.
+    revisar: imagens-containers-e-camadas
+
+  - id: cliente-e-daemon
+    enunciado: Ao executar docker run, qual fluxo descreve melhor o que acontece?
+    alternativas:
+      - id: cli-cria-processo
+        texto: A CLI cria diretamente namespaces e cgroups sem falar com outro processo.
+      - id: cli-chama-api
+        texto: A CLI chama a API; o daemon coordena imagens, rede e o runtime do container.
+      - id: registry-executa
+        texto: O registry recebe o comando e executa a aplicação remotamente.
+    alternativaCorreta: cli-chama-api
+    explicacao: A arquitetura é cliente-servidor. A CLI envia a intenção pela API e o dockerd coordena a execução.
+    revisar: como-o-docker-funciona
+
+  - id: container-versus-vm
+    enunciado: Por que um container Linux normalmente inicia mais rápido que uma máquina virtual completa?
+    alternativas:
+      - id: sem-kernel-proprio
+        texto: Ele executa processos isolados compartilhando o kernel Linux disponível, em vez de iniciar um kernel próprio.
+      - id: sem-isolamento
+        texto: Ele não oferece nenhum tipo de isolamento entre processos.
+      - id: codigo-compilado
+        texto: Todo código dentro de containers é compilado para linguagem de máquina.
+    alternativaCorreta: sem-kernel-proprio
+    explicacao: Containers isolam processos com recursos do kernel compartilhado. No Docker Desktop, esse kernel pode estar em uma VM gerenciada.
+    revisar: containers-e-maquinas-virtuais
+
+  - id: camadas-e-cache
+    enunciado: Um Dockerfile copia todo o repositório antes de instalar dependências. Qual é o efeito provável ao editar apenas o README?
+    alternativas:
+      - id: cache-preservado
+        texto: Todas as etapas seguintes continuam no cache porque o README não é executável.
+      - id: cache-invalidado
+        texto: A cópia muda e pode invalidar a instalação e as etapas seguintes, tornando o build mais lento.
+      - id: imagem-mutada
+        texto: O container em execução recebe automaticamente a nova camada.
+    alternativaCorreta: cache-invalidado
+    explicacao: A alteração muda a etapa COPY; etapas dependentes precisam ser reconstruídas. Ordene cópias e use .dockerignore para preservar cache útil.
+    revisar: imagens-containers-e-camadas
+
+  - id: processo-principal
+    enunciado: Um script inicia a aplicação em background e termina imediatamente. O que tende a acontecer com o container?
+    alternativas:
+      - id: continua
+        texto: Ele continua enquanto qualquer processo em background existir.
+      - id: para
+        texto: Ele para porque o processo principal terminou.
+      - id: reinicia-imagem
+        texto: Ele reconstrói a imagem e tenta iniciar novamente por padrão.
+    alternativaCorreta: para
+    explicacao: O ciclo de vida do container acompanha seu processo principal. A aplicação deve permanecer em primeiro plano e tratar sinais corretamente.
+    revisar: processos-isolamento-e-limites
+
+  - id: segredo-em-arg-ou-env
+    enunciado: A equipe precisa usar um token privado durante o build. Por que ARG ou ENV não resolvem o problema com segurança?
+    alternativas:
+      - id: nao-aceitam-texto
+        texto: ARG e ENV aceitam apenas números.
+      - id: podem-vazar
+        texto: O valor pode permanecer em metadados, histórico, cache ou camadas da imagem.
+      - id: so-funcionam-compose
+        texto: Essas instruções funcionam somente com Docker Compose.
+    alternativaCorreta: podem-vazar
+    explicacao: Use secret mounts do BuildKit e não grave credenciais no artefato. ARG e ENV são configuração, não cofres.
+    revisar: imagens-containers-e-camadas
+
+  - id: expose-versus-publicacao
+    enunciado: Uma imagem declara EXPOSE 8080, mas docker run não usa -p. A aplicação ficará acessível em localhost:8080?
+    alternativas:
+      - id: sim
+        texto: Sim, EXPOSE publica a porta automaticamente em todas as interfaces.
+      - id: nao
+        texto: Não. EXPOSE documenta a porta; a publicação no host é uma configuração separada.
+      - id: somente-root
+        texto: Apenas se o processo do container executar como root.
+    alternativaCorreta: nao
+    explicacao: EXPOSE expressa intenção na imagem. Para criar o caminho host–container, publique a porta explicitamente.
+    revisar: rede-e-publicacao-de-portas
+
+  - id: camada-ou-volume
+    enunciado: Um banco deve manter dados depois que seu container for removido e recriado. Onde os arquivos devem ficar?
+    alternativas:
+      - id: camada-gravavel
+        texto: Apenas na camada gravável do container.
+      - id: volume
+        texto: Em um volume ou mount com ciclo de vida independente do container.
+      - id: tag
+        texto: Na tag usada para identificar a imagem.
+    alternativaCorreta: volume
+    explicacao: A camada gravável desaparece com o container. Volumes e bind mounts mantêm os dados fora desse ciclo de vida.
+    revisar: volumes-e-persistencia
+
+  - id: running-versus-ready
+    enunciado: A API inicia quando o processo do banco existe, mas falha porque o banco ainda recupera dados. Qual mudança modela melhor essa dependência?
+    alternativas:
+      - id: apenas-depends-on
+        texto: Usar somente a forma curta de depends_on, pois ordem de início prova prontidão.
+      - id: healthcheck-e-retry
+        texto: Definir um healthcheck real, aguardar service_healthy e manter retries na aplicação.
+      - id: restart-always
+        texto: Reiniciar todos os serviços a cada segundo sem verificar saúde.
+    alternativaCorreta: healthcheck-e-retry
+    explicacao: Running indica processo existente, não serviço pronto. Healthcheck melhora a partida; retries cobrem falhas posteriores.
+    revisar: compose-rodando-nao-significa-pronto
+
+  - id: tag-versus-digest
+    enunciado: Uma implantação precisa repetir exatamente a imagem aprovada ontem. Qual referência oferece a garantia mais forte?
+    alternativas:
+      - id: latest
+        texto: A tag latest, porque nunca muda depois do primeiro push.
+      - id: tag-versao
+        texto: Qualquer tag, porque registries impedem que ela seja atualizada.
+      - id: digest
+        texto: O digest do conteúdo aprovado.
+    alternativaCorreta: digest
+    explicacao: Tags são ponteiros mutáveis. O digest identifica o conteúdo e permite fixar ou reverter para o artefato exato.
+    revisar: construir-publicar-e-executar
+
+  - id: root-e-isolamento
+    enunciado: Um serviço não precisa de privilégios especiais. Qual configuração reduz melhor o impacto de uma falha?
+    alternativas:
+      - id: privilegiado
+        texto: Executar como root com --privileged para evitar erros de permissão.
+      - id: socket
+        texto: Montar o socket do Docker para o serviço corrigir sua própria configuração.
+      - id: minimo-privilegio
+        texto: Usar usuário não-root, capabilities mínimas e filesystem somente leitura quando possível.
+    alternativaCorreta: minimo-privilegio
+    explicacao: Containers compartilham kernel; privilégios excessivos ampliam o impacto. Aplique mínimo privilégio e evite o socket do daemon.
+    revisar: processos-isolamento-e-limites
+
+  - id: papel-do-registry
+    enunciado: A imagem foi testada no CI e precisa chegar de forma consistente a outras máquinas. Qual é o papel do registry?
+    alternativas:
+      - id: armazenar-distribuir
+        texto: Armazenar e distribuir imagens identificadas por repositório, tag e digest.
+      - id: orquestrar-processos
+        texto: Criar namespaces e cgroups para cada processo em execução.
+      - id: persistir-banco
+        texto: Substituir volumes e guardar os dados graváveis dos containers.
+    alternativaCorreta: armazenar-distribuir
+    explicacao: O registry recebe push e atende pull de imagens. A execução e os dados persistentes pertencem a outros componentes.
+    revisar: como-o-docker-funciona

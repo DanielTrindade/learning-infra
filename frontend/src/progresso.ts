@@ -1,4 +1,4 @@
-import type { CenarioDetalhado, Dificuldade } from './api'
+import type { Dificuldade } from './api'
 
 export type EstadoDoCenario = 'concluido' | 'andamento' | 'nao-iniciado'
 
@@ -17,7 +17,7 @@ export const rotulosEstado: Record<EstadoDoCenario, string> = {
   'nao-iniciado': 'Não iniciado',
 }
 
-export function estadoDoCenario(cenario: CenarioDetalhado): EstadoDoCenario {
+export function estadoDoCenario(cenario: { concluido: boolean; ativo: boolean }): EstadoDoCenario {
   if (cenario.concluido) return 'concluido'
   if (cenario.ativo) return 'andamento'
   return 'nao-iniciado'

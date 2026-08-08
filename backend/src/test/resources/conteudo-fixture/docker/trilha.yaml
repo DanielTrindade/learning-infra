@@ -1,0 +1,7 @@
+id: docker
+titulo: Docker
+fundamentos:
+  titulo: Fundamentos do Docker
+  artigo: fundamentos.md
+  questionario: questionario.yaml
+  aproveitamentoMinimo: 80
