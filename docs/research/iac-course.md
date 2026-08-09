@@ -265,3 +265,14 @@ ganha valor didático em três frentes que nenhuma das anteriores cobriu:
 3. o mesmo HCL atravessando três substratos com fidelidades diferentes, terminando com
    o inventário explícito do que foi provado localmente e do que ainda exige uma conta
    sandbox AWS.
+
+## Validação executada em 2026-08-09
+
+| Premissa | Resultado |
+|---|---|
+| `terraform version` | v1.15.8 |
+| `provider "docker" {}` sem `host` no Windows | funcionou |
+| `apply` de imagem e container | 2 added |
+| segundo `plan -detailed-exitcode` | exit code 0 |
+| duração do `plan` | 1.9293977 s (`TotalSeconds`) |
+| formato de `state show` | `    name                                        = "validacao-iac-web"` |
