@@ -107,7 +107,7 @@ Remove-Item -Recurse -Force $lab -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $lab | Out-Null
 @'
 terraform {
-  required_version = "~> 1.15"
+  required_version = "= 1.15.8"
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"
@@ -1041,7 +1041,7 @@ titulo: Infraestrutura como Código
 
 ```hcl
 terraform {
-  required_version = "~> 1.15"
+  required_version = "= 1.15.8"
 
   required_providers {
     docker = {
@@ -1277,7 +1277,7 @@ Na lista de "Antes de começar", depois da linha da AWS CLI:
 ```markdown
 - **Terraform 1.15.8.** Necessário apenas para a Trilha IaC; confirme com
   `terraform version`. A versão é fixa porque o conteúdo declara
-  `required_version = "~> 1.15"` e o plano exibido muda entre versões do provider.
+  `required_version = "= 1.15.8"` e o plano exibido muda entre versões do provider.
 ```
 
 - [ ] **Step 2: Acrescentar a seção de preparo**

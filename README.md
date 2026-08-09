@@ -16,7 +16,7 @@ Não há terminal embutido, e isso é decisão de projeto — veja
 - **AWS CLI v2.** Necessária apenas para a Trilha AWS; confirme com `aws --version`.
 - **Terraform 1.15.8.** Necessário apenas para a Trilha IaC; confirme com
   `terraform version`. A versão é fixa porque o conteúdo declara
-  `required_version = "~> 1.15"` e o plano exibido muda entre versões do provider.
+  `required_version = "= 1.15.8"` e o plano exibido muda entre versões do provider.
 
 ### Preparando a Trilha Kubernetes
 

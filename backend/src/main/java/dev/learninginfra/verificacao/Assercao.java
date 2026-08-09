@@ -153,6 +153,13 @@ public sealed interface Assercao {
             String atributo,
             String esperado,
             String descricao) implements Assercao {
+
+        public TerraformEstado {
+            if ((atributo == null) != (esperado == null)) {
+                throw new IllegalArgumentException(
+                        "atributo e esperado devem ser informados juntos em terraform_estado");
+            }
+        }
     }
 
     /**

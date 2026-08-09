@@ -492,4 +492,50 @@ class LeitorDeCenarioTest {
 
         assertTrue(erro.getMessage().contains("terraform: true"));
     }
+
+    @Test
+    void terraformEstadoComEsperadoExigeAtributo() throws Exception {
+        escreverCenarioTerraform();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: terraform_estado
+                    endereco: docker_container.web
+                    esperado: mirante-web
+                    descricao: o container está sob gestão do Terraform
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("atributo e esperado"));
+    }
+
+    @Test
+    void terraformEstadoComAtributoExigeEsperado() throws Exception {
+        escreverCenarioTerraform();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: terraform_estado
+                    endereco: docker_container.web
+                    atributo: name
+                    descricao: o container está sob gestão do Terraform
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("atributo e esperado"));
+    }
+
+    private void escreverCenarioTerraform() throws Exception {
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: iac/01-primeiro-apply
+                titulo: Primeiro apply
+                dificuldade: guiado
+                terraform: true
+                ---
+                # Primeiro apply
+                """);
+    }
 }
