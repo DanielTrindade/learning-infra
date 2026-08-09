@@ -27,8 +27,11 @@ class CatalogoRealTest {
         var docker = cenarios.stream()
                 .filter(cenario -> cenario.id().startsWith("docker/"))
                 .toList();
+        var iac = cenarios.stream()
+                .filter(cenario -> cenario.id().startsWith("iac/"))
+                .toList();
 
-        assertThat(cenarios).hasSize(43);
+        assertThat(cenarios).hasSize(44);
         assertThat(kubernetes).hasSize(14);
         assertThat(kubernetes).allMatch(Cenario::usaKubernetes);
         assertThat(kubernetes.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
@@ -41,10 +44,14 @@ class CatalogoRealTest {
         assertThat(docker).allMatch(Cenario::usaDocker);
         assertThat(docker.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
                 .isEqualTo(56);
+        assertThat(iac).hasSize(1);
+        assertThat(iac).allMatch(Cenario::terraform);
+        assertThat(iac.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
+                .isEqualTo(4);
     }
 
     @Test
-    void carregaTresTrilhasComFundamentosPublicadosSomenteEmDocker() {
+    void carregaQuatroTrilhasComFundamentosPublicadosNasTresPrimeiras() {
         Path conteudo = localizarConteudo();
         var cenarios = new RepositorioDeCenarios(
                 conteudo.toString(), new LeitorDeCenario());
@@ -57,7 +64,8 @@ class CatalogoRealTest {
         var trilhas = catalogo.listar();
 
         assertThat(trilhas).extracting(trilha -> trilha.id())
-                .containsExactly("aws", "docker", "kubernetes");
+                .containsExactly("aws", "docker", "iac", "kubernetes");
+        assertThat(catalogo.buscar("iac").orElseThrow().fundamentos()).isNull();
         assertThat(catalogo.buscar("docker").orElseThrow().fundamentos())
                 .satisfies(fundamentos -> {
                     assertThat(fundamentos.questionario().questoes()).hasSize(12);
