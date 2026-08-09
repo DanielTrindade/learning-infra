@@ -454,14 +454,14 @@ de candidatos é `container_saudavel`, `container_em_rede`, `container_configura
 
 O recurso não termina quando Docker estiver pronto:
 
-1. **Kubernetes:** pesquisar e escrever Fundamentos sobre estado desejado, control plane,
-   reconciliação, objetos, scheduling, rede e persistência; criar 12 questões no mesmo
-   formato e acrescentar as referências ao `content/kubernetes/trilha.yaml`.
-2. **AWS:** escrever Fundamentos sobre responsabilidade compartilhada, regiões e zonas,
-   IAM, APIs, control plane versus data plane, custo e guardrails do MiniStack; criar o
-   Questionário e atualizar `content/aws/trilha.yaml`.
-3. **IaC e futuras Trilhas:** criar `trilha.yaml`, Fundamentos e Questionário usando o
-   mesmo contrato, sem novos endpoints ou componentes por tecnologia.
+- [x] **Kubernetes:** pesquisar e escrever Fundamentos sobre estado desejado, control
+  plane, reconciliação, objetos, scheduling, rede e persistência; criar 12 questões no
+  mesmo formato e acrescentar as referências ao `content/kubernetes/trilha.yaml`.
+- [x] **AWS:** escrever Fundamentos sobre responsabilidade compartilhada, regiões e
+  zonas, IAM, APIs, control plane versus data plane, custo e guardrails do MiniStack;
+  criar o Questionário e atualizar `content/aws/trilha.yaml`.
+- [ ] **IaC e futuras Trilhas:** criar `trilha.yaml`, Fundamentos e Questionário usando
+  o mesmo contrato, sem novos endpoints ou componentes por tecnologia.
 
 Cada adoção futura é conteúdo e validação curricular. Se exigir mudança no contrato
 genérico, o desenho do piloto falhou e deve ser revisto antes de duplicar exceções.
@@ -469,8 +469,7 @@ genérico, o desenho do piloto falhou e deve ser revisto antes de duplicar exce�
 ## Critérios de conclusão da feature
 
 - Todas as Trilhas são descobertas por `trilha.yaml`.
-- Docker oferece Fundamentos e Questionário completos.
-- Kubernetes e AWS continuam funcionais sem conteúdo teórico durante a migração.
+- Docker, Kubernetes e AWS oferecem Fundamentos e Questionário completos.
 - O gabarito não aparece em nenhuma resposta anterior à submissão.
 - Progresso antigo carrega sem perda e o novo progresso persiste tentativas e aprovação.
 - Fundamentos contam no progresso, mas nunca alteram ou bloqueiam Cenários.

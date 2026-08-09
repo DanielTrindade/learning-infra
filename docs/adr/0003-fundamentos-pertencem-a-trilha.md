@@ -23,7 +23,7 @@ Cenários.
   ids dos Cenários.
 - Fundamentos contam no progresso quando estiverem disponíveis, mas não alteram o
   Cenário Ativo.
-- O contrato será único para todas as Trilhas. Docker será a primeira implementação de
-  conteúdo; Kubernetes, AWS e futuras Trilhas adotarão a mesma estrutura depois.
+- O contrato é único para todas as Trilhas. Docker, Kubernetes e AWS usam a mesma
+  estrutura; futuras Trilhas devem adotá-la sem criar endpoints por tecnologia.
 - Durante a migração, uma Trilha pode existir sem Fundamentos publicados e continuar
   funcionando somente com seus Cenários.

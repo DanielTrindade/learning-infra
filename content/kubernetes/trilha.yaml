@@ -1,2 +1,7 @@
 id: kubernetes
 titulo: Kubernetes
+fundamentos:
+  titulo: Fundamentos do Kubernetes
+  artigo: fundamentos.md
+  questionario: questionario.yaml
+  aproveitamentoMinimo: 80

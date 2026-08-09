@@ -71,8 +71,16 @@ class CatalogoRealTest {
                     assertThat(fundamentos.questionario().questoes()).hasSize(12);
                     assertThat(fundamentos.markdown()).contains("## Como o Docker funciona");
                 });
-        assertThat(catalogo.buscar("aws").orElseThrow().fundamentos()).isNull();
-        assertThat(catalogo.buscar("kubernetes").orElseThrow().fundamentos()).isNull();
+        assertThat(catalogo.buscar("kubernetes").orElseThrow().fundamentos())
+                .satisfies(fundamentos -> {
+                    assertThat(fundamentos.questionario().questoes()).hasSize(12);
+                    assertThat(fundamentos.markdown()).contains("## Estado desejado e reconciliação");
+                });
+        assertThat(catalogo.buscar("aws").orElseThrow().fundamentos())
+                .satisfies(fundamentos -> {
+                    assertThat(fundamentos.questionario().questoes()).hasSize(12);
+                    assertThat(fundamentos.markdown()).contains("## Responsabilidade compartilhada");
+                });
     }
 
     private Path localizarConteudo() {
