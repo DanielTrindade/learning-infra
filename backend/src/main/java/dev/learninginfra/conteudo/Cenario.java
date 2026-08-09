@@ -20,7 +20,9 @@ public record Cenario(
         String manifestosIniciais,
         boolean ministack,
         boolean infraestruturaRealAws,
-        String inicializacaoAws) {
+        String inicializacaoAws,
+        boolean terraform,
+        String diretorioTerraform) {
 
     /** Cenário sem projeto Compose e sem volumes — a maioria. */
     public Cenario(String id, String titulo, Dificuldade dificuldade, List<String> containers,
@@ -52,6 +54,17 @@ public record Cenario(
         this(id, titulo, dificuldade, containers, markdown, diretorio, asercoes, projetoCompose,
                 volumes, contextoKubernetes, namespaceKubernetes, manifestosIniciais,
                 false, false, null);
+    }
+
+    /** Compatibilidade para Cenários anteriores à Trilha IaC. */
+    public Cenario(String id, String titulo, Dificuldade dificuldade, List<String> containers,
+                   String markdown, Path diretorio, List<Assercao> asercoes, String projetoCompose,
+                   List<String> volumes, String contextoKubernetes, String namespaceKubernetes,
+                   String manifestosIniciais, boolean ministack, boolean infraestruturaRealAws,
+                   String inicializacaoAws) {
+        this(id, titulo, dificuldade, containers, markdown, diretorio, asercoes, projetoCompose,
+                volumes, contextoKubernetes, namespaceKubernetes, manifestosIniciais,
+                ministack, infraestruturaRealAws, inicializacaoAws, false, null);
     }
 
     public boolean usaCompose() {

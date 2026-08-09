@@ -36,6 +36,12 @@ public class LeitorDeCenario {
         String inicializacaoAws = textoOpcional(meta, "inicializacaoAws");
         validarMetadadosAws(
                 ministack, infraestruturaRealAws, inicializacaoAws, diretorioDoCenario);
+        boolean terraform = booleanoOpcional(meta, "terraform");
+        String diretorioTerraform = textoOpcional(meta, "diretorioTerraform");
+        validarMetadadosTerraform(terraform, diretorioTerraform, diretorioDoCenario);
+        if (terraform && diretorioTerraform == null) {
+            diretorioTerraform = ".";
+        }
         List<Assercao> asercoes = lerAsercoes(
                 diretorioDoCenario.resolve("verificacao.yaml"),
                 contextoKubernetes,
@@ -57,7 +63,9 @@ public class LeitorDeCenario {
                 manifestosIniciais,
                 ministack,
                 infraestruturaRealAws,
-                inicializacaoAws);
+                inicializacaoAws,
+                terraform,
+                diretorioTerraform);
     }
 
     private void validarMetadadosAws(
@@ -65,6 +73,31 @@ public class LeitorDeCenario {
         if (!ministack && (infraestruturaReal || inicializacao != null)) {
             throw new IllegalArgumentException(
                     "infraestruturaRealAws e inicializacaoAws exigem ministack: true em " + diretorio);
+        }
+    }
+
+    /**
+     * O diretório do Terraform é relativo ao diretório de trabalho e nunca escapa dele.
+     * A checagem é textual porque o caminho vem do conteúdo, e um `Path` absoluto no
+     * Windows pode não parecer absoluto para o Java quando começa só com barra.
+     */
+    private void validarMetadadosTerraform(
+            boolean terraform, String diretorioTerraform, Path diretorio) {
+        if (!terraform && diretorioTerraform != null) {
+            throw new IllegalArgumentException(
+                    "diretorioTerraform exige terraform: true em " + diretorio);
+        }
+        if (diretorioTerraform == null) {
+            return;
+        }
+        boolean absoluto = diretorioTerraform.startsWith("/")
+                || diretorioTerraform.startsWith("\\")
+                || diretorioTerraform.matches("(?i)^[a-z]:.*");
+        boolean escapa = Path.of(diretorioTerraform).normalize().startsWith("..");
+        if (absoluto || escapa) {
+            throw new IllegalArgumentException(
+                    "diretorioTerraform deve ser relativo ao workspace e não pode escapar dele em "
+                            + diretorio);
         }
     }
 

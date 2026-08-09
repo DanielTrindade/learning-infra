@@ -365,4 +365,84 @@ class LeitorDeCenarioTest {
         var erro = assertThrows(IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
         assertTrue(erro.getMessage().contains("container_falando_grego"));
     }
+
+    @Test
+    void cenarioSemTerraformNaoDeclaraDiretorio() throws Exception {
+        escreverCenarioCompleto();
+
+        Cenario cenario = new LeitorDeCenario().ler(diretorio);
+
+        assertFalse(cenario.terraform());
+        assertNull(cenario.diretorioTerraform());
+    }
+
+    @Test
+    void terraformSemDiretorioUsaARaizDoWorkspace() throws Exception {
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: iac/01-primeiro-apply
+                titulo: Primeiro apply
+                dificuldade: guiado
+                terraform: true
+                ---
+                # Primeiro apply
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: container_rodando
+                    nome: mirante-web
+                """);
+
+        Cenario cenario = new LeitorDeCenario().ler(diretorio);
+
+        assertTrue(cenario.terraform());
+        assertEquals(".", cenario.diretorioTerraform());
+    }
+
+    @Test
+    void diretorioTerraformExigeTerraformLigado() throws Exception {
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: iac/01-primeiro-apply
+                titulo: Primeiro apply
+                dificuldade: guiado
+                diretorioTerraform: infra
+                ---
+                # Primeiro apply
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: container_rodando
+                    nome: mirante-web
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("terraform: true"));
+    }
+
+    @Test
+    void diretorioTerraformNaoPodeEscaparDoWorkspace() throws Exception {
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: iac/01-primeiro-apply
+                titulo: Primeiro apply
+                dificuldade: guiado
+                terraform: true
+                diretorioTerraform: ../fora
+                ---
+                # Primeiro apply
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: container_rodando
+                    nome: mirante-web
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("relativo"));
+    }
 }
