@@ -89,6 +89,7 @@ public class MotorDeVerificacao {
             case Assercao.KubernetesRbac a -> avaliarRbacKubernetes(a);
             case Assercao.AwsConsulta a -> avaliarConsultaAws(a);
             case Assercao.TerraformEstado a -> avaliarEstadoTerraform(a);
+            case Assercao.TerraformPlanoLimpo a -> avaliarPlanoTerraform(a);
         };
     }
 
@@ -117,6 +118,31 @@ public class MotorDeVerificacao {
                 ? ResultadoDeAsercao.aprovada(a)
                 : ResultadoDeAsercao.reprovada(a,
                         "`" + a.atributo() + "` no state é `" + observado + "`");
+    }
+
+    /**
+     * O `-detailed-exitcode` separa três desfechos que um booleano confundiria: 0 é
+     * convergido, 2 é divergente e qualquer outro é falha de execução. O `-lock=false`
+     * evita reprovar por causa de um lock esquecido: planejar aqui é leitura, não
+     * mutação.
+     */
+    private ResultadoDeAsercao avaliarPlanoTerraform(Assercao.TerraformPlanoLimpo a) {
+        Path diretorio = diretorioDoTerraform(a.diretorio());
+        if (diretorio == null) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "o Cenário aponta para fora do diretório de trabalho");
+        }
+        SaidaDeComando saida = executor.executar(List.of(
+                "terraform", "-chdir=" + diretorio, "plan",
+                "-detailed-exitcode", "-input=false", "-no-color", "-lock=false"));
+        return switch (saida.codigoDeSaida()) {
+            case 0 -> ResultadoDeAsercao.aprovada(a);
+            case 2 -> ResultadoDeAsercao.reprovada(a,
+                    "ainda há mudanças pendentes — código e realidade divergem");
+            default -> ResultadoDeAsercao.reprovada(a,
+                    "não consegui planejar — confirme que você rodou `terraform init` neste "
+                    + "diretório: " + ultimoDetalhe(saida));
+        };
     }
 
     /**

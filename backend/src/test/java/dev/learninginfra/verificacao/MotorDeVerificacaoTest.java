@@ -517,4 +517,33 @@ class MotorDeVerificacaoTest {
         assertFalse(resultado.concluido());
         assertTrue(resultado.asercoes().getFirst().detalhe().contains("fora do diretório"));
     }
+
+    @Test
+    void planoLimpoPassaQuandoOTerraformNaoTemMudancaPendente() {
+        var resultado = motorComTrabalho("No changes.", 0, "../work")
+                .verificar(List.of(new Assercao.TerraformPlanoLimpo(
+                        ".", "o código descreve a infraestrutura que está no ar")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void planoComMudancaPendenteFalhaFalandoEmDivergencia() {
+        var resultado = motorComTrabalho("Plan: 1 to add, 0 to change, 0 to destroy.", 2, "../work")
+                .verificar(List.of(new Assercao.TerraformPlanoLimpo(
+                        ".", "o código descreve a infraestrutura que está no ar")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("divergem"));
+    }
+
+    @Test
+    void planoQueNemRodaOrientaARodarInit() {
+        var resultado = motorComTrabalho("", 1, "../work")
+                .verificar(List.of(new Assercao.TerraformPlanoLimpo(
+                        ".", "o código descreve a infraestrutura que está no ar")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("terraform init"));
+    }
 }

@@ -154,4 +154,12 @@ public sealed interface Assercao {
             String esperado,
             String descricao) implements Assercao {
     }
+
+    /**
+     * O `plan` não encontra nenhuma mudança pendente. É a Asserção que distingue uma
+     * infraestrutura descrita por código de uma infraestrutura construída à mão: prova
+     * idempotência e ausência de drift numa afirmação só.
+     */
+    record TerraformPlanoLimpo(String diretorio, String descricao) implements Assercao {
+    }
 }

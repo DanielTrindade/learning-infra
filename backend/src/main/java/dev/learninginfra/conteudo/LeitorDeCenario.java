@@ -244,6 +244,12 @@ public class LeitorDeCenario {
                         textoOpcional(item, "esperado"),
                         exigirTexto(item, "descricao"));
             }
+            case "terraform_plano_limpo" -> {
+                exigirTerraform(diretorioTerraform, tipo, arquivo);
+                yield new Assercao.TerraformPlanoLimpo(
+                        diretorioTerraform,
+                        exigirTexto(item, "descricao"));
+            }
             default -> throw new IllegalArgumentException(
                     "tipo de asserção desconhecido: " + tipo + " em " + arquivo);
         };
