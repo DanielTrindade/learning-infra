@@ -14,6 +14,9 @@ Não há terminal embutido, e isso é decisão de projeto — veja
 - **Java 25.** O Maven vem pelo wrapper (`./mvnw`), não precisa instalar.
 - **Node 22+.**
 - **AWS CLI v2.** Necessária apenas para a Trilha AWS; confirme com `aws --version`.
+- **Terraform 1.15.8.** Necessário apenas para a Trilha IaC; confirme com
+  `terraform version`. A versão é fixa porque o conteúdo declara
+  `required_version = "~> 1.15"` e o plano exibido muda entre versões do provider.
 
 ### Preparando a Trilha Kubernetes
 
@@ -59,6 +62,23 @@ Mesmo com esse ambiente, todos os comandos da aula trazem
 impede a AWS CLI de atingir uma conta real. As credenciais sintéticas mantêm as
 requisições assinadas para o MiniStack distinguir serviços REST com rotas parecidas,
 como ECS e EKS, sem reutilizar nenhuma identidade real da máquina.
+
+### Preparando a Trilha IaC
+
+Instale o Terraform 1.15.8 e confirme que ele está no PATH:
+
+```powershell
+terraform version
+```
+
+Nada mais precisa ser preparado. Os primeiros Cenários usam o provider
+`kreuzwerker/docker`, que no Windows encontra sozinho o named pipe do Docker Desktop —
+`provider "docker" {}` sem argumento nenhum funciona. Os Cenários finais reusam o cluster
+`docker-desktop` da Trilha Kubernetes e o MiniStack da Trilha AWS, que você já preparou.
+
+A Verificação nunca roda `apply`, `destroy` ou `init` por você: ela só observa o state e
+pede um `plan`. Se uma Asserção de Terraform reclamar que não conseguiu planejar,
+confirme que você rodou `terraform init` no diretório de trabalho.
 
 O emulador oferece fidelidades diferentes, e a trilha as trata explicitamente:
 
@@ -146,6 +166,12 @@ A expansão prática de Docker foi implementada e está no catálogo, nos Cenár
 A segunda rodada de conteúdo avançado — CI/CD, scan, SBOM e cadeia de fornecimento —
 permanece planejada, mas não bloqueia a expansão atual.
 
+A quarta Trilha, **Infraestrutura como Código**, está em construção. O estudo de
+ferramental está em [`docs/research/iac-course.md`](docs/research/iac-course.md) e o
+desenho completo — Fundamentos e 18 Cenários em quatro atos — em
+[`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
+Esta etapa entregou a plataforma de verificação e o Cenário 01.
+
 ## O que a plataforma mexe na sua máquina
 
 | Caminho | O que é |
@@ -184,6 +210,7 @@ descartável) e o Cenário 11 usa a **9098** para a porta que o `db` expõe inde
 no estado quebrado. A Trilha AWS usa **4566** (MiniStack), **18080–18081** (tasks ECS),
 **15432+** (RDS) e **16443+** (EKS/k3s). O backend fica na **8099** e o frontend na
 **5180**.
+A Trilha IaC usa o bloco **8070–8079**, começando pela **8070** no Cenário 01.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está
@@ -243,7 +270,8 @@ Cenário continua sendo um diretório em `content/<trilha>/<slug>/`:
   não se repetem em cada Asserção. Conditions e JSONPath esperam convergência por até
   dez segundos por padrão, em vez de depender de um `sleep` fixo. Para AWS há
   `aws_consulta`: o endpoint local, região e credenciais sintéticas são injetados pelo
-  backend e não podem ser substituídos no conteúdo.
+  backend e não podem ser substituídos no conteúdo. Para IaC há também
+  `terraform_estado` e `terraform_plano_limpo`.
 - `workspace/` — opcional. Copiado para `work/` no Iniciar. Se contiver um
   `compose.yaml` **e** o Cenário declarar `projetoCompose`, o stack sobe sozinho; é
   assim que um Cenário entrega ambiente pronto ou quebrado de propósito.
@@ -271,6 +299,32 @@ ministack: true
 infraestruturaRealAws: true
 inicializacaoAws: init
 ```
+
+Um Cenário de IaC declara `terraform: true`. O campo opcional `diretorioTerraform`
+aponta, **relativo ao `work/`**, onde ficam os arquivos `.tf`; omitido, vale a raiz:
+
+```yaml
+terraform: true
+diretorioTerraform: infra
+```
+
+As duas Asserções tipadas recebem esse diretório do frontmatter e nunca o repetem:
+
+```yaml
+- tipo: terraform_estado
+  endereco: docker_container.web
+  atributo: name
+  esperado: mirante-web
+  descricao: o container está sob gestão do Terraform
+- tipo: terraform_plano_limpo
+  descricao: o código descreve a infraestrutura que está no ar
+```
+
+`terraform_estado` roda `terraform state show` e prova que o recurso nasceu do código;
+sem `atributo` e `esperado`, ela apenas exige que o endereço exista no state.
+`terraform_plano_limpo` roda `terraform plan -detailed-exitcode` e prova idempotência e
+ausência de drift. As duas juntas impedem que a Verificação aprove uma infraestrutura
+certa construída pelo caminho errado.
 
 Uma consulta tipada ao estado local fica em `verificacao.yaml`:
 
