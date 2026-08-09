@@ -1244,10 +1244,12 @@ Infraestrutura como Código e no Cenário 01. Então:
    falhar. Se alguma passar, é bug — sobra de ambiente ou Cenário mal escrito.
 3. Faça o exercício no seu terminal, no diretório de trabalho que a tela mostra.
 4. Clique em **Verificar**. As quatro devem passar.
-5. Rode `docker rm -f mirante-web`, suba um container equivalente com
-   `docker run -d --name mirante-web -p 8070:80 nginx:1.27-alpine` e clique em
-   **Verificar** de novo. As duas primeiras Asserções passam e as duas de Terraform
-   reprovam. **Esta é a prova de que a Etapa 1 cumpriu seu objetivo.**
+5. Rode `terraform destroy -auto-approve` no workspace Terraform para remover os recursos
+   gerenciados e limpar o state. Em seguida, rode `docker run -d --name mirante-web -p
+   8070:80 nginx:1.27-alpine` e clique em **Verificar** de novo. As duas primeiras
+   Asserções passam e as duas de Terraform reprovam: como o state está vazio, esta prova
+   demonstra uma infraestrutura construída manualmente, sem reaproveitar o registro de um
+   recurso gerenciado. **Esta é a prova de que a Etapa 1 cumpriu seu objetivo.**
 6. Restaure com `docker rm -f mirante-web && terraform apply`.
 
 - [ ] **Step 8: Commitar**
@@ -1375,7 +1377,8 @@ git commit -m "docs: README cobre a Trilha IaC, o frontmatter terraform e as dua
   menos um `.tf`.
 - `cd frontend && npm run build` passa.
 - O Cenário 01 aparece no catálogo, inicia, reprova antes do exercício e aprova depois.
-- O passo 7.5 da Task 6 foi executado: um `docker run` equivalente reprova nas duas
+- O passo 7.5 da Task 6 foi executado com `terraform destroy -auto-approve` antes do
+  `docker run`: partindo de state vazio, o container equivalente reprova nas duas
   Asserções de Terraform.
 - `docs/research/iac-course.md` tem a seção de validação com os números medidos, sem
   nenhum `PREENCHER`.
