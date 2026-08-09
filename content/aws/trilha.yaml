@@ -1,2 +1,7 @@
 id: aws
 titulo: AWS
+fundamentos:
+  titulo: Fundamentos da AWS
+  artigo: fundamentos.md
+  questionario: questionario.yaml
+  aproveitamentoMinimo: 80

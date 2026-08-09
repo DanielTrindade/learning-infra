@@ -1,0 +1,156 @@
+questoes:
+  - id: bucket-publico-responsabilidade
+    enunciado: "Um bucket foi criado corretamente pela AWS, mas uma policy do cliente expôs objetos confidenciais. De quem era a responsabilidade por evitar essa exposição?"
+    alternativas:
+      - id: cliente-configura-acesso
+        texto: "Do cliente: a AWS protege a infraestrutura do S3, enquanto políticas, classificação e acesso aos dados são decisões na nuvem."
+      - id: aws-deveria-adivinhar
+        texto: "Da AWS: o provedor deve inferir que todo objeto é confidencial e ignorar qualquer policy criada pelo cliente."
+      - id: ninguem-em-servico-gerenciado
+        texto: "De ninguém: ao usar um serviço gerenciado, configuração e proteção do dado deixam de ter um responsável."
+    alternativaCorreta: cliente-configura-acesso
+    explicacao: "Responsabilidade compartilhada não significa responsabilidade ausente. A AWS opera a infraestrutura do serviço; o cliente continua responsável por identidade, configuração e dados."
+    revisar: responsabilidade-compartilhada
+
+  - id: duas-subnets-mesma-az
+    enunciado: "Uma aplicação distribui réplicas entre duas subnets, ambas em us-east-1a, e a equipe a chama de Multi-AZ. Qual é o erro do desenho?"
+    alternativas:
+      - id: mesmo-dominio-falha
+        texto: "As duas subnets continuam no mesmo domínio de falha; tolerância a falha de AZ exige recursos distribuídos por AZs diferentes."
+      - id: regiao-deveria-mudar
+        texto: "Cada réplica deveria estar em uma região diferente, porque duas AZs da mesma região nunca se comunicam."
+      - id: nome-da-subnet-basta
+        texto: "Nenhum: nomes de subnet diferentes fazem a AWS distribuir automaticamente os recursos entre AZs."
+    alternativaCorreta: mesmo-dominio-falha
+    explicacao: "Uma subnet pertence a uma única AZ. Alta disponibilidade depende de domínios de falha reais, não da quantidade nem do nome das subnets."
+    revisar: conta-regiao-zona-e-endereco-do-recurso
+
+  - id: credencial-permanente-no-container
+    enunciado: "Uma task precisa ler somente um bucket, mas recebeu uma access key permanente de um administrador por variável de ambiente. Qual é a correção alinhada ao mínimo privilégio?"
+    alternativas:
+      - id: role-temporaria-restrita
+        texto: "Associar uma role à task com credenciais temporárias e permissão apenas para as ações e os objetos necessários."
+      - id: esconder-chave-na-imagem
+        texto: "Copiar a access key para uma camada antiga da imagem, onde ela não aparece no Dockerfile final."
+      - id: manter-admin-e-rotacionar
+        texto: "Manter a permissão administrativa e apenas trocar a chave permanente uma vez por ano."
+    alternativaCorreta: role-temporaria-restrita
+    explicacao: "Workloads devem assumir roles e receber credenciais temporárias. A policy restringe ação, recurso e condições; uma chave administrativa amplia impacto e dificulta rotação."
+    revisar: identidade-antes-do-recurso
+
+  - id: retry-criou-duplicatas
+    enunciado: "O cliente não recebeu a resposta de uma criação, repetiu a chamada imediatamente e terminou com dois recursos equivalentes. Que propriedade faltou ao fluxo?"
+    alternativas:
+      - id: idempotencia
+        texto: "Idempotência: um token de cliente, chave natural ou operação condicional deveria tornar a repetição segura."
+      - id: consistencia-forte-global
+        texto: "Consistência forte global: toda API AWS deveria bloquear novas requisições até todos os serviços concordarem."
+      - id: permissao-administrativa
+        texto: "Permissão administrativa: retries só são deduplicados quando a identidade tem acesso total à conta."
+    alternativaCorreta: idempotencia
+    explicacao: "Timeout não prova que a primeira operação falhou. Operações idempotentes permitem repetir sem multiplicar efeitos; leituras que convergem pedem polling com timeout e backoff."
+    revisar: apis-requisicoes-e-estado
+
+  - id: ec2-running-sem-vm
+    enunciado: "No MiniStack, DescribeInstances devolve uma instância EC2 em estado running, mas não há sistema operacional nem SSH. O que essa evidência prova?"
+    alternativas:
+      - id: somente-control-plane
+        texto: "Somente que o plano de controle registrou metadados e estado; o emulador não iniciou uma VM nem um data plane EC2."
+      - id: vm-invisivel
+        texto: "Que uma VM real está ativa, mas o hipervisor esconde rede e disco até um security group ser associado."
+      - id: ssh-evidencia-desnecessaria
+        texto: "Que a instância está saudável; testar processo, rede ou acesso seria evidência redundante."
+    alternativaCorreta: somente-control-plane
+    explicacao: "Estado no plano de controle e comportamento no data plane são evidências diferentes. Para EC2 local, o MiniStack preserva estrutura e API, não executa uma VM."
+    revisar: plano-de-controle-e-data-plane
+
+  - id: subnet-publica-por-nome
+    enunciado: "Uma subnet chamada publica não tem rota para Internet Gateway. Outra chamada privada tem. Qual afirmação está correta?"
+    alternativas:
+      - id: rota-define-caminho
+        texto: "O nome não tem efeito: a associação da route table e a rota para o Internet Gateway é que criam o caminho público."
+      - id: tag-define-publica
+        texto: "A tag Name altera o comportamento da VPC, portanto a primeira subnet é pública mesmo sem rota."
+      - id: toda-subnet-e-publica
+        texto: "Toda subnet de uma VPC é pública; apenas security groups distinguem acesso interno e externo."
+    alternativaCorreta: rota-define-caminho
+    explicacao: "Rotas definem o próximo salto. Nome e MapPublicIpOnLaunch não substituem a rota para o Internet Gateway, e ainda são necessários endereço público, filtros e um serviço escutando."
+    revisar: rede-intencao-rotas-e-filtros
+
+  - id: sqs-processou-duas-vezes
+    enunciado: "Um consumidor concluiu uma cobrança, caiu antes de apagar a mensagem do SQS e depois a processou novamente. Qual proteção deveria existir?"
+    alternativas:
+      - id: consumidor-idempotente
+        texto: "O consumidor deve reconhecer a chave do evento e tornar a operação idempotente; SQS pode entregar uma mensagem mais de uma vez."
+      - id: visibility-infinita
+        texto: "O visibility timeout deve ser infinito, impedindo qualquer retry mesmo quando o consumidor falha de verdade."
+      - id: apagar-antes
+        texto: "A mensagem deve ser apagada antes do processamento, para nenhuma falha produzir uma segunda entrega."
+    alternativaCorreta: consumidor-idempotente
+    explicacao: "Entrega pelo menos uma vez admite duplicatas. Idempotência protege o efeito de negócio; visibility timeout e DLQ controlam retentativas sem apagar a evidência cedo demais."
+    revisar: dados-e-processamento-assincrono
+
+  - id: hotfix-fora-do-template
+    enunciado: "Durante um incidente, alguém alterou um security group no console e o serviço voltou. O próximo deploy desfez a mudança. Por quê?"
+    alternativas:
+      - id: drift-fora-da-fonte
+        texto: "A correção criou drift: a fonte de verdade continuou no template antigo e a ferramenta reconciliou o recurso com ele."
+      - id: console-nao-salva
+        texto: "O console mantém mudanças apenas na sessão do navegador e nunca grava APIs de infraestrutura."
+      - id: cloudformation-expira-regras
+        texto: "CloudFormation remove automaticamente toda regra criada em horário de incidente após vinte e quatro horas."
+    alternativaCorreta: drift-fora-da-fonte
+    explicacao: "Mudanças fora da IaC divergem intenção e realidade. Depois de conter o incidente, é preciso entender a alteração, atualizar a fonte de verdade e revisar o plano."
+    revisar: infraestrutura-como-codigo-e-drift
+
+  - id: rollback-com-latest
+    enunciado: "A equipe quer voltar ao build aprovado de ontem, mas ambos os deploys referenciam imagem:latest. Qual identificação torna o rollback determinístico?"
+    alternativas:
+      - id: digest-imutavel
+        texto: "O digest do manifesto da imagem aprovada, porque identifica o conteúdo exato independentemente da tag atual."
+      - id: mesma-tag
+        texto: "A tag latest, porque registries garantem que ela nunca mude depois do primeiro push."
+      - id: horario-da-task
+        texto: "O horário de criação da task, porque o ECS reconstrói automaticamente a imagem existente naquele instante."
+    alternativaCorreta: digest-imutavel
+    explicacao: "Tags são referências mutáveis; digests identificam conteúdo. Um rollback confiável aponta para o artefato que foi testado, não para um nome que pode ter sido movido."
+    revisar: artefatos-containers-e-servicos-gerenciados
+
+  - id: laboratorio-sem-custo
+    enunciado: "O stack funcionou por horas no MiniStack sem cobrar nada. Qual conclusão de custo pode ser promovida para a AWS?"
+    alternativas:
+      - id: nenhuma-sem-modelar
+        texto: "Nenhuma conclusão direta: preço, transferência, retenção, quotas e telemetria precisam ser modelados e validados numa conta sandbox."
+      - id: custo-zero
+        texto: "O mesmo stack custará zero na AWS, porque APIs compatíveis sempre compartilham o mesmo modelo de cobrança."
+      - id: budget-desliga
+        texto: "Um AWS Budget desligará automaticamente qualquer recurso assim que o valor configurado for atingido."
+    alternativaCorreta: nenhuma-sem-modelar
+    explicacao: "O emulador não reproduz cobrança, quotas nem toda a observabilidade. Budgets e alertas sinalizam tendência; arquitetura, retenção e automação controlam o gasto."
+    revisar: custo-quotas-e-observabilidade
+
+  - id: security-group-local
+    enunciado: "Uma regra de security group foi corrigida no MiniStack e o recurso aparece perfeito na API. É possível afirmar que tráfego indevido está bloqueado?"
+    alternativas:
+      - id: apenas-estrutura
+        texto: "Não. O laboratório prova estrutura do plano de controle; o MiniStack não aplica esse security group a pacotes reais."
+      - id: api-prova-pacotes
+        texto: "Sim. Se DescribeSecurityGroups devolve a regra, a filtragem física foi exercitada e validada."
+      - id: ping-prova-iam
+        texto: "Sim, desde que um ping local também prove que IAM e network ACL autorizaram a requisição."
+    alternativaCorreta: apenas-estrutura
+    explicacao: "VPC, rotas e security groups locais preservam metadados e relações, não isolamento de pacotes. Essa propriedade ainda precisa de teste numa sandbox AWS."
+    revisar: o-laboratorio-ministack-e-seus-guardrails
+
+  - id: comando-sem-endpoint
+    enunciado: "As credenciais sintéticas estão no terminal, mas um comando AWS CLI omite --endpoint-url. Qual é a ação segura?"
+    alternativas:
+      - id: parar-e-adicionar-endpoint
+        texto: "Não executar: adicionar explicitamente http://127.0.0.1:4566 e confirmar a identidade local antes de qualquer mutação."
+      - id: executar-porque-chave-e-falsa
+        texto: "Executar normalmente, porque uma access key numérica nunca pode chegar a um endpoint real da AWS."
+      - id: usar-endpoint-so-em-delete
+        texto: "Omitir em leituras e informar o endpoint apenas em operações de exclusão, que são as únicas chamadas com risco."
+    alternativaCorreta: parar-e-adicionar-endpoint
+    explicacao: "O endpoint explícito é o guardrail visível do laboratório. Toda chamada, inclusive leitura, deve apontar ao MiniStack; depois confirme conta e região antes de criar recursos."
+    revisar: o-laboratorio-ministack-e-seus-guardrails

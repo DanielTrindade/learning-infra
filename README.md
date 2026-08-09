@@ -141,15 +141,21 @@ Abra **<http://localhost:5180>**.
 
 ## Fundamentos e evolução das Trilhas
 
-A Trilha Docker já oferece **Fundamentos**: um artigo sobre o problema resolvido pela
-ferramenta, arquitetura, imagens, containers, isolamento, rede, persistência, Compose e
-distribuição. Seu Questionário tem 12 situações, aproveitamento recomendado de 80%,
-feedback por questão e links para revisar cada conceito.
+Três das quatro Trilhas oferecem **Fundamentos** e um Questionário com 12 situações,
+aproveitamento recomendado de 80%, feedback por questão e links para revisar cada
+conceito:
 
-Kubernetes e AWS já são Trilhas explícitas e continuam com seus Cenários atuais. Elas
-receberão Fundamentos pelo mesmo contrato nas próximas entregas; futuras Trilhas também
-seguirão esse formato, sem transformar teoria em um Cenário artificial. A decisão está
-na [ADR 0003](docs/adr/0003-fundamentos-pertencem-a-trilha.md), e a expansão está no
+- **Docker:** arquitetura, imagens, containers, isolamento, rede, persistência, Compose
+  e distribuição;
+- **Kubernetes:** estado desejado, control plane, reconciliação, workloads, rede,
+  agendamento, persistência e mínimo privilégio;
+- **AWS:** responsabilidade compartilhada, regiões e AZs, IAM, APIs, control plane e
+  data plane, IaC, custo e guardrails do MiniStack.
+
+Fundamentos não transformam teoria em um Cenário artificial nem bloqueiam a prática. O
+contrato está na [ADR 0003](docs/adr/0003-fundamentos-pertencem-a-trilha.md), os diagramas
+de conteúdo na [ADR 0004](docs/adr/0004-diagramas-declarativos-no-conteudo.md), e a
+expansão está registrada no
 [plano de Fundamentos e Questionário por Trilha](docs/superpowers/plans/2026-08-07-fundamentos-questionario-por-trilha.md).
 
 A expansão prática de Docker foi implementada e está no catálogo, nos Cenários 06 a 11:
@@ -275,6 +281,42 @@ Cenário continua sendo um diretório em `content/<trilha>/<slug>/`:
 - `workspace/` — opcional. Copiado para `work/` no Iniciar. Se contiver um
   `compose.yaml` **e** o Cenário declarar `projetoCompose`, o stack sobe sozinho; é
   assim que um Cenário entrega ambiente pronto ou quebrado de propósito.
+
+Artigos e Cenários podem incluir diagramas responsivos com um bloco cercado
+`diagrama`. O corpo é um DSL YAML deliberadamente pequeno: `fluxo` e `ciclo` recebem
+`passos`, `camadas` recebe `camadas`, e `comparacao` recebe `colunas`. Nós aceitam
+`titulo`, `detalhe` e o `tom` opcional `neutro`, `destaque`, `sucesso`, `alerta` ou
+`perigo`:
+
+````markdown
+```diagrama
+tipo: fluxo
+titulo: Da intenção à execução
+visual: planos-aws
+passos:
+  - titulo: cliente
+    detalhe: envia a intenção pela API
+  - titulo: reconciliador
+    detalhe: aproxima realidade e estado desejado
+    tom: destaque
+legenda: O conteúdo declara a relação; a interface cuida do desenho.
+```
+````
+
+O campo opcional `visual` escolhe uma miniatura SVG mantida pelo frontend. Ele aceita
+somente ids do catálogo fechado: `fronteiras-runtime`, `motor-docker`,
+`filesystem-camadas`, `rotas-container`, `reconciliacao`, `arquitetura-cluster`,
+`hierarquia-workload`, `service-endpoints`, `responsabilidade-aws`, `fronteiras-aws`,
+`planos-aws` e `fidelidade-local`. O conteúdo continua legível como Markdown e nunca
+carrega coordenadas, SVG, classes CSS, JSX, HTML ou JavaScript.
+
+Antes de publicar, valide os diagramas e os links `revisar` do Questionário:
+
+```sh
+node frontend/scripts-checar-conteudo.mjs docker
+node frontend/scripts-checar-conteudo.mjs kubernetes
+node frontend/scripts-checar-conteudo.mjs aws
+```
 
 Um Cenário Kubernetes declara `contextoKubernetes` e `namespaceKubernetes` juntos. Para
 aplicar um ambiente inicial ao Iniciar, declare também `manifestosIniciais`, relativo ao

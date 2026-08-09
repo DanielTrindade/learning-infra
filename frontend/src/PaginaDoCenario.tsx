@@ -1,5 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import Markdown from 'react-markdown'
+import { useEffect, useState } from 'react'
 import {
   buscarCenario,
   iniciarCenario,
@@ -7,8 +6,9 @@ import {
   type CenarioDetalhado,
   type ResultadoDaVerificacao,
 } from './api'
-import { BlocoDeCodigo, IconeCheck, IconeCopiar } from './BlocoDeCodigo'
+import { IconeCheck, IconeCopiar } from './BlocoDeCodigo'
 import { ChecklistDeVerificacao } from './ChecklistDeVerificacao'
+import { ConteudoMarkdown } from './ConteudoMarkdown'
 import {
   estadoDoCenario,
   idDaTrilha,
@@ -18,21 +18,7 @@ import {
   rotulosEstado,
   salvarTrilhaAtual,
 } from './progresso'
-
-function slugificar(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('pt-BR')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-}
-
-function textoDoNo(no: ReactNode): string {
-  if (typeof no === 'string' || typeof no === 'number') return String(no)
-  if (Array.isArray(no)) return no.map(textoDoNo).join('')
-  return ''
-}
+import { slugificar } from './texto'
 
 function secoesDoCenario(markdown: string) {
   return markdown
@@ -242,15 +228,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
             <p><strong>Os comandos rodam no seu terminal.</strong> Esta página explica o exercício e verifica o resultado na sua máquina.</p>
           </div>
 
-          <Markdown
-            components={{
-              h1: () => null,
-              h2: ({ children }) => <h2 id={slugificar(textoDoNo(children))}>{children}</h2>,
-              pre: ({ children }) => <BlocoDeCodigo>{children}</BlocoDeCodigo>,
-            }}
-          >
-            {cenario.markdown}
-          </Markdown>
+          <ConteudoMarkdown markdown={cenario.markdown} />
         </article>
       </div>
     </div>
