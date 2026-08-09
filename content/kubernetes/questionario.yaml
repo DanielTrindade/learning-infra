@@ -1,0 +1,156 @@
+questoes:
+  - id: reconciliacao-apos-delete
+    enunciado: Um Deployment mantém três réplicas. Alguém apaga um dos Pods com kubectl delete. O que acontece nos segundos seguintes?
+    alternativas:
+      - id: controller-recria
+        texto: O ReplicaSet nota a divergência e cria outro Pod para convergir ao estado desejado.
+      - id: fica-com-dois
+        texto: O Deployment assume que duas réplicas bastam, pois o delete foi manual.
+      - id: cluster-para-tudo
+        texto: O Deployment inteiro é removido por segurança e precisa ser reaplicado.
+    alternativaCorreta: controller-recria
+    explicacao: Objetos são registros de intenção e controllers reconciliam continuamente. Apagar a realidade não muda a intenção — o laço recria o que falta.
+    revisar: estado-desejado-e-reconciliacao
+
+  - id: editar-pod-em-execucao
+    enunciado: Uma correção feita com kubectl edit em um Pod parece funcionar, mas some horas depois. Qual é a explicação mais provável?
+    alternativas:
+      - id: reconciliacao-desfez
+        texto: O Pod foi recriado a partir do template do workload, e a edição feita fora do estado desejado se perdeu.
+      - id: api-descartou
+        texto: O API server descarta alterações a cada hora cheia, por política padrão.
+      - id: kubelet-corrompido
+        texto: O kubelet corrompeu o manifesto local do Node e precisa ser reinstalado.
+    alternativaCorreta: reconciliacao-desfez
+    explicacao: Mudanças duradouras entram pelo estado desejado — o manifesto do Deployment. Editar a realidade à mão é desfeito pela próxima reconciliação.
+    revisar: estado-desejado-e-reconciliacao
+
+  - id: quem-fala-com-quem
+    enunciado: De onde o kubelet de um Node recebe a instrução de executar um Pod?
+    alternativas:
+      - id: observando-api
+        texto: Observando o API server, onde o scheduler registrou a designação do Pod para aquele Node.
+      - id: push-do-kubectl
+        texto: Do kubectl apply, que envia o manifesto diretamente para cada Node.
+      - id: mensagem-do-scheduler
+        texto: De uma conexão direta do scheduler, que comanda os kubelets sem passar pela API.
+    alternativaCorreta: observando-api
+    explicacao: O API server é a única porta do cluster. Scheduler, controllers e kubelets leem e gravam intenções nele — nenhum componente se comunica por fora.
+    revisar: a-arquitetura-do-cluster
+
+  - id: pod-pending-sem-container
+    enunciado: Um Pod está Pending há vinte minutos e nenhum container chegou a ser criado. Qual é a primeira hipótese a investigar?
+    alternativas:
+      - id: scheduler-sem-node
+        texto: O scheduler não encontrou Node que comporte os requests do Pod — comece pelos eventos e pelos recursos pedidos.
+      - id: imagem-quebrada
+        texto: A imagem está corrompida no registry e precisa ser republicada.
+      - id: dns-fora
+        texto: O DNS do cluster está fora do ar, impedindo a criação de containers.
+    alternativaCorreta: scheduler-sem-node
+    explicacao: Pending sem container significa que ainda não há Node designado. Um Pod que pede mais memória do que qualquer Node livre permanece Pending sem erro explícito além dos eventos.
+    revisar: agendamento-e-recursos
+
+  - id: deployment-versus-pod-nu
+    enunciado: Por que uma aplicação stateless deve rodar como Deployment em vez de um Pod criado diretamente?
+    alternativas:
+      - id: pod-nu-e-ilegal
+        texto: O API server recusa Pods fora de um Deployment em namespaces de produção.
+      - id: intencao-gerenciada
+        texto: O Deployment registra réplicas, template e estratégia de atualização; o Pod nu não é recriado por ninguém quando morre.
+      - id: performance
+        texto: Containers de Deployments iniciam mais rápido porque dividem o mesmo kernel.
+    alternativaCorreta: intencao-gerenciada
+    explicacao: O Pod é descartável por desenho. O Deployment (via ReplicaSet) é quem garante contagem, recriação e rollout — o Pod nu não tem nenhum desses laços.
+    revisar: objetos-do-deployment-ao-pod
+
+  - id: service-sem-endpoints
+    enunciado: Um Service resolve no DNS, mas toda conexão falha. kubectl mostra o Service criado há dias. O que verificar primeiro?
+    alternativas:
+      - id: endpointslices
+        texto: "Os EndpointSlices: um selector que não combina com as labels dos Pods, ou Pods não prontos, deixam a lista vazia."
+      - id: porta-do-node
+        texto: A NodePort do Service, que precisa estar aberta no firewall do Node.
+      - id: reiniciar-coredns
+        texto: O CoreDNS, já que o nome resolveu parcialmente e precisa ser reiniciado.
+    alternativaCorreta: endpointslices
+    explicacao: O Service não contém Pods — um controller mantém EndpointSlices com os Pods que combinam com o selector e estão prontos. Lista vazia é o clássico “Service existe e ninguém responde”.
+    revisar: rede-services-dns-e-endpoints
+
+  - id: readiness-versus-liveness
+    enunciado: Um Pod aparece Running, sem restarts, mas não recebe nenhuma requisição do Service. Qual mecanismo explica isso?
+    alternativas:
+      - id: readiness-falhando
+        texto: "A readiness probe falhando: o Pod sai dos EndpointSlices sem ser reiniciado."
+      - id: liveness-falhando
+        texto: "A liveness probe falhando: ela remove o Pod do tráfego sem reiniciá-lo."
+      - id: startup-falhando
+        texto: "A startup probe falhando: ela pausa o agendamento dos demais Pods do Deployment."
+    alternativaCorreta: readiness-falhando
+    explicacao: Liveness falhando reinicia o container; readiness falhando apenas tira o Pod dos endpoints. Vivo mas fora do tráfego é assinatura de readiness.
+    revisar: saude-de-verdade-probes
+
+  - id: configmap-processo-antigo
+    enunciado: A equipe editou um ConfigMap, mas a aplicação continua com o valor antigo horas depois. Por quê?
+    alternativas:
+      - id: env-na-criacao
+        texto: Variáveis de ambiente são lidas na criação do processo; é preciso provocar um novo rollout para os Pods nascerem com o valor novo.
+      - id: cache-do-api
+        texto: O API server cacheia ConfigMaps por vinte e quatro horas antes de propagar.
+      - id: falta-restart-policy
+        texto: "O ConfigMap só é aplicado se o Pod declarar restartPolicy: Always."
+    alternativaCorreta: env-na-criacao
+    explicacao: O ConfigMap mudou, mas o processo já estava criado. A correção declarativa é um rollout — Pods novos leem a configuração nova.
+    revisar: configuracao-sem-reconstruir-a-imagem
+
+  - id: secret-base64
+    enunciado: Por que o valor em base64 de um Secret não pode ser tratado como proteção do dado?
+    alternativas:
+      - id: codificacao-reversivel
+        texto: Base64 é codificação reversível por qualquer um com leitura na API; a proteção real vem do RBAC e da criptografia em repouso.
+      - id: base64-expira
+        texto: Base64 expira após a rotação automática de tokens do cluster.
+      - id: so-funciona-linux
+        texto: A decodificação só existe em Nodes Linux, então o valor trafega em claro no Windows.
+    alternativaCorreta: codificacao-reversivel
+    explicacao: Base64 não é criptografia. Quem pode ler o Secret lê o texto claro — por isso os Cenários usam somente valores sintéticos e o acesso é controlado por RBAC.
+    revisar: configuracao-sem-reconstruir-a-imagem
+
+  - id: oomkilled-ou-throttling
+    enunciado: Um container morre esporadicamente com OOMKilled. O que essa saída indica sobre os limites declarados?
+    alternativas:
+      - id: memoria-estourada
+        texto: O uso de memória passou do limit e o cgroup encerrou o processo; CPU além do limit causaria throttling, não morte.
+      - id: cpu-estourada
+        texto: O uso de CPU passou do limit e o kernel matou o processo para proteger o Node.
+      - id: node-sem-disco
+        texto: O Node ficou sem disco e escolheu o container mais novo para terminar.
+    alternativaCorreta: memoria-estourada
+    explicacao: Requests guiam o scheduler; limits são impostos em execução pelos cgroups. Memória acima do limite termina em OOM kill; CPU acima do limite apenas desacelera.
+    revisar: agendamento-e-recursos
+
+  - id: statefulset-identidade
+    enunciado: Um banco de dados precisa manter o mesmo nome e o mesmo volume depois de cada recriação. O que o StatefulSet oferece que o Deployment não oferece?
+    alternativas:
+      - id: identidade-estavel
+        texto: Ordinais previsíveis, um PVC próprio por réplica via volumeClaimTemplates e endereço estável pelo Service headless.
+      - id: mais-performance
+        texto: Containers privilegiados com acesso direto ao disco do Node.
+      - id: rollout-instantaneo
+        texto: Atualizações simultâneas de todas as réplicas, sem esperar cada uma ficar pronta.
+    alternativaCorreta: identidade-estavel
+    explicacao: O StatefulSet recria app-0 como app-0, com o mesmo volume e o mesmo nome. E remover o StatefulSet não apaga os volumes — apagar dados é uma decisão separada.
+    revisar: persistencia-e-identidade-estavel
+
+  - id: rbac-minimo
+    enunciado: Uma aplicação recebe Forbidden ao ler uma única ConfigMap de que precisa. Qual é a correção alinhada ao mínimo privilégio?
+    alternativas:
+      - id: role-cirurgica
+        texto: Criar uma Role com get naquela ConfigMap específica e um RoleBinding para a ServiceAccount do Pod.
+      - id: cluster-admin
+        texto: Conceder cluster-admin à ServiceAccount para eliminar a classe inteira de erros Forbidden.
+      - id: desligar-rbac
+        texto: Desativar o RBAC no namespace da aplicação até a leitura funcionar.
+    alternativaCorreta: role-cirurgica
+    explicacao: RBAC concede verbos sobre recursos — get em configmaps/<nome> basta. kubectl auth can-i responde yes ou no antes de qualquer tentativa de contorno.
+    revisar: seguranca-identidade-e-minimo-privilegio

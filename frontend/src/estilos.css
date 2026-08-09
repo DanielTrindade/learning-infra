@@ -2066,6 +2066,696 @@ h3 {
   text-decoration: none;
 }
 
+/* ============================================================================
+   Diagramas declarativos — versão leve
+   Substitui, em frontend/src/estilos.css:
+     1. o bloco "/* Diagramas declarativos ... *\/" (linhas ~2069 a ~2635,
+        de `.diagrama {` até o fim de `.diagrama-erro`);
+     2. dentro de @media (prefers-reduced-motion: reduce), as regras que
+        começam em `.diagrama-ilustracao,` e vão até `.diagrama .fluxo-indice`;
+     3. dentro de @media (max-width: 760px), as regras de `.diagrama` até
+        `.ciclo-retorno-legenda`.
+   Nenhuma mudança em Diagrama.tsx, IlustracaoDoDiagrama.tsx ou no DSL.
+   ============================================================================ */
+
+.diagrama {
+  --conector: #d7d4e4;
+  --trilho: #e8e7f0;
+  --sinal: #a49eb8;
+  --tinta: #f8f8fb;
+  --tinta-linha: #ecebf2;
+  --tinta-forte: var(--ink);
+  position: relative;
+  margin: 2.6rem 0;
+  overflow: hidden;
+  border: 1px solid var(--trilho);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.diagrama-cabecalho {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px 12px;
+}
+
+.diagrama-identificacao {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.diagrama-tipo {
+  width: fit-content;
+  color: #8b84a6;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.diagrama-titulo {
+  color: var(--ink);
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 1.22rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* miniaturas: mesmo desenho, traço mais claro */
+
+.diagrama-ilustracao {
+  display: block;
+  width: 100%;
+  max-width: 128px;
+  height: auto;
+  justify-self: end;
+  overflow: visible;
+  opacity: 0;
+  transform: translateX(6px);
+  transition:
+    opacity 180ms ease,
+    transform 240ms var(--ease-out);
+  transition-delay: 40ms;
+}
+
+.diagrama[data-visivel="true"] .diagrama-ilustracao {
+  opacity: 0.9;
+  transform: none;
+}
+
+.ilustracao-plano,
+.ilustracao-no,
+.ilustracao-no-destaque,
+.ilustracao-no-sucesso,
+.ilustracao-no-alerta,
+.ilustracao-plano-destaque,
+.ilustracao-plano-alerta {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.3;
+}
+
+.ilustracao-plano,
+.ilustracao-no {
+  fill: #fbfbfd;
+  stroke: #c9c5d6;
+}
+
+.ilustracao-plano-destaque,
+.ilustracao-no-destaque {
+  fill: #f4f1ff;
+  stroke: #a892f0;
+}
+
+.ilustracao-no-sucesso {
+  fill: var(--green-soft);
+  stroke: #4aa88f;
+}
+
+.ilustracao-plano-alerta,
+.ilustracao-no-alerta {
+  fill: var(--amber-soft);
+  stroke: #d59a54;
+}
+
+.ilustracao-linha,
+.ilustracao-linha-fantasma,
+.ilustracao-base,
+.ilustracao-seta {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke: #c9c5d6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.3;
+}
+
+.ilustracao-linha-fantasma {
+  stroke-dasharray: 3 4;
+}
+
+.ilustracao-base {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+
+.ilustracao-seta {
+  stroke: var(--violet);
+  stroke-width: 1.6;
+}
+
+.ilustracao-ponto {
+  fill: var(--violet);
+}
+
+.ilustracao-ponto-alerta {
+  fill: var(--amber);
+}
+
+.diagrama-corpo {
+  padding: 6px 24px 4px;
+}
+
+.diagrama-legenda {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 24px 18px;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.diagrama-legenda::before {
+  flex: 0 0 auto;
+  color: #a892f0;
+  content: "↳";
+  font-family: "Cascadia Code", Consolas, monospace;
+}
+
+/* nó — o tom vira o próprio fundo, sem borda nem marcador */
+
+.no {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 11px 15px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--tinta);
+  text-align: left;
+}
+
+.no > strong {
+  color: var(--tinta-forte);
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.no > span {
+  color: var(--ink-soft);
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+
+.diagrama-tom-destaque {
+  --sinal: var(--violet);
+  --tinta: #f5f2ff;
+  --tinta-linha: #e5dffa;
+  --tinta-forte: #3c2a86;
+}
+
+.diagrama-tom-sucesso {
+  --sinal: var(--green);
+  --tinta: #eef7f3;
+  --tinta-linha: #dceee7;
+  --tinta-forte: #0f5c4c;
+}
+
+.diagrama-tom-alerta {
+  --sinal: var(--amber);
+  --tinta: #fdf5eb;
+  --tinta-linha: #f2e3cf;
+  --tinta-forte: #8d4d15;
+}
+
+.diagrama-tom-perigo {
+  --sinal: var(--red);
+  --tinta: #fdf0f2;
+  --tinta-linha: #f6dde1;
+  --tinta-forte: #8f2b39;
+}
+
+.diagrama-tom-destaque > span,
+.diagrama-tom-sucesso > span,
+.diagrama-tom-alerta > span,
+.diagrama-tom-perigo > span {
+  color: color-mix(in oklab, var(--tinta-forte) 62%, var(--ink-soft));
+}
+
+/* fluxo — índices em círculo sobre um trilho de 1px */
+
+.fluxo {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fluxo-item {
+  position: relative;
+  padding: 2px 0 2px 34px;
+}
+
+.fluxo-item::before {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 10px;
+  width: 1px;
+  background: var(--trilho);
+  content: "";
+}
+
+.fluxo-item:first-child::before {
+  top: 50%;
+}
+
+.fluxo-item:last-child::before {
+  bottom: 50%;
+}
+
+.fluxo-indice {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 0;
+  display: grid;
+  width: 21px;
+  height: 21px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #8b84a6;
+  background: #f2f1f7;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.55rem;
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+
+.fluxo-item:has(.diagrama-tom-destaque) .fluxo-indice {
+  color: var(--violet-dark);
+  background: var(--violet-soft);
+}
+
+.fluxo-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.fluxo-grade.com-lateral {
+  grid-template-columns: minmax(0, 1fr) 22px minmax(160px, 0.6fr);
+}
+
+.fluxo-derivacao {
+  border-top: 1px dashed var(--conector);
+}
+
+.no-lateral {
+  border: 0;
+}
+
+/* camadas — pilha com barra de tom à esquerda */
+
+.camadas {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.camada {
+  margin-left: calc(var(--i, 0) * 14px);
+}
+
+.camada .no {
+  position: relative;
+  padding-left: 29px;
+}
+
+.camada .no::before {
+  position: absolute;
+  top: 11px;
+  bottom: 11px;
+  left: 12px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--sinal);
+  content: "";
+}
+
+/* comparacao — colunas independentes, com respiro entre elas */
+
+.comparacao {
+  display: grid;
+  grid-template-columns: repeat(var(--colunas), minmax(0, 1fr));
+  gap: 12px;
+  border: 0;
+  background: transparent;
+}
+
+.comparacao-coluna {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 16px 18px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--tinta);
+}
+
+.comparacao-coluna h3 {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  color: var(--tinta-forte);
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.comparacao-coluna h3::before {
+  width: 26px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--sinal);
+  content: "";
+}
+
+.comparacao-coluna ul {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comparacao-coluna li {
+  padding: 0;
+  color: color-mix(in oklab, var(--tinta-forte) 55%, var(--ink-soft));
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+
+.comparacao-coluna li + li {
+  padding-top: 9px;
+  border-top: 1px solid var(--tinta-linha);
+}
+
+/* ciclo — cadeia com seta leve e retorno com pílula */
+
+.ciclo-cadeia {
+  display: flex;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ciclo-item {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 0;
+}
+
+.ciclo-item .no {
+  flex: 1;
+}
+
+.ciclo-seta {
+  position: relative;
+  flex: 0 0 26px;
+  height: 1px;
+  margin: 0;
+  background: transparent;
+}
+
+.ciclo-seta::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: #b6b1c6;
+  content: "→";
+  font-size: 0.8rem;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.ciclo-retorno {
+  position: relative;
+  height: 22px;
+  margin: 0 calc(50% / var(--n));
+  border-right: 1px solid var(--trilho);
+  border-bottom: 1px solid var(--trilho);
+  border-left: 1px solid var(--trilho);
+  border-radius: 0 0 11px 11px;
+}
+
+.ciclo-retorno::before {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-top: 1px solid #b6b1c6;
+  border-right: 1px solid #b6b1c6;
+  content: "";
+  transform: rotate(-45deg);
+}
+
+.ciclo-retorno-legenda {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 0;
+}
+
+.ciclo-retorno-legenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  color: var(--violet-dark);
+  background: var(--violet-soft);
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.63rem;
+  letter-spacing: 0.03em;
+}
+
+/* entrada explicativa: curta, uma vez, sem atrasar a leitura */
+
+.diagrama .fluxo-item,
+.diagrama .camada,
+.diagrama .comparacao-coluna,
+.diagrama .ciclo-item {
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 160ms ease,
+    transform 240ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 40ms);
+}
+
+.diagrama .fluxo-item::before {
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 240ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 40ms);
+}
+
+.diagrama .fluxo-indice {
+  opacity: 0;
+  transform: translateY(-50%) scale(0.9);
+  transition:
+    opacity 160ms ease,
+    transform 220ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 40ms + 30ms);
+}
+
+.diagrama .ciclo-retorno {
+  clip-path: inset(0 50% 0 50%);
+  transition: clip-path 260ms var(--ease-in-out);
+  transition-delay: calc(var(--n, 1) * 40ms);
+}
+
+.diagrama .ciclo-retorno-legenda {
+  opacity: 0;
+  transition: opacity 180ms ease;
+  transition-delay: calc(var(--n, 1) * 40ms + 80ms);
+}
+
+.diagrama[data-visivel="true"] .fluxo-item,
+.diagrama[data-visivel="true"] .camada,
+.diagrama[data-visivel="true"] .comparacao-coluna,
+.diagrama[data-visivel="true"] .ciclo-item {
+  opacity: 1;
+  transform: none;
+}
+
+.diagrama[data-visivel="true"] .fluxo-item::before {
+  transform: scaleY(1);
+}
+
+.diagrama[data-visivel="true"] .fluxo-indice {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.diagrama[data-visivel="true"] .ciclo-retorno {
+  clip-path: inset(0 0 0 0);
+}
+
+.diagrama[data-visivel="true"] .ciclo-retorno-legenda {
+  opacity: 1;
+}
+
+/* bloco que não virou diagrama: fonte visível, erro contido */
+
+.diagrama-invalido {
+  border: 1px solid #ecd5ae;
+  background: var(--amber-soft);
+}
+
+.diagrama-invalido .diagrama-cabecalho {
+  display: block;
+  padding: 18px 24px 0;
+}
+
+.diagrama-invalido .diagrama-tipo {
+  color: var(--amber);
+}
+
+.diagrama-fonte {
+  margin: 14px 24px 10px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border: 1px solid #f0dcc2;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 70%);
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.diagrama-erro {
+  margin: 0 24px 18px;
+  color: var(--amber);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagrama-ilustracao,
+  .diagrama .fluxo-item,
+  .diagrama .camada,
+  .diagrama .comparacao-coluna,
+  .diagrama .ciclo-item,
+  .diagrama .fluxo-indice,
+  .diagrama .ciclo-retorno,
+  .diagrama .ciclo-retorno-legenda {
+    opacity: 1;
+    clip-path: none;
+    transform: none;
+    transition: none;
+  }
+
+  .diagrama-ilustracao {
+    opacity: 0.9;
+  }
+
+  .diagrama .fluxo-item::before {
+    transform: scaleY(1);
+    transition: none;
+  }
+
+  .diagrama .fluxo-indice {
+    transform: translateY(-50%);
+  }
+}
+
+@media (max-width: 760px) {
+  .diagrama {
+    margin-inline: -4px;
+    border-radius: 14px;
+  }
+
+  .diagrama-cabecalho {
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: 12px;
+    padding: 16px 16px 10px;
+  }
+
+  .diagrama-titulo {
+    font-size: 1.05rem;
+  }
+
+  .diagrama-ilustracao {
+    max-width: 96px;
+  }
+
+  .diagrama-corpo {
+    padding: 4px 16px;
+  }
+
+  .diagrama-legenda {
+    padding: 12px 16px 16px;
+  }
+
+  .fluxo-item {
+    padding-left: 30px;
+  }
+
+  .fluxo-grade.com-lateral {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fluxo-derivacao {
+    display: none;
+  }
+
+  .no-lateral {
+    margin-left: 16px;
+  }
+
+  .comparacao {
+    grid-template-columns: 1fr;
+  }
+
+  .camada {
+    margin-left: calc(var(--i, 0) * 6px);
+  }
+
+  .ciclo-cadeia,
+  .ciclo-item {
+    flex-direction: column;
+  }
+
+  .ciclo-item .no {
+    width: 100%;
+  }
+
+  .ciclo-seta {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 20px;
+  }
+
+  .ciclo-seta::after {
+    content: "↓";
+  }
+
+  .ciclo-retorno {
+    display: none;
+  }
+
+  .ciclo-retorno-legenda {
+    margin-top: 13px;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .botao-primario:hover {
     background: var(--violet-dark);
@@ -2475,4 +3165,5 @@ h3 {
   .barra-linear-andamento {
     transition: none;
   }
+
 }

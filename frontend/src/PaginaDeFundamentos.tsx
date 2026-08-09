@@ -1,29 +1,14 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import Markdown from 'react-markdown'
+import { useEffect, useState } from 'react'
 import {
   buscarFundamentos,
   listarTrilhas,
   type FundamentosDetalhados,
   type ResultadoDoQuestionario,
 } from './api'
-import { BlocoDeCodigo } from './BlocoDeCodigo'
+import { ConteudoMarkdown } from './ConteudoMarkdown'
 import { Questionario } from './Questionario'
 import { salvarTrilhaAtual } from './progresso'
-
-function slugificar(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('pt-BR')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-}
-
-function textoDoNo(no: ReactNode): string {
-  if (typeof no === 'string' || typeof no === 'number') return String(no)
-  if (Array.isArray(no)) return no.map(textoDoNo).join('')
-  return ''
-}
+import { slugificar } from './texto'
 
 function secoesDoArtigo(markdown: string) {
   return markdown
@@ -169,15 +154,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
 
         <div className="coluna-fundamentos">
           <article className="conteudo-aula conteudo-fundamentos">
-            <Markdown
-              components={{
-                h1: () => null,
-                h2: ({ children }) => <h2 id={slugificar(textoDoNo(children))}>{children}</h2>,
-                pre: ({ children }) => <BlocoDeCodigo>{children}</BlocoDeCodigo>,
-              }}
-            >
-              {fundamentos.markdown}
-            </Markdown>
+            <ConteudoMarkdown markdown={fundamentos.markdown} />
           </article>
 
           <section className="bloco-questionario" id="inicio-questionario" aria-labelledby="titulo-questionario">

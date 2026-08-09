@@ -36,6 +36,25 @@ compartilha o kernel Linux do host. Por isso ele tende a iniciar mais rápido e 
 menos recursos que uma VM completa. Container não é uma “VM pequena”: o limite de
 isolamento e o modelo operacional são diferentes.
 
+```diagrama
+tipo: comparacao
+visual: fronteiras-runtime
+titulo: "VM e container: fronteiras diferentes"
+colunas:
+  - titulo: Máquina virtual
+    itens:
+      - virtualiza hardware
+      - inicia sistema e kernel próprios
+      - isola pela fronteira da VM
+  - titulo: Container
+    tom: destaque
+    itens:
+      - isola processos
+      - compartilha o kernel do host
+      - usa namespaces e cgroups
+legenda: Em produção, containers costumam rodar dentro de VMs; as duas fronteiras se complementam.
+```
+
 No Windows e no macOS, o Docker Desktop precisa oferecer um kernel Linux para executar
 containers Linux. Ele faz isso dentro de uma VM gerenciada. A comparação continua
 válida: vários containers compartilham o kernel dessa VM; cada container não recebe uma
@@ -53,23 +72,29 @@ redes, volumes e containers e coordena componentes de runtime. Em uma visão um 
 mais detalhada, `containerd` gerencia o ciclo de vida da execução e um runtime compatível
 com OCI prepara e inicia os processos isolados.
 
-```text
-docker CLI / Docker Compose
-            │
-            ▼
-       Docker API
-            │
-            ▼
-         dockerd ───── registry
-            │
-            ▼
-        containerd
-            │
-            ▼
-       runtime OCI
-            │
-            ▼
-  namespaces, cgroups e filesystem
+```diagrama
+tipo: fluxo
+visual: motor-docker
+titulo: Do cliente ao kernel
+passos:
+  - titulo: docker CLI · Docker Compose
+    detalhe: transforma o comando em chamada à API
+  - titulo: Docker API
+    detalhe: contrato do Engine, local ou remoto
+  - titulo: dockerd
+    detalhe: coordena imagens, redes, volumes e execução
+    lateral:
+      titulo: registry
+      detalhe: guarda e entrega imagens
+      tom: destaque
+  - titulo: containerd
+    detalhe: acompanha o ciclo de vida
+  - titulo: runtime OCI
+    detalhe: prepara o isolamento e inicia o processo
+  - titulo: namespaces · cgroups · filesystem
+    detalhe: impõem fronteiras e limites
+    tom: destaque
+legenda: dockerd coordena, o runtime executa e o kernel isola.
 ```
 
 O cliente pode falar com um daemon local ou remoto. Isso é poderoso e também explica
@@ -77,10 +102,10 @@ por que acesso ao socket do Docker equivale a uma permissão altamente privilegi
 pessoa ou processo que controla o daemon pode criar mounts, iniciar containers e
 alcançar recursos do host.
 
-Um **registry** é o serviço que armazena e distribui imagens. Docker Hub é um exemplo,
-mas organizações usam registries privados e podem executar um registry local. O daemon
-baixa uma imagem quando ela ainda não existe localmente e envia imagens quando você faz
-`push`.
+Um **registry** é o serviço que armazena e distribui imagens — o desenho acima o mostra
+conversando com o daemon, não com a CLI. Docker Hub é um exemplo, mas organizações usam
+registries privados e podem executar um registry local. O daemon baixa uma imagem
+quando ela ainda não existe localmente e envia imagens quando você faz `push`.
 
 ## Imagens containers e camadas
 
@@ -94,6 +119,21 @@ Um container é uma **instância executável** de uma imagem, combinada com conf
 comando, variáveis de ambiente, rede, mounts e limites de recursos. Ao iniciar, ele
 recebe uma camada gravável própria sobre as camadas somente leitura. Dois containers da
 mesma imagem compartilham a base, mas não a camada gravável.
+
+```diagrama
+tipo: camadas
+visual: filesystem-camadas
+titulo: O que muda e o que permanece
+camadas:
+  - titulo: camada gravável do container
+    detalhe: escritas desta execução
+    tom: alerta
+  - titulo: camadas da aplicação
+    detalhe: código e dependências
+  - titulo: imagem base
+    detalhe: runtime e bibliotecas compartilháveis
+legenda: Substituir o container descarta o topo; dados persistentes ficam fora da pilha.
+```
 
 Essa camada gravável pertence ao container. Remover e recriar o container remove os
 dados que existiam apenas nela. Uma nova versão da imagem também não altera um
@@ -141,6 +181,25 @@ Também importa em qual endereço do host a porta é publicada. `127.0.0.1:8080:
 restringe o acesso à máquina local; `8080:80` pode escutar em todas as interfaces,
 dependendo da configuração. Redes separadas permitem que só a borda converse com o
 mundo externo enquanto banco e serviços internos permanecem inacessíveis diretamente.
+
+```diagrama
+tipo: fluxo
+visual: rotas-container
+titulo: Entrada externa e rede interna
+passos:
+  - titulo: origem externa
+    detalhe: cliente fora do Docker
+  - titulo: host :8080
+    detalhe: publica 8080 → 80
+    lateral:
+      titulo: DNS da rede
+      detalhe: web → db:5432, sem publicar porta
+      tom: sucesso
+  - titulo: container :80
+    detalhe: processo escutando
+    tom: destaque
+legenda: Só o caminho externo atravessa uma porta do host.
+```
 
 ## Volumes e persistência
 
@@ -208,12 +267,16 @@ Os Cenários seguintes transformam o modelo mental em evidência na sua máquina
 - **02 — Empacotar uma app num Dockerfile:** Dockerfile, imagem, build e cache;
 - **03 — Dois containers conversando com Compose:** serviços, DNS e rede;
 - **04 — Um stack que não sobe:** diagnóstico com `ps`, `logs` e `config`;
-- **05 — Dados que sobrevivem ao container:** camada gravável, bind mount e volume.
+- **05 — Dados que sobrevivem ao container:** camada gravável, bind mount e volume;
+- **06 — Uma imagem cara e lenta:** `.dockerignore`, ordenação de camadas e multi-stage;
+- **07 — Só quem precisa se enxerga:** redes de borda e interna, DNS por nome de serviço;
+- **08 — Rodando ainda não é pronto:** healthcheck e `depends_on` com `service_healthy`;
+- **09 — O container com privilégios demais:** usuário não-root, read-only e `cap_drop`;
+- **10 — Da tag ao digest:** registry local, push, pull e rollback por digest;
+- **11 — Incidente final de Docker:** diagnóstico de um stack com falhas combinadas.
 
-A expansão planejada acrescentará otimização e multi-stage, redes internas, healthcheck,
-execução com privilégios mínimos, registry e rollback por digest, encerrando com um
-incidente integrado. O contrato de Fundamentos e Questionário será aplicado também a
-Kubernetes, AWS e futuras Trilhas; muda o conteúdo, não a experiência.
+O mesmo contrato de Fundamentos e Questionário abre as Trilhas de Kubernetes e AWS;
+muda o conteúdo, não a experiência.
 
 Use o Questionário como recuperação ativa: responda sem procurar no texto, veja o
 feedback e volte apenas às seções indicadas. Depois, abra o terminal. Compreensão sem
