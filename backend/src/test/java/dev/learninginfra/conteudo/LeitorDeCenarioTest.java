@@ -445,4 +445,51 @@ class LeitorDeCenarioTest {
 
         assertTrue(erro.getMessage().contains("relativo"));
     }
+
+    @Test
+    void montaAsercaoDeEstadoDoTerraformComODiretorioDoFrontmatter() throws Exception {
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: iac/01-primeiro-apply
+                titulo: Primeiro apply
+                dificuldade: guiado
+                terraform: true
+                diretorioTerraform: infra
+                ---
+                # Primeiro apply
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: terraform_estado
+                    endereco: docker_container.web
+                    atributo: name
+                    esperado: mirante-web
+                    descricao: o container está sob gestão do Terraform
+                """);
+
+        Assercao asercao = new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertInstanceOf(Assercao.TerraformEstado.class, asercao);
+        var estado = (Assercao.TerraformEstado) asercao;
+        assertEquals("infra", estado.diretorio());
+        assertEquals("docker_container.web", estado.endereco());
+        assertEquals("name", estado.atributo());
+        assertEquals("mirante-web", estado.esperado());
+    }
+
+    @Test
+    void asercaoDeTerraformExigeTerraformLigado() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: terraform_estado
+                    endereco: docker_container.web
+                    descricao: o container está sob gestão do Terraform
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("terraform: true"));
+    }
 }

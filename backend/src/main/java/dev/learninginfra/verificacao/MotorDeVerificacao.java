@@ -3,6 +3,7 @@ package dev.learninginfra.verificacao;
 import dev.learninginfra.execucao.ExecutorDeComando;
 import dev.learninginfra.execucao.SaidaDeComando;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -33,21 +35,35 @@ public class MotorDeVerificacao {
     private final ExecutorDeComando executor;
     private final Duration espera;
     private final HttpClient http;
+    private final Path raizDeTrabalho;
 
     /**
      * O {@code @Autowired} é obrigatório: com mais de um construtor, o Spring não elege
      * nenhum sozinho e procura um construtor sem argumentos, que não existe.
      */
     @Autowired
-    public MotorDeVerificacao(ExecutorDeComando executor) {
-        this(executor, ESPERA_PADRAO);
+    public MotorDeVerificacao(
+            ExecutorDeComando executor,
+            @Value("${learninginfra.diretorio-de-trabalho}") String diretorioDeTrabalho) {
+        this(executor, ESPERA_PADRAO, diretorioDeTrabalho);
+    }
+
+    /** Só para teste: o dublê simples, sem interesse em espera nem em Terraform. */
+    MotorDeVerificacao(ExecutorDeComando executor) {
+        this(executor, ESPERA_PADRAO, "../work");
     }
 
     /** Só para teste: permite uma espera curta sem deixar a suíte lenta. */
     MotorDeVerificacao(ExecutorDeComando executor, Duration espera) {
+        this(executor, espera, "../work");
+    }
+
+    /** Só para teste: espera curta e um diretório de trabalho controlado. */
+    MotorDeVerificacao(ExecutorDeComando executor, Duration espera, String diretorioDeTrabalho) {
         this.executor = executor;
         this.espera = espera;
         this.http = HttpClient.newBuilder().connectTimeout(espera).build();
+        this.raizDeTrabalho = Path.of(diretorioDeTrabalho);
     }
 
     public ResultadoDaVerificacao verificar(List<Assercao> asercoes) {
@@ -72,7 +88,64 @@ public class MotorDeVerificacao {
             case Assercao.KubernetesJsonpath a -> avaliarJsonpathKubernetes(a);
             case Assercao.KubernetesRbac a -> avaliarRbacKubernetes(a);
             case Assercao.AwsConsulta a -> avaliarConsultaAws(a);
+            case Assercao.TerraformEstado a -> avaliarEstadoTerraform(a);
         };
+    }
+
+    private ResultadoDeAsercao avaliarEstadoTerraform(Assercao.TerraformEstado a) {
+        Path diretorio = diretorioDoTerraform(a.diretorio());
+        if (diretorio == null) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "o Cenário aponta para fora do diretório de trabalho");
+        }
+        SaidaDeComando saida = executor.executar(List.of(
+                "terraform", "-chdir=" + diretorio, "state", "show", "-no-color", a.endereco()));
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "`" + a.endereco() + "` não está no state — o recurso não nasceu do código");
+        }
+        if (a.atributo() == null) {
+            return ResultadoDeAsercao.aprovada(a);
+        }
+        String observado = valorNoEstado(saida.stdout(), a.atributo());
+        if (observado == null) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "o atributo `" + a.atributo() + "` não aparece no state de `"
+                    + a.endereco() + "`");
+        }
+        return observado.equals(a.esperado())
+                ? ResultadoDeAsercao.aprovada(a)
+                : ResultadoDeAsercao.reprovada(a,
+                        "`" + a.atributo() + "` no state é `" + observado + "`");
+    }
+
+    /**
+     * O `state show` imprime `chave = valor` indentado, com aspas em texto. Interessa a
+     * primeira ocorrência: blocos aninhados repetem nomes comuns como `name`.
+     */
+    private String valorNoEstado(String saida, String atributo) {
+        java.util.regex.Matcher achado = java.util.regex.Pattern.compile(
+                        "^\\s*" + java.util.regex.Pattern.quote(atributo) + "\\s*=\\s*(.+?)\\s*$",
+                        java.util.regex.Pattern.MULTILINE)
+                .matcher(saida);
+        if (!achado.find()) {
+            return null;
+        }
+        String valor = achado.group(1);
+        return valor.length() >= 2 && valor.startsWith("\"") && valor.endsWith("\"")
+                ? valor.substring(1, valor.length() - 1)
+                : valor;
+    }
+
+    /**
+     * Confina o Terraform ao diretório de trabalho. O Cenário declara um caminho
+     * relativo; se ele escapar, a Verificação reprova em vez de rodar `terraform` num
+     * diretório arbitrário da máquina do leitor.
+     */
+    private Path diretorioDoTerraform(String relativo) {
+        Path raiz = raizDeTrabalho.toAbsolutePath().normalize();
+        Path alvo = raiz.resolve(relativo).normalize();
+        return alvo.startsWith(raiz) ? alvo : null;
     }
 
     private ResultadoDeAsercao avaliarConsultaAws(Assercao.AwsConsulta a) {

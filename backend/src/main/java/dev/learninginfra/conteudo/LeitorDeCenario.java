@@ -46,7 +46,8 @@ public class LeitorDeCenario {
                 diretorioDoCenario.resolve("verificacao.yaml"),
                 contextoKubernetes,
                 namespaceKubernetes,
-                ministack);
+                ministack,
+                diretorioTerraform);
 
         return new Cenario(
                 exigirTexto(meta, "id"),
@@ -131,7 +132,11 @@ public class LeitorDeCenario {
 
     @SuppressWarnings("unchecked")
     private List<Assercao> lerAsercoes(
-            Path arquivo, String contextoKubernetes, String namespaceKubernetes, boolean ministack) {
+            Path arquivo,
+            String contextoKubernetes,
+            String namespaceKubernetes,
+            boolean ministack,
+            String diretorioTerraform) {
         Map<String, Object> raiz = new Yaml().load(lerArquivo(arquivo));
         List<Map<String, Object>> itens = (List<Map<String, Object>>) raiz.get("asercoes");
         if (itens == null || itens.isEmpty()) {
@@ -140,7 +145,12 @@ public class LeitorDeCenario {
         List<Assercao> asercoes = new ArrayList<>();
         for (Map<String, Object> item : itens) {
             asercoes.add(montarAsercao(
-                    item, arquivo, contextoKubernetes, namespaceKubernetes, ministack));
+                    item,
+                    arquivo,
+                    contextoKubernetes,
+                    namespaceKubernetes,
+                    ministack,
+                    diretorioTerraform));
         }
         return List.copyOf(asercoes);
     }
@@ -150,7 +160,8 @@ public class LeitorDeCenario {
             Path arquivo,
             String contextoKubernetes,
             String namespaceKubernetes,
-            boolean ministack) {
+            boolean ministack,
+            String diretorioTerraform) {
         String tipo = exigirTexto(item, "tipo");
         return switch (tipo) {
             case "container_rodando" -> new Assercao.ContainerRodando(exigirTexto(item, "nome"));
@@ -224,9 +235,25 @@ public class LeitorDeCenario {
                         exigirTexto(item, "esperado"),
                         exigirTexto(item, "descricao"));
             }
+            case "terraform_estado" -> {
+                exigirTerraform(diretorioTerraform, tipo, arquivo);
+                yield new Assercao.TerraformEstado(
+                        diretorioTerraform,
+                        exigirTexto(item, "endereco"),
+                        textoOpcional(item, "atributo"),
+                        textoOpcional(item, "esperado"),
+                        exigirTexto(item, "descricao"));
+            }
             default -> throw new IllegalArgumentException(
                     "tipo de asserção desconhecido: " + tipo + " em " + arquivo);
         };
+    }
+
+    private void exigirTerraform(String diretorioTerraform, String tipo, Path arquivo) {
+        if (diretorioTerraform == null) {
+            throw new IllegalArgumentException(
+                    "a Asserção " + tipo + " exige terraform: true em " + arquivo);
+        }
     }
 
     private void exigirMinistack(boolean ministack, String tipo, Path arquivo) {

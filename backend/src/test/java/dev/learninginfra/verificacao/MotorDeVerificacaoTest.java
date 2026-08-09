@@ -54,6 +54,20 @@ class MotorDeVerificacaoTest {
         return new MotorDeVerificacao(falso);
     }
 
+    private MotorDeVerificacao motorComTrabalho(String stdout, int codigo, String trabalho) {
+        ExecutorDeComando falso = comando -> new SaidaDeComando(codigo, stdout, "");
+        return new MotorDeVerificacao(falso, java.time.Duration.ofSeconds(1), trabalho);
+    }
+
+    private static final String ESTADO_DO_CONTAINER = """
+            # docker_container.web:
+            resource "docker_container" "web" {
+                image = "sha256:abc"
+                name  = "mirante-web"
+                rm    = false
+            }
+            """;
+
     @Test
     void containerRodandoPassaQuandoDockerDizTrue() {
         var resultado = motorQueResponde("true\n", 0)
@@ -448,5 +462,59 @@ class MotorDeVerificacaoTest {
 
         assertTrue(apiFalhou.asercoes().getFirst().detalhe().contains("não consegui consultar"));
         assertTrue(valorErrado.asercoes().getFirst().detalhe().contains("CREATING"));
+    }
+
+    @Test
+    void terraformEstadoPassaQuandoOAtributoConfere() {
+        var resultado = motorComTrabalho(ESTADO_DO_CONTAINER, 0, "../work")
+                .verificar(List.of(new Assercao.TerraformEstado(
+                        ".", "docker_container.web", "name", "mirante-web",
+                        "o container está sob gestão do Terraform")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void terraformEstadoFalhaDizendoOValorObservado() {
+        var resultado = motorComTrabalho(ESTADO_DO_CONTAINER, 0, "../work")
+                .verificar(List.of(new Assercao.TerraformEstado(
+                        ".", "docker_container.web", "name", "outro-nome",
+                        "o container está sob gestão do Terraform")));
+
+        assertFalse(resultado.concluido());
+        assertEquals("`name` no state é `mirante-web`",
+                resultado.asercoes().getFirst().detalhe());
+    }
+
+    @Test
+    void terraformEstadoFalhaQuandoORecursoNaoNasceuDoCodigo() {
+        var resultado = motorComTrabalho("", 1, "../work")
+                .verificar(List.of(new Assercao.TerraformEstado(
+                        ".", "docker_container.web", null, null,
+                        "o container está sob gestão do Terraform")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não nasceu do código"));
+    }
+
+    @Test
+    void terraformEstadoSemAtributoSoExigeQueOEnderecoExista() {
+        var resultado = motorComTrabalho(ESTADO_DO_CONTAINER, 0, "../work")
+                .verificar(List.of(new Assercao.TerraformEstado(
+                        ".", "docker_container.web", null, null,
+                        "o container está sob gestão do Terraform")));
+
+        assertTrue(resultado.concluido());
+    }
+
+    @Test
+    void terraformEstadoRecusaDiretorioQueEscapaDoTrabalho() {
+        var resultado = motorComTrabalho(ESTADO_DO_CONTAINER, 0, "../work")
+                .verificar(List.of(new Assercao.TerraformEstado(
+                        "../..", "docker_container.web", null, null,
+                        "o container está sob gestão do Terraform")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("fora do diretório"));
     }
 }

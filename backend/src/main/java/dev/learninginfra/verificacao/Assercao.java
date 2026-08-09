@@ -137,4 +137,21 @@ public sealed interface Assercao {
             String esperado,
             String descricao) implements Assercao {
     }
+
+    /**
+     * Um endereço está no state do Terraform e, quando {@code atributo} vem preenchido,
+     * com o valor esperado. Prova que o recurso nasceu do código, e não de um comando
+     * digitado à mão.
+     *
+     * <p>O {@code diretorio} é relativo ao diretório de trabalho e chega injetado pelo
+     * frontmatter do Cenário; o {@link MotorDeVerificacao} resolve e confina o caminho.
+     * O YAML do Cenário não escolhe onde o Terraform roda.
+     */
+    record TerraformEstado(
+            String diretorio,
+            String endereco,
+            String atributo,
+            String esperado,
+            String descricao) implements Assercao {
+    }
 }
