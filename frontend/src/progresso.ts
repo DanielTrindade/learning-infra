@@ -52,3 +52,11 @@ export function salvarTrilhaAtual(trilha: string) {
     // O laboratório continua utilizável quando o browser bloqueia armazenamento local.
   }
 }
+
+export function limparTrilhaAtual() {
+  try {
+    localStorage.removeItem(CHAVE_TRILHA_ATUAL)
+  } catch {
+    // O laboratório continua utilizável quando o browser bloqueia armazenamento local.
+  }
+}

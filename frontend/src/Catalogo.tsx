@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import {
   listarTrilhas,
   type CenarioResumo,
@@ -9,6 +9,7 @@ import hero from './assets/hero-infra.svg'
 import {
   carregarTrilhaAtual,
   estadoDoCenario,
+  limparTrilhaAtual,
   numeroDoCenario,
   rotulosDificuldade,
   rotulosEstado,
@@ -33,6 +34,7 @@ type ResumoDaTrilha = {
 }
 
 const CHAVE_TRILHAS_ABERTAS = 'learning-infra:trilhas-abertas:v2'
+const CHAVE_TRILHAS_RESTAURADAS = 'learning-infra:trilhas-restauradas:v1'
 
 const filtros: { id: Filtro; rotulo: string }[] = [
   { id: 'todos', rotulo: 'Todos' },
@@ -58,6 +60,28 @@ function carregarTrilhasAbertas(): Set<string> | null {
 function salvarTrilhasAbertas(trilhas: Set<string>) {
   try {
     localStorage.setItem(CHAVE_TRILHAS_ABERTAS, JSON.stringify([...trilhas]))
+  } catch {
+    // A navegação continua funcionando quando o browser bloqueia armazenamento local.
+  }
+}
+
+function carregarTrilhasRestauradas(): Set<string> | null {
+  try {
+    const valor = localStorage.getItem(CHAVE_TRILHAS_RESTAURADAS)
+    if (valor === null) return null
+
+    const trilhas = JSON.parse(valor)
+    return Array.isArray(trilhas) && trilhas.every((trilha) => typeof trilha === 'string')
+      ? new Set(trilhas)
+      : null
+  } catch {
+    return null
+  }
+}
+
+function salvarTrilhasRestauradas(trilhas: Set<string>) {
+  try {
+    localStorage.setItem(CHAVE_TRILHAS_RESTAURADAS, JSON.stringify([...trilhas]))
   } catch {
     // A navegação continua funcionando quando o browser bloqueia armazenamento local.
   }
@@ -239,12 +263,102 @@ function ListaDeCenarios({
   )
 }
 
+function CartaoDeTrilha({
+  resumo,
+  aulas,
+  fundamentos,
+  aberta,
+  ehAtual,
+  podeIniciar,
+  legenda,
+  acoes,
+  onAlternar,
+}: {
+  resumo: ResumoDaTrilha
+  aulas: CenarioResumo[]
+  fundamentos: FundamentosResumo | null
+  aberta: boolean
+  ehAtual: boolean
+  podeIniciar: boolean
+  legenda: string
+  acoes: ReactNode
+  onAlternar: () => void
+}) {
+  const idDosCenarios = `cenarios-trilha-${resumo.id}`
+  const idDoTitulo = `titulo-trilha-${resumo.id}`
+
+  return (
+    <section
+      className={`trilha ${aberta ? '' : 'trilha-colapsada'} ${ehAtual ? 'trilha-atual' : ''}`}
+      aria-labelledby={idDoTitulo}
+    >
+      <header
+        className="trilha-cabecalho"
+        onClick={(evento) => {
+          if ((evento.target as HTMLElement).closest('button, a')) return
+          onAlternar()
+        }}
+      >
+        <div className="trilha-identidade">
+          <span className="trilha-icone" aria-hidden="true">▣</span>
+          <div>
+            <h3 className="trilha-titulo" id={idDoTitulo}>{resumo.nome}</h3>
+            <span className="trilha-legenda">{legenda}</span>
+          </div>
+        </div>
+
+        <ResumoVisualDaTrilha resumo={resumo} />
+
+        <div className="trilha-acoes">
+          {acoes}
+          <button
+            type="button"
+            className="trilha-recolher"
+            aria-expanded={aberta}
+            aria-controls={idDosCenarios}
+            aria-label={`${aberta ? 'Recolher' : 'Mostrar'} aulas da trilha ${resumo.nome}`}
+            title={aberta ? 'Recolher aulas' : 'Mostrar aulas'}
+            onClick={onAlternar}
+          >
+            <svg
+              className="trilha-chevron"
+              viewBox="0 0 16 16"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 6.25l4 4 4-4" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <ListaDeCenarios
+        aulas={aulas}
+        fundamentos={fundamentos}
+        aberta={aberta}
+        id={idDosCenarios}
+        idDaTrilha={resumo.id}
+        podeIniciar={podeIniciar}
+      />
+    </section>
+  )
+}
+
 export function Catalogo() {
   const [trilhas, setTrilhas] = useState<TrilhaResumo[] | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [trilhaAtual, setTrilhaAtual] = useState<string | null>(carregarTrilhaAtual)
   const [trilhasAbertas, setTrilhasAbertas] = useState<Set<string> | null>(carregarTrilhasAbertas)
+  const [trilhasRestauradas, setTrilhasRestauradas] = useState<Set<string> | null>(
+    carregarTrilhasRestauradas,
+  )
   const [trilhasRecolhidasNoFiltro, setTrilhasRecolhidasNoFiltro] = useState<Set<string>>(
     () => new Set(),
   )
@@ -277,8 +391,13 @@ export function Catalogo() {
   }
 
   const resumos = trilhas.map(resumirTrilha)
-  const trilhasConcluidas = resumos.filter((resumo) => resumo.concluida)
-  const trilhasDisponiveis = resumos.filter((resumo) => !resumo.concluida)
+  const trilhasRestauradasEfetivas = trilhasRestauradas ?? new Set<string>()
+  const trilhasConcluidas = resumos.filter(
+    (resumo) => resumo.concluida && !trilhasRestauradasEfetivas.has(resumo.id),
+  )
+  const trilhasDisponiveis = resumos.filter(
+    (resumo) => !resumo.concluida || trilhasRestauradasEfetivas.has(resumo.id),
+  )
   const trilhaDoAmbienteAtivo = trilhasDisponiveis.find((resumo) =>
     resumo.aulas.some((cenario) => cenario.ativo),
   )
@@ -330,6 +449,30 @@ export function Catalogo() {
     alterarTrilhasAbertas(() => new Set([trilha]))
   }
 
+  function restaurarTrilha(trilha: string) {
+    setTrilhasRestauradas((atuais) => {
+      const proximas = new Set(atuais ?? [])
+      proximas.add(trilha)
+      salvarTrilhasRestauradas(proximas)
+      return proximas
+    })
+    aderirATrilha(trilha)
+    window.requestAnimationFrame(() => rolarAte(`titulo-trilha-${trilha}`))
+  }
+
+  function arquivarTrilha(trilha: string) {
+    setTrilhasRestauradas((atuais) => {
+      const proximas = new Set(atuais ?? [])
+      proximas.delete(trilha)
+      salvarTrilhasRestauradas(proximas)
+      return proximas
+    })
+    if (trilhaAtual === trilha) {
+      setTrilhaAtual(null)
+      limparTrilhaAtual()
+    }
+  }
+
   function alternarTrilha(trilha: string) {
     if (filtro !== 'todos') {
       setTrilhasRecolhidasNoFiltro((atuais) => {
@@ -351,6 +494,14 @@ export function Catalogo() {
   function selecionarFiltro(proximoFiltro: Filtro) {
     setFiltro(proximoFiltro)
     setTrilhasRecolhidasNoFiltro(new Set())
+  }
+
+  function alternarAberturaArquivada(trilha: string) {
+    alterarTrilhasAbertas((abertas) => {
+      if (abertas.has(trilha)) abertas.delete(trilha)
+      else abertas.add(trilha)
+      return abertas
+    })
   }
 
   function rolarAte(id: string) {
@@ -487,37 +638,25 @@ export function Catalogo() {
               const aberta = filtro === 'todos'
                 ? trilhasAbertasEfetivas.has(resumo.id)
                 : !trilhasRecolhidasNoFiltro.has(resumo.id)
-              const idDosCenarios = `cenarios-trilha-${resumo.id}`
-              const idDoTitulo = `titulo-trilha-${resumo.id}`
+              const restaurada = resumo.concluida && trilhasRestauradasEfetivas.has(resumo.id)
 
               return (
-                <section
+                <CartaoDeTrilha
                   key={resumo.id}
-                  className={`trilha ${aberta ? '' : 'trilha-colapsada'} ${ehAtual ? 'trilha-atual' : ''}`}
-                  aria-labelledby={idDoTitulo}
-                >
-                  <header
-                    className="trilha-cabecalho"
-                    onClick={(evento) => {
-                      if ((evento.target as HTMLElement).closest('button, a')) return
-                      alternarTrilha(resumo.id)
-                    }}
-                  >
-                    <div className="trilha-identidade">
-                      <span className="trilha-icone" aria-hidden="true">▣</span>
-                      <div>
-                        <h3 className="trilha-titulo" id={idDoTitulo}>{resumo.nome}</h3>
-                        <span className="trilha-legenda">
-                          {filtro === 'todos'
-                            ? `${resumo.aulas.length} ${resumo.aulas.length === 1 ? 'Cenário' : 'Cenários'}`
-                            : `${aulas.length} ${aulas.length === 1 ? 'resultado' : 'resultados'} neste filtro`}
-                        </span>
-                      </div>
-                    </div>
-
-                    <ResumoVisualDaTrilha resumo={resumo} />
-
-                    <div className="trilha-acoes">
+                  resumo={resumo}
+                  aulas={aulas}
+                  fundamentos={filtro === 'todos' ? resumo.fundamentos : null}
+                  aberta={aberta}
+                  ehAtual={ehAtual}
+                  podeIniciar={ehAtual}
+                  legenda={
+                    filtro === 'todos'
+                      ? `${resumo.aulas.length} ${resumo.aulas.length === 1 ? 'Cenário' : 'Cenários'}`
+                      : `${aulas.length} ${aulas.length === 1 ? 'resultado' : 'resultados'} neste filtro`
+                  }
+                  onAlternar={() => alternarTrilha(resumo.id)}
+                  acoes={
+                    <>
                       {ehAtual ? (
                         <span className="selo-trilha-atual"><i aria-hidden="true" /> Trilha atual</span>
                       ) : (
@@ -529,42 +668,18 @@ export function Catalogo() {
                           {resumo.temProgresso ? 'Retomar trilha' : 'Aderir à trilha'}
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className="trilha-recolher"
-                        aria-expanded={aberta}
-                        aria-controls={idDosCenarios}
-                        aria-label={`${aberta ? 'Recolher' : 'Mostrar'} aulas da trilha ${resumo.nome}`}
-                        title={aberta ? 'Recolher aulas' : 'Mostrar aulas'}
-                        onClick={() => alternarTrilha(resumo.id)}
-                      >
-                        <svg
-                          className="trilha-chevron"
-                          viewBox="0 0 16 16"
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
+                      {restaurada && (
+                        <button
+                          type="button"
+                          className="botao trilha-arquivar"
+                          onClick={() => arquivarTrilha(resumo.id)}
                         >
-                          <path d="M4 6.25l4 4 4-4" />
-                        </svg>
-                      </button>
-                    </div>
-                  </header>
-
-                  <ListaDeCenarios
-                    aulas={aulas}
-                    fundamentos={filtro === 'todos' ? resumo.fundamentos : null}
-                    aberta={aberta}
-                    id={idDosCenarios}
-                    idDaTrilha={resumo.id}
-                    podeIniciar={ehAtual}
-                  />
-                </section>
+                          Arquivar
+                        </button>
+                      )}
+                    </>
+                  }
+                />
               )
             })
           )}
@@ -577,19 +692,32 @@ export function Catalogo() {
             <div>
               <p className="eyebrow">Arquivo de conquistas</p>
               <h2 id="titulo-concluidas">Trilhas concluídas</h2>
+              <p className="arquivo-descricao">Restaurar devolve a Trilha ao roteiro de estudo para refazer ou revisitar.</p>
             </div>
             <span>{trilhasConcluidas.length} {trilhasConcluidas.length === 1 ? 'trilha' : 'trilhas'}</span>
           </div>
-          <div className="trilhas-concluidas-grade">
+          <div className="arquivo-lista">
             {trilhasConcluidas.map((resumo) => (
-              <article className="trilha-concluida" key={resumo.id}>
-                <span className="trilha-concluida-status"><i aria-hidden="true" /> Trilha concluída</span>
-                <h3>{resumo.nome}</h3>
-                <p>{resumo.total} etapas concluídas</p>
-                <a href={resumo.fundamentos
-                  ? `#/trilhas/${resumo.id}/fundamentos`
-                  : `#/cenarios/${resumo.aulas[0].id}`}>Revisar conteúdo <span aria-hidden="true">→</span></a>
-              </article>
+              <CartaoDeTrilha
+                key={resumo.id}
+                resumo={resumo}
+                aulas={resumo.aulas}
+                fundamentos={resumo.fundamentos}
+                aberta={trilhasAbertasEfetivas.has(resumo.id)}
+                ehAtual={false}
+                podeIniciar
+                legenda={`${resumo.total} ${resumo.total === 1 ? 'etapa' : 'etapas'} concluídas`}
+                onAlternar={() => alternarAberturaArquivada(resumo.id)}
+                acoes={
+                  <button
+                    type="button"
+                    className="botao trilha-restaurar"
+                    onClick={() => restaurarTrilha(resumo.id)}
+                  >
+                    Restaurar trilha
+                  </button>
+                }
+              />
             ))}
           </div>
         </section>
