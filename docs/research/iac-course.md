@@ -276,3 +276,135 @@ ganha valor didático em três frentes que nenhuma das anteriores cobriu:
 | segundo `plan -detailed-exitcode` | exit code 0 |
 | duração do `plan` | 1.9293977 s (`TotalSeconds`) |
 | formato de `state show` | `    name                                        = "validacao-iac-web"` |
+
+## Validação executada em 2026-08-10 — Atos II e III
+
+Rodada antes de escrever os planos das Etapas 2 a 6, contra Terraform 1.15.8, provider
+`kreuzwerker/docker` 4.5 e Docker Engine 29.6.1. Cinco achados mudam o desenho e estão
+marcados como tal.
+
+### `import` não é simétrico ao `apply` — **muda o desenho**
+
+O `Read` do provider Docker **não recupera** `ports`, `volumes` nem `env` de um container
+importado. O state importado sai sem esses blocos, e o `plan` seguinte quer criá-los:
+
+| Bloco no `.tf` | Efeito no `plan` depois do `import` |
+|---|---|
+| `env` ausente da configuração | `+ env = (known after apply) # forces replacement` |
+| `env = []` explícito | atualização em lugar, sem recriação |
+| `ports { … }` | `+ ports { # forces replacement` — **recriação inevitável** |
+| `volumes { … }` | `+ volumes { # forces replacement` — **recriação inevitável** |
+
+Medido: `docker_volume` e `docker_network` importam limpos. Um container **sem portas
+publicadas e sem volumes**, com `env = []` na configuração, importa e converge —
+`0 added, 1 changed, 0 destroyed`, mesmo id de container antes e depois, e
+`plan -detailed-exitcode` igual a 0 em seguida.
+
+Consequência para o **Cenário 07**: a infra órfã a adotar é um **volume, uma rede e um
+container sem portas publicadas**. O container com porta publicada não pode ser adotado
+sem recriação, e essa impossibilidade vira a lição do Cenário: `import` traz só o que o
+`Read` do provider implementa, e quem decide se a adoção é segura é o `plan`, não a
+intenção de quem escreveu o bloco.
+
+### `moved` preserva volume com dados, mas o plano não fica limpo antes do `apply`
+
+Sequência medida com um volume contendo `pedido-4711`:
+
+| Passo | Resultado |
+|---|---|
+| renomear o endereço **sem** `moved` | `Plan: 2 to add, 0 to change, 2 to destroy` — o volume com dados seria destruído |
+| renomear **com** `moved` | `Plan: 0 to add, 0 to change, 0 to destroy`, mas **`-detailed-exitcode` = 2** |
+| `apply` dos `moved` | `0 added, 0 changed, 0 destroyed`; mesmo id de container; `pedido-4711` intacto |
+| `plan` depois do `apply` | `No changes`, exit code **0** |
+
+O exit code 2 com plano vazio é a sutileza que o Cenário 09 precisa nomear: mover um
+endereço **é** uma mudança a aplicar, ainda que nada no mundo real se altere. A Asserção
+`terraform_plano_limpo` só aprova depois do `apply`, e isso está correto.
+
+`prevent_destroy` protege **um endereço, não um recurso**: declarado no endereço novo, ele
+não impediu o plano destrutivo do endereço antigo. Quando o destroy alcança o endereço
+protegido, a mensagem é `Error: Instance cannot be destroyed`.
+
+### Endereço de módulo com `for_each` quebra o `terraform_estado` no Windows — **muda o desenho**
+
+`terraform state list` devolve endereços com aspas embutidas:
+
+```
+module.ambiente["producao"].docker_container.web
+```
+
+O `ProcessBuilder` do Java só cita argumentos que contêm espaço. Um argumento com aspas
+no meio atravessa a linha de comando do Windows e o runtime do Go a desfaz, entregando ao
+Terraform `module.ambiente[producao].docker_container.web`. Medido com Java 25:
+
+| Argumento entregue ao `ProcessBuilder` | Exit code |
+|---|---|
+| `module.ambiente["producao"].docker_container.web` | 1 — `Error parsing instance address` |
+| `module.ambiente[\"producao\"].docker_container.web` | 0 — atributo lido |
+
+A correção é escapar `"` como `\"` no `MotorDeVerificacao` quando o sistema for Windows.
+Sem ela, a evidência prevista para o **Cenário 08** (`terraform_estado` em endereços
+`module.*`) não funciona. É a única mudança de plataforma que as Etapas 3 a 6 exigem, e
+está na Etapa 4.
+
+O mesmo problema aparece no conteúdo: no PowerShell, `terraform state show` de um
+endereço indexado precisa de `'module.ambiente[\"producao\"].docker_container.web'`.
+
+### Módulo sem `required_providers` próprio resolve para `hashicorp/docker`
+
+Um módulo filho que usa `docker_container` sem declarar o próprio bloco
+`required_providers` faz o `init` procurar `registry.terraform.io/hashicorp/docker` e
+falhar com *provider registry does not have a provider named*. É armadilha clássica de
+extração de módulo e entra como passo do **Cenário 08**.
+
+### `terraform test`, `precondition`, `postcondition`, `check`, `fmt` e `validate`
+
+Um arquivo `.tftest.hcl` com quatro `run` — dois `command = plan`, um `expect_failures`
+sobre `precondition`, um `expect_failures` sobre `validation` de variável e um
+`command = apply` real — passou inteiro contra o provider Docker:
+
+```
+Success! 4 passed, 0 failed.
+```
+
+O teardown do `test` removeu o container aplicado. `fmt -check -recursive` e `validate`
+saíram com código 0. A linha `Success! 4 passed, 0 failed.` é a âncora estável para o
+`comando_produz` do **Cenário 11**.
+
+### Drift é detectado nos dois formatos
+
+| Divergência criada à mão | `plan -detailed-exitcode` |
+|---|---|
+| `docker stop` no container | 2 — `must be replaced` |
+| `docker rm -f` no container | 2 — `has been deleted` / `will be created` |
+
+### `terraform -chdir` no PowerShell
+
+`terraform -chdir=$lab` **não** expande a variável: o binário recebe o literal `$lab` e
+responde `Error handling -chdir option`. A forma que funciona é `terraform -chdir="$lab"`.
+Só afeta scripts de validação; o backend monta a lista de argumentos em Java e o conteúdo
+instrui o leitor a rodar `terraform` dentro do próprio diretório.
+
+### Backend S3 — documentação, ainda não medido
+
+`use_lockfile = true` é argumento do backend `s3`, e o lock por DynamoDB está
+descontinuado. Para um endpoint S3-compatível o backend aceita o argumento `endpoints`,
+mais `use_path_style`, `skip_credentials_validation`, `skip_region_validation`,
+`skip_requesting_account_id`, `skip_metadata_api_check` e `skip_s3_checksum` — este
+último existe justamente por causa de implementações S3-compatíveis. O risco do
+**Cenário 16** continua aberto e a contingência registrada acima continua valendo.
+[Backend S3](https://developer.hashicorp.com/terraform/language/backend/s3)
+
+### Provider Kubernetes — documentação, ainda não medido
+
+`config_path` e `config_context` são os argumentos de configuração. Para o **Cenário 14**
+existe um recurso que resolve exatamente o assunto de campos gerenciados:
+`kubernetes_config_map_v1_data` gerencia **apenas as chaves declaradas** de um ConfigMap
+que já existe, via server-side apply, e conflita quando outro field manager já governa a
+mesma chave — conflito que `force = true` sobrescreve. É o material do Cenário sobre
+quem é o dono do recurso.
+[Provider Kubernetes](https://github.com/hashicorp/terraform-provider-kubernetes/blob/main/docs/index.md)
+
+Nesta máquina, em 2026-08-10, `kubectl config get-contexts` não lista nenhum contexto: o
+cluster do Docker Desktop não está no ar. A validação empírica do Ato IV depende de
+subi-lo e é a Task 1 da Etapa 6.
