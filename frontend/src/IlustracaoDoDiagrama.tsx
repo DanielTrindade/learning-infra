@@ -153,6 +153,44 @@ const desenhos: Record<VisualDoDiagrama, ReactNode> = {
       <path className="ilustracao-base" d="M7 84h146" />
     </>
   ),
+  'ciclo-iac': (
+    <>
+      <rect className="ilustracao-plano" x="10" y="18" width="32" height="24" rx="4" />
+      <rect className="ilustracao-plano ilustracao-plano-destaque" x="64" y="18" width="32" height="24" rx="4" />
+      <rect className="ilustracao-plano" x="118" y="18" width="32" height="24" rx="4" />
+      <rect className="ilustracao-plano ilustracao-plano-alerta" x="64" y="62" width="32" height="24" rx="4" />
+      <path className="ilustracao-linha-fantasma" d="M16 26h20M16 33h14M124 26h20M124 33h12" />
+      <path className="ilustracao-linha" d="M42 30h16M96 30h16M134 42v20H102M62 74H26V42" />
+      <path className="ilustracao-seta" d="m53 26 6 4-6 4M107 26l6 4-6 4M107 70l-6 4 6 4M31 47l-5-6 5-1" />
+      <circle className="ilustracao-ponto" cx="80" cy="30" r="4" />
+      <circle className="ilustracao-ponto-alerta" cx="80" cy="74" r="4" />
+    </>
+  ),
+  'triangulo-state': (
+    <>
+      <path className="ilustracao-linha" d="M80 20 30 74h100z" />
+      <circle className="ilustracao-no-destaque" cx="80" cy="20" r="13" />
+      <circle className="ilustracao-no" cx="30" cy="74" r="13" />
+      <circle className="ilustracao-no-alerta" cx="130" cy="74" r="13" />
+      <path className="ilustracao-linha-fantasma" d="M74 16h12M24 70h12M124 70h12M74 24h12M24 78h12M124 78h12" />
+      <circle className="ilustracao-ponto" cx="53" cy="48" r="3" />
+      <circle className="ilustracao-ponto" cx="107" cy="48" r="3" />
+      <circle className="ilustracao-ponto-alerta" cx="80" cy="74" r="3" />
+    </>
+  ),
+  'grafo-dependencias': (
+    <>
+      <rect className="ilustracao-no-destaque" x="62" y="10" width="36" height="20" rx="3" />
+      <path className="ilustracao-linha" d="M80 30v12H40v10M80 42h40v10" />
+      <path className="ilustracao-seta" d="m36 47 4 6 4-6M116 47l4 6 4-6" />
+      <rect className="ilustracao-no" x="22" y="52" width="36" height="20" rx="3" />
+      <rect className="ilustracao-no" x="102" y="52" width="36" height="20" rx="3" />
+      <path className="ilustracao-linha" d="M120 72v8H80" />
+      <path className="ilustracao-seta" d="m85 76-5 4 5 4" />
+      <rect className="ilustracao-no-sucesso" x="44" y="74" width="36" height="14" rx="3" />
+      <path className="ilustracao-linha-fantasma" d="M28 60h24M108 60h24" />
+    </>
+  ),
 }
 
 export function IlustracaoDoDiagrama({ visual }: { visual: VisualDoDiagrama }) {
