@@ -141,7 +141,7 @@ Abra **<http://localhost:5180>**.
 
 ## Fundamentos e evolução das Trilhas
 
-Três das quatro Trilhas oferecem **Fundamentos** e um Questionário com 12 situações,
+As quatro Trilhas oferecem **Fundamentos** e um Questionário com 12 situações,
 aproveitamento recomendado de 80%, feedback por questão e links para revisar cada
 conceito:
 
@@ -172,11 +172,10 @@ A expansão prática de Docker foi implementada e está no catálogo, nos Cenár
 A segunda rodada de conteúdo avançado — CI/CD, scan, SBOM e cadeia de fornecimento —
 permanece planejada, mas não bloqueia a expansão atual.
 
-A quarta Trilha, **Infraestrutura como Código**, está em construção. O estudo de
-ferramental está em [`docs/research/iac-course.md`](docs/research/iac-course.md) e o
-desenho completo — Fundamentos e 18 Cenários em quatro atos — em
+A quarta Trilha, **Infraestrutura como Código**, tem Fundamentos publicados e Cenários em construção. O estudo de ferramental está em
+[`docs/research/iac-course.md`](docs/research/iac-course.md) e o desenho completo —
+Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
-Esta etapa entregou a plataforma de verificação e o Cenário 01.
 
 ## O que a plataforma mexe na sua máquina
 
