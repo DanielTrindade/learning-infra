@@ -408,3 +408,25 @@ quem é o dono do recurso.
 Nesta máquina, em 2026-08-10, `kubectl config get-contexts` não lista nenhum contexto: o
 cluster do Docker Desktop não está no ar. A validação empírica do Ato IV depende de
 subi-lo e é a Task 1 da Etapa 6.
+
+## Símbolos do plano medidos no provider Docker 4.5
+
+Medido em 2026-08-10 contra Terraform 1.15.8, provider `kreuzwerker/docker` 4.5 e Docker
+Engine 29.x, com um `docker_container` publicado na porta 8071. O Cenário 02 cita esta
+tabela: cada mudança no arquivo produz um símbolo, e o `plan` é quem diz qual.
+
+| Mudança | Símbolo | Linha observada |
+|---|---|---|
+| `restart = "no"` → `"unless-stopped"` | `~` | `~ restart = "no" -> "unless-stopped"` — `will be updated in-place` |
+| `ports.external` 8071 → 8075 | `-/+` | `# docker_container.web must be replaced` — `~ external = 8071 -> 8075 # forces replacement` |
+| recurso removido do arquivo | `-` | `# docker_container.web will be destroyed` |
+| recurso novo no arquivo | `+` | `# docker_container.web will be created` |
+
+`restart` é o atributo confirmado atualizável em lugar: trocá-lo não destrói nem recria o
+container, e o plano fecha com `Plan: 0 to add, 1 to change, 0 to destroy.` Qualquer
+mudança no bloco `ports` força recriação — `Plan: 1 to add, 0 to change, 1 to destroy.` —,
+e remover o recurso do arquivo destrói com `Plan: 0 to add, 0 to change, 1 to destroy.`
+
+O `apply` de um plano salvo com `-out` não pede confirmação: após `Plan:` segue direto
+para as ações e termina com `Apply complete! Resources: 1 added, 0 changed, 1 destroyed.`
+É a razão de um pipeline poder aplicar um plano salvo de forma não interativa.
