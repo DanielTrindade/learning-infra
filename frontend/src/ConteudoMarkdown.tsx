@@ -1,5 +1,6 @@
 import { isValidElement, type ReactNode } from 'react'
 import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { BlocoDeCodigo } from './BlocoDeCodigo'
 import { Diagrama } from './Diagrama'
 import { slugificar, textoDoNo } from './texto'
@@ -17,6 +18,7 @@ function PreDoConteudo({ children }: { children?: ReactNode }) {
 export function ConteudoMarkdown({ markdown }: { markdown: string }) {
   return (
     <Markdown
+      remarkPlugins={[remarkGfm]}
       components={{
         h1: () => null,
         h2: ({ children }) => <h2 id={slugificar(textoDoNo(children))}>{children}</h2>,
