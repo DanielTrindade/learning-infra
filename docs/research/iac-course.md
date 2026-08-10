@@ -409,7 +409,7 @@ Nesta máquina, em 2026-08-10, `kubectl config get-contexts` não lista nenhum c
 cluster do Docker Desktop não está no ar. A validação empírica do Ato IV depende de
 subi-lo e é a Task 1 da Etapa 6.
 
-## Símbolos do plano medidos no provider Docker 4.5
+### Símbolos do plano medidos no provider Docker 4.5
 
 Medido em 2026-08-10 contra Terraform 1.15.8, provider `kreuzwerker/docker` 4.5 e Docker
 Engine 29.x, com um `docker_container` publicado na porta 8071. O Cenário 02 cita esta
