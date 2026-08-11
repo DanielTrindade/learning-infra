@@ -546,4 +546,46 @@ class MotorDeVerificacaoTest {
         assertFalse(resultado.concluido());
         assertTrue(resultado.asercoes().getFirst().detalhe().contains("terraform init"));
     }
+
+    @Test
+    void enderecoDeModuloGanhaAspasEscapadasNoWindows() {
+        String escapado = MotorDeVerificacao.enderecoParaLinhaDeComando(
+                "module.ambiente[\"producao\"].docker_container.web", true);
+
+        assertEquals("module.ambiente[\\\"producao\\\"].docker_container.web", escapado);
+    }
+
+    @Test
+    void enderecoDeModuloFicaIntactoForaDoWindows() {
+        String cru = "module.ambiente[\"producao\"].docker_container.web";
+
+        assertEquals(cru, MotorDeVerificacao.enderecoParaLinhaDeComando(cru, false));
+    }
+
+    @Test
+    void enderecoSemAspasNaoEAlterado() {
+        assertEquals("docker_container.web",
+                MotorDeVerificacao.enderecoParaLinhaDeComando("docker_container.web", true));
+    }
+
+    @Test
+    void avaliadorDeEstadoEntregaOEnderecoAoExecutor() {
+        List<List<String>> recebidos = new java.util.ArrayList<>();
+        ExecutorDeComando espiao = comando -> {
+            recebidos.add(comando);
+            return new SaidaDeComando(0, ESTADO_DO_CONTAINER, "");
+        };
+
+        new MotorDeVerificacao(espiao, java.time.Duration.ofSeconds(1), "../work")
+                .verificar(List.of(new Assercao.TerraformEstado(
+                        ".", "module.ambiente[\"producao\"].docker_container.web",
+                        null, null, "o container do módulo está no state")));
+
+        String enderecoEnviado = recebidos.getFirst().getLast();
+        boolean windows = System.getProperty("os.name").startsWith("Windows");
+        assertEquals(
+                MotorDeVerificacao.enderecoParaLinhaDeComando(
+                        "module.ambiente[\"producao\"].docker_container.web", windows),
+                enderecoEnviado);
+    }
 }
