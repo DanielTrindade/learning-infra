@@ -31,7 +31,7 @@ class CatalogoRealTest {
                 .filter(cenario -> cenario.id().startsWith("iac/"))
                 .toList();
 
-        assertThat(cenarios).hasSize(44);
+        assertThat(cenarios).hasSize(48);
         assertThat(kubernetes).hasSize(14);
         assertThat(kubernetes).allMatch(Cenario::usaKubernetes);
         assertThat(kubernetes.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
@@ -44,10 +44,10 @@ class CatalogoRealTest {
         assertThat(docker).allMatch(Cenario::usaDocker);
         assertThat(docker.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
                 .isEqualTo(56);
-        assertThat(iac).hasSize(1);
+        assertThat(iac).hasSize(5);
         assertThat(iac).allMatch(Cenario::terraform);
         assertThat(iac.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
-                .isEqualTo(4);
+                .isEqualTo(23);
     }
 
     @Test

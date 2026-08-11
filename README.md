@@ -172,7 +172,7 @@ A expansão prática de Docker foi implementada e está no catálogo, nos Cenár
 A segunda rodada de conteúdo avançado — CI/CD, scan, SBOM e cadeia de fornecimento —
 permanece planejada, mas não bloqueia a expansão atual.
 
-A quarta Trilha, **Infraestrutura como Código**, tem Fundamentos publicados e Cenários em construção. O estudo de ferramental está em
+A quarta Trilha, **Infraestrutura como Código**, tem Fundamentos publicados e o Ato I completo e os Atos II a IV em construção. O estudo de ferramental está em
 [`docs/research/iac-course.md`](docs/research/iac-course.md) e o desenho completo —
 Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
@@ -215,7 +215,7 @@ descartável) e o Cenário 11 usa a **9098** para a porta que o `db` expõe inde
 no estado quebrado. A Trilha AWS usa **4566** (MiniStack), **18080–18081** (tasks ECS),
 **15432+** (RDS) e **16443+** (EKS/k3s). O backend fica na **8099** e o frontend na
 **5180**.
-A Trilha IaC usa o bloco **8070–8079**, começando pela **8070** no Cenário 01.
+A Trilha IaC usa o bloco **8070–8079**: 8070 no Cenário 01, 8071 no 02, 8072 e 8073 no 03, 8074 no 04 e 8075 no 05.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está
