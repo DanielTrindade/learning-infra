@@ -1,0 +1,16 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-web
+  - tipo: container_em_rede
+    nome: mirante-web
+    rede: mirante-interna
+    presente: true
+  - tipo: volume_existe
+    nome: mirante-conteudo
+  - tipo: terraform_estado
+    endereco: docker_network.interna
+    atributo: name
+    esperado: mirante-interna
+    descricao: a rede nasceu do código
+  - tipo: terraform_plano_limpo
+    descricao: o grafo aplicado é o que o arquivo descreve
