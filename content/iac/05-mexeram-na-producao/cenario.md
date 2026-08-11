@@ -137,7 +137,9 @@ A Verificação deste Cenário tem quatro Asserções. As duas primeiras confere
 código, e não à mão. A quarta roda um `plan` e só aprova quando não há mais divergência
 entre o código, o state e o que está no ar — o triângulo inteiro em sincronia.
 
-A quarta é a que dá sentido ao Cenário. Suba o mesmo serviço com um `docker run`, e as duas
-primeiras Asserções passam — o container existe e responde. Mas o state aponta para um
-container que não existe mais, e o plano limpo reprova. O resultado certo pelo caminho
-errado não conta nesta Trilha.
+A quarta é a que dá sentido ao Cenário. Suba o mesmo serviço com um `docker run`, e as três
+primeiras Asserções passam — o container existe, responde e o state ainda lê `mirante-web`,
+pois o registro nunca foi tocado. Só a quarta reprova: o plano limpo é o único detetor de
+uma correção feita à mão, porque aponta para a distância que as outras não enxergam — um
+state que descreve um container que já não é o que o Terraform administra. O resultado
+certo pelo caminho errado não conta nesta Trilha.
