@@ -1,0 +1,18 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-homologacao
+  - tipo: container_rodando
+    nome: mirante-producao
+  - tipo: http_responde
+    url: http://localhost:8072
+    status: 200
+  - tipo: http_responde
+    url: http://localhost:8073
+    status: 200
+  - tipo: terraform_estado
+    endereco: docker_container.web
+    atributo: name
+    esperado: mirante-producao
+    descricao: o workspace selecionado é o de produção e o container nasceu do código
+  - tipo: terraform_plano_limpo
+    descricao: o ambiente selecionado não tem mudança pendente
