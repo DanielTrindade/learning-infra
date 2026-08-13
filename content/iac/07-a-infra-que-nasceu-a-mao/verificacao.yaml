@@ -17,10 +17,9 @@ asercoes:
     atributo: name
     esperado: mirante-relatorios
     descricao: o container foi adotado, e não refeito
-  - tipo: terraform_estado
-    endereco: docker_container.relatorios
-    atributo: id
-    esperado: f41a3a28109133cca280e4f857f23bac7276f64705934f12befebd87a5d61db9
-    descricao: o container no state é o mesmo que estava no ar — o id não mudou
+  - tipo: comando_produz
+    comando: [powershell, -NoProfile, -Command, "if ((terraform '-chdir=..\\work' state show docker_container.relatorios) -match (Get-Content '..\\work\\container.id').Trim()) { 'mesmo-container' } else { 'id-mudou' }"]
+    contem: "mesmo-container"
+    descricao: o container no state é o mesmo que preparar.ps1 criou — o id não mudou
   - tipo: terraform_plano_limpo
     descricao: a adoção convergiu — não há mudança pendente

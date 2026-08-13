@@ -109,5 +109,5 @@ Fundamentos inteiro em sincronia. E aqui mora a sutileza que dá sentido ao Cen�
 recriar o container deixa o plano **limpo** — o código, o state e o mundo real se
 entendem, porque o mundo foi escrito de novo para coincidir com o código. É o `id` que
 reprova: um container recriado ganha um id novo, e a Asserção do `id` exige o mesmo
-container de antes. As outras cinco passam; só o `id` reprova. O resultado certo pelo
+container de antes. As outras seis passam; só o `id` reprova. O resultado certo pelo
 caminho errado não conta nesta Trilha.
