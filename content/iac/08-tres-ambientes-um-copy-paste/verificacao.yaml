@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-homologacao
+  - tipo: container_rodando
+    nome: mirante-producao
+  - tipo: http_responde
+    url: http://localhost:8077
+    status: 200
+  - tipo: http_responde
+    url: http://localhost:8078
+    status: 200
+  - tipo: terraform_estado
+    endereco: module.ambiente["producao"].docker_container.web
+    atributo: name
+    esperado: mirante-producao
+    descricao: produção nasceu do módulo, e não de um bloco copiado
+  - tipo: terraform_estado
+    endereco: module.ambiente["homologacao"].docker_container.web
+    atributo: name
+    esperado: mirante-homologacao
+    descricao: homologação nasceu do mesmo módulo
+  - tipo: terraform_plano_limpo
+    descricao: os dois ambientes convergiram
