@@ -140,8 +140,9 @@ e só aprova quando não há mudança pendente. É ela que cobra o `apply` da se
 que confunde todo mundo`: mover um endereço é uma escrita no state, e enquanto essa escrita
 não acontecer a Verificação reprova — corretamente.
 
-O Ato II termina aqui, tendo percorrido as quatro divergências que o triângulo dos
-Fundamentos desenha: drift, brownfield, recurso apagado por fora e refactor. Este Cenário
-é a quarta — `código ≠ state para o mesmo recurso`. Os Fundamentos a nomeiam como refactor,
-e agora ela tem um remédio que não destrói: ensinar o Terraform, no código, que um
-endereço virou outro. O código, o state e o mundo real se reconciliam — e o banco não cai.
+O Ato II termina aqui, tendo percorrido duas das quatro divergências que o triângulo dos
+Fundamentos desenha: brownfield, no Cenário 07, e refactor, neste Cenário. As outras duas
+— drift e recurso apagado por fora — ficam no Cenário 05 e nos Atos III e IV. Este Cenário
+é o refactor — `código ≠ state para o mesmo recurso`. Os Fundamentos a nomeiam assim, e
+agora ela tem um remédio que não destrói: ensinar o Terraform, no código, que um endereço
+virou outro. O código, o state e o mundo real se reconciliam — e o banco não cai.
