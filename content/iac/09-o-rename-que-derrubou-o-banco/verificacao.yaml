@@ -1,0 +1,21 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-banco
+  - tipo: volume_existe
+    nome: mirante-estoque
+  - tipo: comando_produz
+    comando: [docker, exec, mirante-banco, cat, /var/lib/mirante/estoque.txt]
+    contem: pedido-4711
+    descricao: o dado gravado antes do rename sobreviveu
+  - tipo: terraform_estado
+    endereco: docker_volume.estoque
+    atributo: name
+    esperado: mirante-estoque
+    descricao: o volume está no endereço novo do state
+  - tipo: terraform_estado
+    endereco: docker_container.estoque
+    atributo: name
+    esperado: mirante-banco
+    descricao: o container está no endereço novo, com o mesmo nome de sempre
+  - tipo: terraform_plano_limpo
+    descricao: o bloco moved foi aplicado e não sobrou mudança pendente
