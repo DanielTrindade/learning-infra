@@ -1,0 +1,21 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-web
+  - tipo: http_responde
+    url: http://localhost:8070
+    status: 200
+  - tipo: comando_produz
+    comando: ["powershell.exe", "-NoProfile", "-Command", "Get-Content ../work/.terraform.lock.hcl -Raw"]
+    contem: kreuzwerker/docker
+    descricao: o lockfile existe e registra o provider resolvido
+  - tipo: comando_produz
+    comando: ["powershell.exe", "-NoProfile", "-Command", "Get-Content ../work/versions.tf -Raw"]
+    contem: "~> 4.5"
+    descricao: a constraint do provider deixou de aceitar qualquer versão
+  - tipo: terraform_estado
+    endereco: docker_container.web
+    atributo: name
+    esperado: mirante-web
+    descricao: o container nasceu do código
+  - tipo: terraform_plano_limpo
+    descricao: o código descreve a infraestrutura que está no ar
