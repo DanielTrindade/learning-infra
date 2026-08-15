@@ -1,0 +1,21 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-homologacao
+  - tipo: http_responde
+    url: http://localhost:8071
+    status: 200
+  - tipo: comando_produz
+    comando: ["terraform", "-chdir=../work", "test", "-no-color", "-filter=tests\\unidade.tftest.hcl"]
+    contem: "3 passed, 0 failed"
+    descricao: os testes de unidade da infraestrutura passam
+  - tipo: comando_produz
+    comando: ["terraform", "-chdir=../work", "fmt", "-check", "-recursive", "-no-color"]
+    contem: ""
+    descricao: os arquivos estão formatados
+  - tipo: terraform_estado
+    endereco: docker_container.web
+    atributo: name
+    esperado: mirante-homologacao
+    descricao: o container nasceu do código
+  - tipo: terraform_plano_limpo
+    descricao: o código descreve a infraestrutura que está no ar
