@@ -368,8 +368,9 @@ Success! 4 passed, 0 failed.
 ```
 
 O teardown do `test` removeu o container aplicado. `fmt -check -recursive` e `validate`
-saíram com código 0. A linha `Success! 4 passed, 0 failed.` é a âncora estável para o
-`comando_produz` do **Cenário 11**.
+saíram com código 0. A linha `Success! 4 passed, 0 failed.` refere-se apenas a esta
+validação com quatro `run` (unidade + integração); a âncora do `comando_produz` do
+**Cenário 11** é a linha de 3 passed, só de unidade, registrada abaixo.
 
 Duração de `terraform test` com três `run` em modo `plan`: 1.5766561 s (`TotalSeconds`,
 medida em 2026-08-14) — bem abaixo do timeout de 30 s do `ExecutorDeComandoReal`, então a
