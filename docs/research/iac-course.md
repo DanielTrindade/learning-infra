@@ -436,3 +436,26 @@ e remover o recurso do arquivo destrói com `Plan: 0 to add, 0 to change, 1 to d
 O `apply` de um plano salvo com `-out` não pede confirmação: após `Plan:` segue direto
 para as ações e termina com `Apply complete! Resources: 1 added, 0 changed, 1 destroyed.`
 É a razão de um pipeline poder aplicar um plano salvo de forma não interativa.
+
+## Validação do Ato IV, executada em 2026-08-16
+
+O cluster só subiu depois de um reparo no ambiente, registrado aqui porque qualquer
+reinstalação vai esbarrar no mesmo muro: o kubelet 1.36.1 recusa cgroup v1 (*kubelet is
+configured to not run on a host using cgroup v1*), e a VM `docker-desktop` montava o
+layout híbrido v1. O `kubeadm init` falhava em `wait-control-plane` com o API server
+nunca subindo. A saída foi `wsl --update` (kernel 5.15.167.4 → 6.18.33.2) mais um
+`%USERPROFILE%\.wslconfig` com `systemd.unified_cgroup_hierarchy=1` e `wsl --shutdown`;
+com o kernel novo a VM passou a montar cgroup v2 unificado e o cluster kind de 3 Nodes
+subiu em ~2 minutos. Os containers que estavam no ar voltaram sozinhos (políticas de
+restart), exceto um leftover `restart=no` que foi religado à mão.
+
+| Premissa | Resultado |
+|---|---|
+| contexto `docker-desktop` disponível | sim — kind, 3 Nodes `Ready` (`desktop-control-plane` + 2 workers), v1.36.1, após o reparo de cgroup acima |
+| provider `hashicorp/kubernetes` resolvido pelo init | v3.2.1 |
+| `kubernetes_namespace` criado e plano limpo em seguida | `lab-iac-validacao` criado (`Active`); `plan -detailed-exitcode` = 0 |
+| state no backend S3 do MiniStack | objeto `mirante/terraform.tfstate` (3.829 bytes) no bucket após o `apply`; o `init` aceitou `use_lockfile = true` sem reclamar |
+| **`use_lockfile` com dois apply concorrentes** | **funciona** — o segundo `apply`, disparado quase junto, terminou exit 1 com `Error: Error acquiring the state lock` (PutObject condicional recusado pelo emulador) e o `Lock Info` do detentor; o primeiro terminou exit 0. O Cenário 16 mantém `use_lockfile` e a demonstração de lock concorrente |
+| RAM livre com os três substratos no ar | host 16.088 MB totais, ~700 MB livres; dentro da VM de 7,61 GiB sobravam ~4,3 GiB (kind 1,08 GiB, MiniStack 68 MiB, containers ~2,1 GiB — um deles, alheio à Trilha, sozinho em 1,71 GiB). Os três substratos couberam com folga dentro da VM: o Cenário 18 mantém Docker + Kubernetes + AWS |
+| chamadas para `amazonaws.com` no conteúdo | zero linhas em `content\iac\**\*.tf` |
+| portas 8070, 8071 e 30070 livres | as três livres (`ocupada=False`) |
