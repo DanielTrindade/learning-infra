@@ -1,0 +1,24 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    recurso: deployment
+    nome: mirante-web
+    condicao: Available
+    timeout: 20
+    descricao: o Deployment está disponível depois da reconciliação
+  - tipo: kubernetes_jsonpath
+    recurso: deployment
+    nome: mirante-web
+    expressao: "{.spec.replicas}"
+    contem: "3"
+    descricao: o número de réplicas voltou ao que o código declara
+  - tipo: kubernetes_jsonpath
+    recurso: configmap
+    nome: mirante-config
+    expressao: "{.data.mensagem}"
+    contem: v2
+    descricao: a configuração nova chegou ao cluster
+  - tipo: terraform_estado
+    endereco: kubernetes_config_map_v1.config
+    descricao: o ConfigMap está sob gestão do Terraform
+  - tipo: terraform_plano_limpo
+    descricao: não sobrou divergência entre o código e o cluster
