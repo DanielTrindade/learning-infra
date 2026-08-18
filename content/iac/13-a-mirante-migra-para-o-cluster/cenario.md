@@ -170,8 +170,13 @@ perguntado na 30070, alcança o serviço.
 Por que `NodePort` e não `LoadBalancer`? Porque `LoadBalancer` depende de um controlador
 de nuvem que provisione o balanceador de verdade — coisa que um cluster local não tem.
 Num cluster de laboratório, um Service `LoadBalancer` fica pendente para sempre. O
-`NodePort` é a publicação que o cluster local sustenta sozinho — e, no cluster do Docker
-Desktop, a porta do Node chega ao `localhost`. O leitor vai conferir no navegador.
+`NodePort` é a publicação que o cluster local sustenta sozinho.
+
+Uma ressalva honesta do laboratório: o cluster kind do Docker Desktop **não encaminha**
+a faixa de `NodePort` para o `localhost` do computador. A porta existe no Node, dentro da
+rede do WSL, mas o host não tem como alcançá-la direto. Isso não é defeito do Service —
+é particularidade do cluster de laboratório. A ponte para o navegador se chama
+`kubectl port-forward`.
 
 ## Aplique e confira dos dois lados
 
@@ -199,7 +204,18 @@ Kubernetes: usou os dois, cada um no seu papel. O HCL declarou, o API server reg
 os controllers do cluster fizeram o resto — três réplicas, distribuídas nos Nodes,
 reconciliadas para sempre.
 
-Confirme no navegador: <http://localhost:30070>.
+Para conferir no navegador, abra um segundo terminal e faça a ponte até a porta do
+Service:
+
+```powershell
+kubectl --context docker-desktop -n learning-infra-iac-13 port-forward svc/mirante-web 30070:80
+```
+
+O `port-forward` abre na sua máquina a porta 30070 e a liga à porta 80 do Service, por
+dentro do cluster. Com o comando **rodando**, confirme em <http://localhost:30070> no
+navegador — a página de boas-vindas do nginx. Quando terminar, volte ao primeiro terminal:
+é nele que o resto do Cenário acontece, e o `port-forward` pode continuar rodando no
+segundo, já que a Verificação usa a mesma porta.
 
 ## O que o Terraform não faz aqui
 
