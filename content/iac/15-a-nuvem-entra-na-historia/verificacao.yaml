@@ -1,0 +1,29 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: get-bucket-versioning
+    argumentos: ["--bucket", "mirante-notas"]
+    consulta: Status
+    esperado: Enabled
+    descricao: o bucket de notas mantém histórico de versões
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: get-queue-url
+    argumentos: ["--queue-name", "mirante-pedidos"]
+    consulta: QueueUrl
+    esperado: mirante-pedidos
+    descricao: a fila de pedidos existe
+  - tipo: aws_consulta
+    servico: dynamodb
+    operacao: describe-table
+    argumentos: ["--table-name", "mirante-estoque"]
+    consulta: "Table.KeySchema[0].AttributeName"
+    esperado: sku
+    descricao: a tabela de estoque usa o SKU como chave de partição
+  - tipo: terraform_estado
+    endereco: aws_dynamodb_table.estoque
+    atributo: name
+    esperado: mirante-estoque
+    descricao: a tabela nasceu do código
+  - tipo: terraform_plano_limpo
+    descricao: os três recursos convergiram
