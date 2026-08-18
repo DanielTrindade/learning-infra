@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-route-tables
+    argumentos: ["--filters", "Name=tag:Name,Values=mirante-publica"]
+    consulta: "RouteTables[0].Routes[?DestinationCidrBlock=='0.0.0.0/0'].GatewayId | [0]"
+    esperado: igw-
+    descricao: a rota default das subnets públicas aponta para o Internet Gateway
+  - tipo: aws_consulta
+    servico: ec2
+    operacao: describe-route-tables
+    argumentos: ["--filters", "Name=tag:Name,Values=mirante-publica"]
+    consulta: "length(RouteTables[0].Associations)"
+    esperado: "2"
+    descricao: exatamente as duas subnets públicas estão associadas a essa route table
+  - tipo: terraform_estado
+    endereco: aws_internet_gateway.mirante
+    descricao: o gateway nasceu do código
+  - tipo: terraform_estado
+    endereco: aws_route_table_association.publica_a
+    descricao: a associação que torna a subnet pública está versionada
+  - tipo: terraform_plano_limpo
+    descricao: a topologia declarada é a que está no control plane
