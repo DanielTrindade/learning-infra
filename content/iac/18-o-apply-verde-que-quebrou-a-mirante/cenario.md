@@ -51,6 +51,12 @@ Ao final deste Cenário:
 O plano é o instrumento. Quatro problemas diferentes deixam **quatro marcas diferentes**
 no plano — e todas aparecem antes de qualquer `apply`.
 
+Uma das marcas diz respeito ao `import`. Quando o Terraform pede o endereço de um recurso
+que já existe, ele fala o dialeto da AWS real: uma URL `https://sqs.us-east-1...` — e
+recusa o que o `get-queue-url` do emulador devolve, com o erro `could not parse X as SQS
+URL`. O erro é o mapa: a forma que o provider exige tem a região, a conta de doze dígitos
+e o nome da fila.
+
 ## O inventário de fidelidade
 
 Para fechar a Trilha e a plataforma, escreva — com as suas palavras — o que este
