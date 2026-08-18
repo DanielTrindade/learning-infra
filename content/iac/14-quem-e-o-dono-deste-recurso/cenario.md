@@ -127,8 +127,15 @@ kubectl --context docker-desktop -n learning-infra-iac-14 get pods -l app=mirant
 A resposta honesta é: **depende de como o ConfigMap está referenciado** — e é por isso que a
 pergunta vale um Cenário. O ConfigMap do workspace entra no Deployment como **volume**
 montado no container. Volumes de ConfigMap atualizam o arquivo depois de um intervalo — o Pod
-continua vivo, o arquivo muda por dentro. Nenhum Pod novo nasce, nenhum reinicia: o template
-não mudou, e o Deployment não tem motivo para trocar os Pods que já existem.
+continua vivo, o arquivo muda por dentro. Por causa do ConfigMap, nenhum Pod novo nasce e
+nenhum reinicia: o template não mudou, e o Deployment não tem motivo para trocar os Pods que
+já existem.
+
+Repare, porém, no que mais este `apply` carrega: a escala de cinco réplicas feita à mão
+ainda está no mundo, e `spec.replicas` é um campo que o código governa. O plano mostra as
+duas mudanças juntas — a do ConfigMap e a das réplicas — e é por isso que o número de Pods
+muda neste apply. A mudança não é o ConfigMap disparando rollout: é o Terraform reconciliando
+a réplica que a mão mexeu.
 
 A técnica que garante o rollout existe, e ela muda o jogo de dono de campo. A ideia é amarrar
 uma **anotação do template** ao conteúdo do ConfigMap: quando o dado muda, o valor da anotação
@@ -170,6 +177,19 @@ disputa.
 Volte ao terminal e pergunte de novo ao Terraform o que ele vê:
 
 ```powershell
+terraform plan
+```
+
+Se o leitor seguiu o fio até aqui, o plano pode já sair limpo: o `apply` da seção anterior
+reconciliou as réplicas que a mão escalou junto com a mudança do ConfigMap, porque os dois
+campos pertencem ao código. O `apply` só tem uma coisa a fazer — e, se não sobrou nada,
+ele não faz nada.
+
+Para ver a reconciliação fazendo o trabalho dela, devolva o conflito ao mundo. A mão de
+plantão voltou a mexer:
+
+```powershell
+kubectl --context docker-desktop -n learning-infra-iac-14 scale deployment mirante-web --replicas=5
 terraform plan
 ```
 
