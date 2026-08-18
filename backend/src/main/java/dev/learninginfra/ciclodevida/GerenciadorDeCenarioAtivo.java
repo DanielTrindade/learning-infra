@@ -151,6 +151,11 @@ public class GerenciadorDeCenarioAtivo {
      * Recria o namespace exclusivo do Cenário e, quando declarado, aplica o ambiente
      * inicial. O contexto é sempre explícito para um laboratório nunca atingir por
      * acidente outro cluster configurado no kubectl do autor.
+     *
+     * <p>Em Cenário de Terraform o namespace não é criado adiantado: ele nasce do
+     * `terraform apply` do leitor, porque o código é dono do objeto — criá-lo antes
+     * faria o apply falhar com "already exists". A remoção prévia continua valendo,
+     * para o apply nunca encontrar sobra de uma execução anterior.
      */
     private void prepararKubernetes(Cenario cenario, Path trabalho) {
         if (!cenario.usaKubernetes()) {
@@ -168,6 +173,10 @@ public class GerenciadorDeCenarioAtivo {
         }
 
         removerNamespace(cenario, "recriar o ambiente");
+
+        if (cenario.terraform()) {
+            return;
+        }
 
         SaidaDeComando criado = executor.executar(List.of(
                 "kubectl", "--context", cenario.contextoKubernetes(),

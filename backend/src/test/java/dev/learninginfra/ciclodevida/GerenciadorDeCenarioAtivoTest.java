@@ -73,6 +73,14 @@ class GerenciadorDeCenarioAtivoTest {
                 comSetup ? "setup" : null);
     }
 
+    private Cenario cenarioTerraformKubernetes(String id, String namespace) throws Exception {
+        Path diretorio = raiz.resolve("content").resolve(id.replace('/', '-'));
+        Files.createDirectories(diretorio.resolve("workspace"));
+        return new Cenario(id, "titulo", Dificuldade.GUIADO, List.of(), "# corpo",
+                diretorio, List.of(), null, List.of(), "docker-desktop", namespace,
+                null, false, false, null, true, ".");
+    }
+
     private Cenario cenarioAws(String id, boolean infraestruturaReal, boolean comInit) throws Exception {
         Path diretorio = raiz.resolve("content").resolve(id.replace('/', '-'));
         Files.createDirectories(diretorio.resolve("workspace"));
@@ -138,6 +146,21 @@ class GerenciadorDeCenarioAtivoTest {
                 "kubectl", "--context", "docker-desktop", "delete", "namespace",
                 "learning-infra-k8s-01", "--ignore-not-found=true", "--wait=true",
                 "--timeout=20s")), comandosExecutados);
+    }
+
+    @Test
+    void iniciarCenarioTerraformDeixaONamespaceNascerDoApplyDoLeitor() throws Exception {
+        Cenario cenario = cenarioTerraformKubernetes("iac/13", "learning-infra-iac-13");
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+
+        gerenciador(repositorio).iniciar(cenario);
+
+        assertEquals(List.of(
+                List.of("kubectl", "--context", "docker-desktop", "get", "--raw=/readyz",
+                        "--request-timeout=5s"),
+                List.of("kubectl", "--context", "docker-desktop", "delete", "namespace",
+                        "learning-infra-iac-13", "--ignore-not-found=true", "--wait=true",
+                        "--timeout=20s")), comandosExecutados);
     }
 
     @Test
