@@ -73,8 +73,9 @@ terraform version
 
 Nada mais precisa ser preparado. Os primeiros Cenários usam o provider
 `kreuzwerker/docker`, que no Windows encontra sozinho o named pipe do Docker Desktop —
-`provider "docker" {}` sem argumento nenhum funciona. Os Cenários finais reusam o cluster
-`docker-desktop` da Trilha Kubernetes e o MiniStack da Trilha AWS, que você já preparou.
+`provider "docker" {}` sem argumento nenhum funciona. Os Cenários 13, 14 e 18 exigem o
+cluster `docker-desktop` da Trilha Kubernetes **no ar**, e os Cenários 15 a 18 exigem o
+MiniStack da Trilha AWS — os mesmos pré-requisitos que você já preparou.
 
 A Verificação nunca roda `apply`, `destroy` ou `init` por você: ela só observa o state e
 pede um `plan`. Se uma Asserção de Terraform reclamar que não conseguiu planejar,
@@ -172,7 +173,7 @@ A expansão prática de Docker foi implementada e está no catálogo, nos Cenár
 A segunda rodada de conteúdo avançado — CI/CD, scan, SBOM e cadeia de fornecimento —
 permanece planejada, mas não bloqueia a expansão atual.
 
-A quarta Trilha, **Infraestrutura como Código**, tem Fundamentos publicados e os Atos I a III completos e o Ato IV em construção. O estudo de ferramental está em
+A quarta Trilha, **Infraestrutura como Código**, tem Fundamentos publicados e os Atos I a IV completos: os 18 Cenários do desenho estão no catálogo. O estudo de ferramental está em
 [`docs/research/iac-course.md`](docs/research/iac-course.md) e o desenho completo —
 Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
@@ -217,8 +218,10 @@ no estado quebrado. A Trilha AWS usa **4566** (MiniStack), **18080–18081** (ta
 **5180**.
 A Trilha IaC usa o bloco **8070–8079**: 8070 no Cenário 01, 8071 no 02, 8072 e 8073 no 03, 8074 no 04, 8075 no 05, 8076 no 06, 8077 e 8078 no 08 e 8079 no 09. O Cenário 07 não publica porta nenhuma, de propósito.
 A partir do Cenário 10 a Trilha IaC **reusa** o bloco 8070–8079: 8070 no 10, 8071 no 11 e
-8072 no 12. Como só existe um Cenário Ativo por vez, dois Cenários podem declarar a mesma
-porta sem colidir.
+8072 no 12. O Ato IV fecha a trilha reusando o bloco mais uma vez: 8071 no 18, e o 13
+publica o cluster pelo **NodePort 30070** — alcançado no navegador pela mesma 30070, via
+`kubectl port-forward`. Como só existe um Cenário Ativo por vez, dois Cenários podem
+declarar a mesma porta sem colidir.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está

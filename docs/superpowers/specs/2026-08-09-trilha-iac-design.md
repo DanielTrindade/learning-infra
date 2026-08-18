@@ -4,7 +4,7 @@
 >
 > Estudo de ferramental: [`docs/research/iac-course.md`](../../research/iac-course.md)
 >
-> Estado: aprovado para virar plano de implementação
+> Estado: implementado nas Etapas 1 a 6
 
 ## Objetivo
 
@@ -286,3 +286,36 @@ bloqueantes são: `apply` idempotente com o provider Docker, `import` sem recria
 `moved` preservando volume com dados, `terraform test` nos dois modos, provider
 Kubernetes 3.2.1 contra `docker-desktop`, `use_lockfile` contra o MiniStack, e o canário
 que confirma zero chamadas para `amazonaws.com`.
+
+## Divergências registradas na implementação
+
+O desenho mudou em quatro pontos durante a implementação. Nenhum alterou o contrato do
+final — quatro `Guiado`, oito `Assistido`, cinco `Autônomo`, um `Mestre` —, mas o que
+foi construído difere do que o desenho previa em detalhe:
+
+- **Cenário 07 (`import` não é o inverso do `apply`).** Medido no estudo: o `Read` do
+  provider Docker não recupera `ports`, `volumes` nem `env` de um container importado, e
+  um container com porta publicada **não** é adotável sem recriação. O Cenário mudou de
+  desenho para não prometer o que o provider não cumpre: a infra órfã é um volume, uma
+  rede e um container **sem portas publicadas**, e a impossibilidade de adotar o que tem
+  porta vira a lição — `import` traz só o que o `Read` implementa, e quem decide a
+  segurança da adoção é o `plan`.
+- **Cenário 13 (a ponte para o `localhost`).** O NodePort 30070 existe no Service, mas o
+  cluster `docker-desktop` (kind) não encaminha NodePort para o host. O texto passou a
+  ensinar o `kubectl port-forward svc/mirante-web 30070:80` como a ponte para
+  `<http://localhost:30070>`, mantendo o Service `NodePort` como o código que o leitor
+  escreve.
+- **Cenário 16 (`use_lockfile` aprovado, e o state local sumiu de outra forma).** A
+  validação do Ato IV confirmou que `use_lockfile = true` **funciona** contra o S3 do
+  MiniStack (o segundo `apply` concorrente termina em erro de lock) — o Cenário mantém o
+  lock nativo, sem fallback. O desenho dizia que o state "deixaria de morar na máquina";
+  na prática o `init -migrate-state` deixa um `terraform.tfstate` vazio de zero bytes e
+  um `.backup`. A Asserção da máquina local foi escrita para exigir a **ausência do
+  arquivo com conteúdo**, não só do nome.
+- **Cenário 18 (RAM, substratos e o dialeto da AWS real).** O veredito de RAM manteve os
+  **três substratos** no ar — nada foi cortado. A plataforma mudou um ponto para os
+  Cenários de Terraform: o namespace Kubernetes **não é criado adiantado** pelo
+  `GerenciadorDeCenarioAtivo`, porque ele nasce do `terraform apply` do leitor — criá-lo
+  antes faria o apply falhar com "already exists". E o `import` da fila SQS fala o
+  dialeto da AWS real (URL `https://sqs.us-east-1…`), não o do emulador: o texto dá a
+  meia-pista, e descobrir a URL certa é parte do Mestre.
