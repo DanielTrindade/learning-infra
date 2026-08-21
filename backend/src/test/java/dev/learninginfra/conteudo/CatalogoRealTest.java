@@ -31,7 +31,7 @@ class CatalogoRealTest {
                 .filter(cenario -> cenario.id().startsWith("iac/"))
                 .toList();
 
-        assertThat(cenarios).hasSize(44);
+        assertThat(cenarios).hasSize(61);
         assertThat(kubernetes).hasSize(14);
         assertThat(kubernetes).allMatch(Cenario::usaKubernetes);
         assertThat(kubernetes.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
@@ -44,14 +44,22 @@ class CatalogoRealTest {
         assertThat(docker).allMatch(Cenario::usaDocker);
         assertThat(docker.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
                 .isEqualTo(56);
-        assertThat(iac).hasSize(1);
+        assertThat(iac).hasSize(18);
         assertThat(iac).allMatch(Cenario::terraform);
         assertThat(iac.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
-                .isEqualTo(4);
+                .isEqualTo(98);
+        assertThat(iac).filteredOn(cenario -> cenario.dificuldade() == Dificuldade.GUIADO)
+                .hasSize(4);
+        assertThat(iac).filteredOn(cenario -> cenario.dificuldade() == Dificuldade.ASSISTIDO)
+                .hasSize(8);
+        assertThat(iac).filteredOn(cenario -> cenario.dificuldade() == Dificuldade.AUTONOMO)
+                .hasSize(5);
+        assertThat(iac).filteredOn(cenario -> cenario.dificuldade() == Dificuldade.MESTRE)
+                .hasSize(1);
     }
 
     @Test
-    void carregaQuatroTrilhasComFundamentosPublicadosNasTresPrimeiras() {
+    void carregaQuatroTrilhasComFundamentosPublicados() {
         Path conteudo = localizarConteudo();
         var cenarios = new RepositorioDeCenarios(
                 conteudo.toString(), new LeitorDeCenario());
@@ -65,7 +73,9 @@ class CatalogoRealTest {
 
         assertThat(trilhas).extracting(trilha -> trilha.id())
                 .containsExactly("aws", "docker", "iac", "kubernetes");
-        assertThat(catalogo.buscar("iac").orElseThrow().fundamentos()).isNull();
+        assertThat(catalogo.buscar("iac").orElseThrow().fundamentos()).isNotNull();
+        assertThat(catalogo.buscar("iac").orElseThrow().fundamentos().questionario())
+                .isNotNull();
         assertThat(catalogo.buscar("docker").orElseThrow().fundamentos())
                 .satisfies(fundamentos -> {
                     assertThat(fundamentos.questionario().questoes()).hasSize(12);

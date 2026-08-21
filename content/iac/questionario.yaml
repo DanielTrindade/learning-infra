@@ -1,0 +1,155 @@
+questoes:
+  - id: aplicar-duas-vezes
+    enunciado: Você roda terraform apply, ele cria um container, e você roda terraform apply de novo sem mudar uma linha. O que acontece na segunda vez?
+    alternativas:
+      - id: nada-muda
+        texto: O Terraform compara o código com o que o state conhece, não encontra diferença e não faz nada.
+      - id: segundo-container
+        texto: Um segundo container é criado, porque cada apply executa as instruções do arquivo.
+      - id: erro-de-conflito
+        texto: O apply falha com erro de nome duplicado, como aconteceria num script.
+    alternativaCorreta: nada-muda
+    explicacao: Um script descreve o caminho e repete o caminho. O Terraform descreve o destino e só age sobre a diferença. É isso que se chama idempotência, e é o que permite rodar o mesmo código todo dia.
+    revisar: idempotencia-e-drift
+
+  - id: correcao-na-mao-em-producao
+    enunciado: Durante um incidente, alguém corrigiu a configuração direto no console e não mexeu no código. O serviço voltou. O que o próximo terraform apply faz com essa correção?
+    alternativas:
+      - id: desfaz-a-correcao
+        texto: Desfaz — o plano vai propor voltar o recurso ao que o código descreve.
+      - id: incorpora-ao-codigo
+        texto: Incorpora a correção ao código automaticamente, já que ela está no mundo real.
+      - id: ignora-para-sempre
+        texto: Ignora, porque o Terraform só age sobre recursos que ele mesmo alterou desde o último apply.
+    alternativaCorreta: desfaz-a-correcao
+    explicacao: O código é a fonte de intenção. Uma correção que não voltou para ele é drift, e a próxima reconciliação a apaga. Correção de incidente que precisa durar vira commit.
+    revisar: idempotencia-e-drift
+
+  - id: forces-replacement-no-banco
+    enunciado: O plano de uma mudança pequena mostra, embaixo do recurso do banco de dados, a marca forces replacement. O que isso significa?
+    alternativas:
+      - id: destroi-e-recria
+        texto: O atributo alterado não pode ser mudado em lugar, então o Terraform vai destruir o banco e criar outro no lugar.
+      - id: reinicia-o-servico
+        texto: O banco vai ser reiniciado para aplicar a nova configuração, sem perder dados.
+      - id: apenas-um-aviso
+        texto: É um aviso de que o provider tem uma versão nova disponível para aquele recurso.
+    alternativaCorreta: destroi-e-recria
+    explicacao: forces replacement é a marca mais cara do plano. Ela diz que o recurso vai ser destruído e recriado — e num banco isso é perda de dados. É o motivo de o plano ser lido antes de aprovado, e não depois.
+    revisar: blast-radius-ler-o-plano
+
+  - id: state-no-notebook-de-quem-saiu
+    enunciado: A pessoa que criou a infraestrutura saiu da empresa, e o arquivo de state estava só no notebook dela. A infraestrutura continua no ar. O que o time perdeu?
+    alternativas:
+      - id: a-correspondencia
+        texto: A correspondência entre cada endereço do código e o recurso real — a infraestrutura existe, mas o Terraform não sabe mais que é dela.
+      - id: a-infraestrutura
+        texto: A infraestrutura, que para de funcionar assim que o state some.
+      - id: apenas-o-historico
+        texto: Apenas o histórico de execuções, já que o state guarda um log dos applies anteriores.
+    alternativaCorreta: a-correspondencia
+    explicacao: O state não sustenta a infraestrutura, ele a mapeia. Sem ele, o próximo apply tenta criar tudo de novo em cima do que já existe. Recuperar essa correspondência é import, e é por isso que state remoto compartilhado deixa de ser luxo quando o time passa de uma pessoa.
+    revisar: o-ciclo-codigo-plan-apply-state
+
+  - id: recurso-que-o-codigo-nao-conhece
+    enunciado: Existe em produção um container que ninguém declarou em nenhum arquivo .tf. Como ele aparece no terraform plan?
+    alternativas:
+      - id: nao-aparece
+        texto: Não aparece — o Terraform só enxerga o que está no state, e ele não está.
+      - id: aparece-para-destruir
+        texto: Aparece marcado para destruição, porque não consta no código.
+      - id: aparece-como-drift
+        texto: Aparece como drift, com aviso de recurso não gerenciado.
+    alternativaCorreta: nao-aparece
+    explicacao: O Terraform não varre o ambiente atrás do que existe. Ele compara o código com o state e checa no mundo real apenas os recursos que o state conhece. Infra órfã é invisível até alguém trazê-la para dentro com import.
+    revisar: o-triangulo-codigo-state-e-mundo-real
+
+  - id: renomear-sem-destruir
+    enunciado: Você quer renomear docker_volume.dados para docker_volume.estoque, mantendo o mesmo volume e os dados dentro dele. Qual é o caminho seguro?
+    alternativas:
+      - id: bloco-moved
+        texto: Declarar um bloco moved do endereço antigo para o novo e aplicar — o Terraform move o registro no state sem tocar no recurso.
+      - id: renomear-e-aplicar
+        texto: Renomear no código e aplicar; o Terraform reconhece que é o mesmo volume pelo nome declarado.
+      - id: destruir-e-recriar
+        texto: Destruir e recriar, restaurando os dados de um backup depois.
+    alternativaCorreta: bloco-moved
+    explicacao: Para o Terraform, o endereço é a identidade. Renomear sem moved é dizer que um recurso sumiu e outro nasceu — e o plano vem com um destroy embaixo dos seus dados. O bloco moved reescreve o state e não encosta no recurso.
+    revisar: blast-radius-ler-o-plano
+  - id: senha-no-state
+    enunciado: Uma senha entrou como variável e você marcou a saída com sensitive = true. Onde essa senha está agora?
+    alternativas:
+      - id: em-claro-no-state
+        texto: Em claro dentro do arquivo de state — sensitive esconde da saída do terminal, não do arquivo.
+      - id: criptografada-no-state
+        texto: Criptografada no state, que é o efeito de marcar o valor como sensitive.
+      - id: nao-persistida
+        texto: "Em lugar nenhum: valores sensitive são usados na chamada da API e descartados."
+    alternativaCorreta: em-claro-no-state
+    explicacao: "sensitive é uma proteção de exibição. O state guarda o valor como recebeu. Daí decorrem duas regras práticas: state local nunca vai para o Git, e state remoto compartilhado tem acesso restrito."
+    revisar: segredos-e-o-state
+
+  - id: target-durante-incidente
+    enunciado: No meio de um incidente, alguém sugere terraform apply -target para aplicar só o recurso quebrado. Qual é o custo dessa escolha?
+    alternativas:
+      - id: plano-parcial
+        texto: O plano deixa de representar o conjunto, então mudanças pendentes em outros recursos ficam invisíveis até o próximo apply completo.
+      - id: nenhum-custo
+        texto: "Nenhum: -target é a forma recomendada de aplicar mudanças pontuais no dia a dia."
+      - id: corrompe-o-state
+        texto: O state é corrompido e precisa ser reconstruído com import depois.
+    alternativaCorreta: plano-parcial
+    explicacao: -target existe para emergência e cobra o preço de estreitar a visão. Ele não corrompe nada, mas o plano que você aprovou não é mais o retrato do sistema. Depois do incidente, um apply completo é o que reconcilia a conta.
+    revisar: blast-radius-ler-o-plano
+
+  - id: provider-sem-constraint
+    enunciado: O código não declara versão de provider. Funciona na sua máquina e quebra na máquina de quem entrou no time ontem. Por quê?
+    alternativas:
+      - id: versao-diferente
+        texto: O init de cada máquina resolveu uma versão diferente do provider, e o comportamento mudou entre elas.
+      - id: cache-corrompido
+        texto: O diretório .terraform da outra máquina está corrompido e precisa ser apagado.
+      - id: state-incompativel
+        texto: O state foi escrito por uma versão de Terraform mais nova do que a instalada lá.
+    alternativaCorreta: versao-diferente
+    explicacao: Sem constraint, o init pega a versão mais nova que satisfaz a configuração — e "mais nova" muda com o tempo. required_providers com constraint e o arquivo .terraform.lock.hcl versionado são o que faz duas máquinas receberem o mesmo binário.
+    revisar: provider-como-tradutor
+
+  - id: onde-ansible-entra
+    enunciado: O time já provisiona servidores com Terraform e agora quer instalar e configurar pacotes dentro deles. Onde o Ansible se encaixa?
+    alternativas:
+      - id: configura-o-que-existe
+        texto: "Depois do provisionamento: ele configura máquinas que já existem, enquanto o Terraform cria a máquina."
+      - id: substitui-o-terraform
+        texto: No lugar do Terraform, já que também descreve o estado desejado em arquivos.
+      - id: nao-se-encaixa
+        texto: "Em lugar nenhum: configuração de máquina é responsabilidade exclusiva da imagem."
+    alternativaCorreta: configura-o-que-existe
+    explicacao: São categorias diferentes. Provisionar é criar o recurso; configurar é ajustar o que já está de pé. Confundir as duas leva a usar provisioner para tudo, que é justamente o caminho que a documentação do Terraform recomenda evitar.
+    revisar: o-mapa-do-territorio
+
+  - id: terraform-contra-cloudformation
+    enunciado: Comparado ao CloudFormation, que você já usou na Trilha AWS, qual é a diferença estrutural do Terraform?
+    alternativas:
+      - id: multiplos-providers
+        texto: O Terraform fala com muitos providers pelo mesmo código e mantém o próprio state; o CloudFormation é da AWS e o estado da stack é gerido pelo serviço.
+      - id: apenas-sintaxe
+        texto: "Apenas a sintaxe: HCL em vez de YAML, com o mesmo modelo de execução por baixo."
+      - id: sem-state
+        texto: O Terraform não tem state, e é por isso que ele consegue atravessar provedores.
+    alternativaCorreta: multiplos-providers
+    explicacao: A diferença que importa não é a sintaxe, é quem guarda o estado e quantos alvos o mesmo código alcança. Isso explica por que state, lock e backend são assunto no Terraform e quase não são no CloudFormation.
+    revisar: o-mapa-do-territorio
+
+  - id: o-que-a-fidelidade-local-nao-prova
+    enunciado: Todos os Cenários de AWS desta Trilha passam contra o emulador local. O que esse resultado não autoriza você a afirmar?
+    alternativas:
+      - id: nada-sobre-iam-e-rede
+        texto: Nada sobre IAM aplicado, isolamento de rede, custo ou disponibilidade — o emulador aceita a declaração sem executar o efeito.
+      - id: nada-sobre-sintaxe
+        texto: Nada sobre a sintaxe do HCL, que só é validada contra a API real.
+      - id: nada-sobre-o-state
+        texto: Nada sobre o state, que tem formato diferente quando o alvo é um emulador.
+    alternativaCorreta: nada-sobre-iam-e-rede
+    explicacao: O emulador tem fidelidade alta no control plane e parcial no data plane. Ele prova que o código descreve os recursos certos e que as relações entre eles fecham. Não prova que uma regra de segurança bloqueia tráfego, porque ali não passa tráfego.
+    revisar: o-ambiente-desta-trilha

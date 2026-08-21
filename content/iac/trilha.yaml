@@ -1,2 +1,7 @@
 id: iac
 titulo: Infraestrutura como Código
+fundamentos:
+  titulo: Fundamentos de Infraestrutura como Código
+  artigo: fundamentos.md
+  questionario: questionario.yaml
+  aproveitamentoMinimo: 80

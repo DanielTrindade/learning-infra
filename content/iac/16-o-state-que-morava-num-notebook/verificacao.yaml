@@ -1,0 +1,24 @@
+asercoes:
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: list-queues
+    argumentos: ["--queue-name-prefix", "mirante-pedidos"]
+    consulta: "length(QueueUrls)"
+    esperado: "1"
+    descricao: a fila continua no ar depois da migração
+  - tipo: aws_consulta
+    servico: s3api
+    operacao: list-objects-v2
+    argumentos: ["--bucket", "mirante-tfstate", "--prefix", "mirante/"]
+    consulta: "length(Contents)"
+    esperado: "1"
+    descricao: o state migrou para o bucket
+  - tipo: comando_produz
+    comando: ["powershell.exe", "-NoProfile", "-Command", "if ((Test-Path ../work/terraform.tfstate) -and (Get-Item ../work/terraform.tfstate).Length -gt 0) { 'state-local-ainda-existe' } else { 'sem-state-local' }"]
+    contem: sem-state-local
+    descricao: o state deixou de morar no diretório de trabalho
+  - tipo: terraform_estado
+    endereco: aws_sqs_queue.pedidos
+    descricao: o Terraform continua reconhecendo a fila depois da migração
+  - tipo: terraform_plano_limpo
+    descricao: a migração não deixou mudança pendente

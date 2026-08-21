@@ -1,0 +1,21 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-web
+  - tipo: http_responde
+    url: http://localhost:8072
+    status: 200
+  - tipo: comando_produz
+    comando: ["powershell.exe", "-NoProfile", "-Command", "if (Test-Path ../work/plano.tfplan) { 'plano-salvo-presente' } else { 'ausente' }"]
+    contem: plano-salvo-presente
+    descricao: o apply consumiu um plano salvo, e não um plano recalculado
+  - tipo: comando_produz
+    comando: ["terraform", "-chdir=../work", "test", "-no-color"]
+    contem: "2 passed, 0 failed"
+    descricao: a etapa de teste do pipeline passa
+  - tipo: terraform_estado
+    endereco: docker_container.web
+    atributo: name
+    esperado: mirante-web
+    descricao: o container nasceu do código
+  - tipo: terraform_plano_limpo
+    descricao: depois do apply do plano salvo, não sobrou mudança pendente

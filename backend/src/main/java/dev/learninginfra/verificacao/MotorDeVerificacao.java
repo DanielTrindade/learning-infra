@@ -100,7 +100,8 @@ public class MotorDeVerificacao {
                     "o Cenário aponta para fora do diretório de trabalho");
         }
         SaidaDeComando saida = executor.executar(List.of(
-                "terraform", "-chdir=" + diretorio, "state", "show", "-no-color", a.endereco()));
+                "terraform", "-chdir=" + diretorio, "state", "show", "-no-color",
+                enderecoParaLinhaDeComando(a.endereco(), noWindows())));
         if (!saida.sucesso()) {
             return ResultadoDeAsercao.reprovada(a,
                     "`" + a.endereco() + "` não está no state — o recurso não nasceu do código");
@@ -172,6 +173,23 @@ public class MotorDeVerificacao {
         Path raiz = raizDeTrabalho.toAbsolutePath().normalize();
         Path alvo = raiz.resolve(relativo).normalize();
         return alvo.startsWith(raiz) ? alvo : null;
+    }
+
+    /**
+     * O `terraform state list` devolve endereços com aspas embutidas, como
+     * {@code module.ambiente["producao"].docker_container.web}. No Windows o
+     * {@link ProcessBuilder} só cita argumentos com espaço, então as aspas atravessam a
+     * linha de comando cruas e o runtime do Go as desfaz antes de o Terraform ver o
+     * argumento — que chega como {@code module.ambiente[producao]...} e é recusado.
+     * Escapar com barra invertida é o que sobrevive à viagem. Fora do Windows não há
+     * linha de comando intermediária e o endereço vai como está.
+     */
+    static String enderecoParaLinhaDeComando(String endereco, boolean windows) {
+        return windows ? endereco.replace("\"", "\\\"") : endereco;
+    }
+
+    private static boolean noWindows() {
+        return System.getProperty("os.name").startsWith("Windows");
     }
 
     private ResultadoDeAsercao avaliarConsultaAws(Assercao.AwsConsulta a) {

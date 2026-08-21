@@ -276,3 +276,186 @@ ganha valor didático em três frentes que nenhuma das anteriores cobriu:
 | segundo `plan -detailed-exitcode` | exit code 0 |
 | duração do `plan` | 1.9293977 s (`TotalSeconds`) |
 | formato de `state show` | `    name                                        = "validacao-iac-web"` |
+
+## Validação executada em 2026-08-10 — Atos II e III
+
+Rodada antes de escrever os planos das Etapas 2 a 6, contra Terraform 1.15.8, provider
+`kreuzwerker/docker` 4.5 e Docker Engine 29.6.1. Cinco achados mudam o desenho e estão
+marcados como tal.
+
+### `import` não é simétrico ao `apply` — **muda o desenho**
+
+O `Read` do provider Docker **não recupera** `ports`, `volumes` nem `env` de um container
+importado. O state importado sai sem esses blocos, e o `plan` seguinte quer criá-los:
+
+| Bloco no `.tf` | Efeito no `plan` depois do `import` |
+|---|---|
+| `env` ausente da configuração | `+ env = (known after apply) # forces replacement` |
+| `env = []` explícito | atualização em lugar, sem recriação |
+| `ports { … }` | `+ ports { # forces replacement` — **recriação inevitável** |
+| `volumes { … }` | `+ volumes { # forces replacement` — **recriação inevitável** |
+
+Medido: `docker_volume` e `docker_network` importam limpos. Um container **sem portas
+publicadas e sem volumes**, com `env = []` na configuração, importa e converge —
+`0 added, 1 changed, 0 destroyed`, mesmo id de container antes e depois, e
+`plan -detailed-exitcode` igual a 0 em seguida.
+
+Consequência para o **Cenário 07**: a infra órfã a adotar é um **volume, uma rede e um
+container sem portas publicadas**. O container com porta publicada não pode ser adotado
+sem recriação, e essa impossibilidade vira a lição do Cenário: `import` traz só o que o
+`Read` do provider implementa, e quem decide se a adoção é segura é o `plan`, não a
+intenção de quem escreveu o bloco.
+
+### `moved` preserva volume com dados, mas o plano não fica limpo antes do `apply`
+
+Sequência medida com um volume contendo `pedido-4711`:
+
+| Passo | Resultado |
+|---|---|
+| renomear o endereço **sem** `moved` | `Plan: 2 to add, 0 to change, 2 to destroy` — o volume com dados seria destruído |
+| renomear **com** `moved` | `Plan: 0 to add, 0 to change, 0 to destroy`, mas **`-detailed-exitcode` = 2** |
+| `apply` dos `moved` | `0 added, 0 changed, 0 destroyed`; mesmo id de container; `pedido-4711` intacto |
+| `plan` depois do `apply` | `No changes`, exit code **0** |
+
+O exit code 2 com plano vazio é a sutileza que o Cenário 09 precisa nomear: mover um
+endereço **é** uma mudança a aplicar, ainda que nada no mundo real se altere. A Asserção
+`terraform_plano_limpo` só aprova depois do `apply`, e isso está correto.
+
+`prevent_destroy` protege **um endereço, não um recurso**: declarado no endereço novo, ele
+não impediu o plano destrutivo do endereço antigo. Quando o destroy alcança o endereço
+protegido, a mensagem é `Error: Instance cannot be destroyed`.
+
+### Endereço de módulo com `for_each` quebra o `terraform_estado` no Windows — **muda o desenho**
+
+`terraform state list` devolve endereços com aspas embutidas:
+
+```
+module.ambiente["producao"].docker_container.web
+```
+
+O `ProcessBuilder` do Java só cita argumentos que contêm espaço. Um argumento com aspas
+no meio atravessa a linha de comando do Windows e o runtime do Go a desfaz, entregando ao
+Terraform `module.ambiente[producao].docker_container.web`. Medido com Java 25:
+
+| Argumento entregue ao `ProcessBuilder` | Exit code |
+|---|---|
+| `module.ambiente["producao"].docker_container.web` | 1 — `Error parsing instance address` |
+| `module.ambiente[\"producao\"].docker_container.web` | 0 — atributo lido |
+
+A correção é escapar `"` como `\"` no `MotorDeVerificacao` quando o sistema for Windows.
+Sem ela, a evidência prevista para o **Cenário 08** (`terraform_estado` em endereços
+`module.*`) não funciona. É a única mudança de plataforma que as Etapas 3 a 6 exigem, e
+está na Etapa 4.
+
+O mesmo problema aparece no conteúdo: no PowerShell, `terraform state show` de um
+endereço indexado precisa de `'module.ambiente[\"producao\"].docker_container.web'`.
+
+### Módulo sem `required_providers` próprio resolve para `hashicorp/docker`
+
+Um módulo filho que usa `docker_container` sem declarar o próprio bloco
+`required_providers` faz o `init` procurar `registry.terraform.io/hashicorp/docker` e
+falhar com *provider registry does not have a provider named*. É armadilha clássica de
+extração de módulo e entra como passo do **Cenário 08**.
+
+### `terraform test`, `precondition`, `postcondition`, `check`, `fmt` e `validate`
+
+Um arquivo `.tftest.hcl` com quatro `run` — dois `command = plan`, um `expect_failures`
+sobre `precondition`, um `expect_failures` sobre `validation` de variável e um
+`command = apply` real — passou inteiro contra o provider Docker:
+
+```
+Success! 4 passed, 0 failed.
+```
+
+O teardown do `test` removeu o container aplicado. `fmt -check -recursive` e `validate`
+saíram com código 0. A linha `Success! 4 passed, 0 failed.` refere-se apenas a esta
+validação com quatro `run` (unidade + integração); a âncora do `comando_produz` do
+**Cenário 11** é a linha de 3 passed, só de unidade, registrada abaixo.
+
+Duração de `terraform test` com três `run` em modo `plan`: 1.5766561 s (`TotalSeconds`,
+medida em 2026-08-14) — bem abaixo do timeout de 30 s do `ExecutorDeComandoReal`, então a
+Asserção do **Cenário 11** verifica com `comando_produz` direto, sem arquivo de saída.
+Linha final observada: `Success! 3 passed, 0 failed.`
+
+### Drift é detectado nos dois formatos
+
+| Divergência criada à mão | `plan -detailed-exitcode` |
+|---|---|
+| `docker stop` no container | 2 — `must be replaced` |
+| `docker rm -f` no container | 2 — `has been deleted` / `will be created` |
+
+### `terraform -chdir` no PowerShell
+
+`terraform -chdir=$lab` **não** expande a variável: o binário recebe o literal `$lab` e
+responde `Error handling -chdir option`. A forma que funciona é `terraform -chdir="$lab"`.
+Só afeta scripts de validação; o backend monta a lista de argumentos em Java e o conteúdo
+instrui o leitor a rodar `terraform` dentro do próprio diretório.
+
+### Backend S3 — documentação, ainda não medido
+
+`use_lockfile = true` é argumento do backend `s3`, e o lock por DynamoDB está
+descontinuado. Para um endpoint S3-compatível o backend aceita o argumento `endpoints`,
+mais `use_path_style`, `skip_credentials_validation`, `skip_region_validation`,
+`skip_requesting_account_id`, `skip_metadata_api_check` e `skip_s3_checksum` — este
+último existe justamente por causa de implementações S3-compatíveis. O risco do
+**Cenário 16** continua aberto e a contingência registrada acima continua valendo.
+[Backend S3](https://developer.hashicorp.com/terraform/language/backend/s3)
+
+### Provider Kubernetes — documentação, ainda não medido
+
+`config_path` e `config_context` são os argumentos de configuração. Para o **Cenário 14**
+existe um recurso que resolve exatamente o assunto de campos gerenciados:
+`kubernetes_config_map_v1_data` gerencia **apenas as chaves declaradas** de um ConfigMap
+que já existe, via server-side apply, e conflita quando outro field manager já governa a
+mesma chave — conflito que `force = true` sobrescreve. É o material do Cenário sobre
+quem é o dono do recurso.
+[Provider Kubernetes](https://github.com/hashicorp/terraform-provider-kubernetes/blob/main/docs/index.md)
+
+Nesta máquina, em 2026-08-10, `kubectl config get-contexts` não lista nenhum contexto: o
+cluster do Docker Desktop não está no ar. A validação empírica do Ato IV depende de
+subi-lo e é a Task 1 da Etapa 6.
+
+### Símbolos do plano medidos no provider Docker 4.5
+
+Medido em 2026-08-10 contra Terraform 1.15.8, provider `kreuzwerker/docker` 4.5 e Docker
+Engine 29.x, com um `docker_container` publicado na porta 8071. O Cenário 02 cita esta
+tabela: cada mudança no arquivo produz um símbolo, e o `plan` é quem diz qual.
+
+| Mudança | Símbolo | Linha observada |
+|---|---|---|
+| `restart = "no"` → `"unless-stopped"` | `~` | `~ restart = "no" -> "unless-stopped"` — `will be updated in-place` |
+| `ports.external` 8071 → 8075 | `-/+` | `# docker_container.web must be replaced` — `~ external = 8071 -> 8075 # forces replacement` |
+| recurso removido do arquivo | `-` | `# docker_container.web will be destroyed` |
+| recurso novo no arquivo | `+` | `# docker_container.web will be created` |
+
+`restart` é o atributo confirmado atualizável em lugar: trocá-lo não destrói nem recria o
+container, e o plano fecha com `Plan: 0 to add, 1 to change, 0 to destroy.` Qualquer
+mudança no bloco `ports` força recriação — `Plan: 1 to add, 0 to change, 1 to destroy.` —,
+e remover o recurso do arquivo destrói com `Plan: 0 to add, 0 to change, 1 to destroy.`
+
+O `apply` de um plano salvo com `-out` não pede confirmação: após `Plan:` segue direto
+para as ações e termina com `Apply complete! Resources: 1 added, 0 changed, 1 destroyed.`
+É a razão de um pipeline poder aplicar um plano salvo de forma não interativa.
+
+## Validação do Ato IV, executada em 2026-08-16
+
+O cluster só subiu depois de um reparo no ambiente, registrado aqui porque qualquer
+reinstalação vai esbarrar no mesmo muro: o kubelet 1.36.1 recusa cgroup v1 (*kubelet is
+configured to not run on a host using cgroup v1*), e a VM `docker-desktop` montava o
+layout híbrido v1. O `kubeadm init` falhava em `wait-control-plane` com o API server
+nunca subindo. A saída foi `wsl --update` (kernel 5.15.167.4 → 6.18.33.2) mais um
+`%USERPROFILE%\.wslconfig` com `systemd.unified_cgroup_hierarchy=1` e `wsl --shutdown`;
+com o kernel novo a VM passou a montar cgroup v2 unificado e o cluster kind de 3 Nodes
+subiu em ~2 minutos. Os containers que estavam no ar voltaram sozinhos (políticas de
+restart), exceto um leftover `restart=no` que foi religado à mão.
+
+| Premissa | Resultado |
+|---|---|
+| contexto `docker-desktop` disponível | sim — kind, 3 Nodes `Ready` (`desktop-control-plane` + 2 workers), v1.36.1, após o reparo de cgroup acima |
+| provider `hashicorp/kubernetes` resolvido pelo init | v3.2.1 |
+| `kubernetes_namespace` criado e plano limpo em seguida | `lab-iac-validacao` criado (`Active`); `plan -detailed-exitcode` = 0 |
+| state no backend S3 do MiniStack | objeto `mirante/terraform.tfstate` (3.829 bytes) no bucket após o `apply`; o `init` aceitou `use_lockfile = true` sem reclamar |
+| **`use_lockfile` com dois apply concorrentes** | **funciona** — o segundo `apply`, disparado quase junto, terminou exit 1 com `Error: Error acquiring the state lock` (PutObject condicional recusado pelo emulador) e o `Lock Info` do detentor; o primeiro terminou exit 0. O Cenário 16 mantém `use_lockfile` e a demonstração de lock concorrente |
+| RAM livre com os três substratos no ar | host 16.088 MB totais, ~700 MB livres; dentro da VM de 7,61 GiB sobravam ~4,3 GiB (kind 1,08 GiB, MiniStack 68 MiB, containers ~2,1 GiB — um deles, alheio à Trilha, sozinho em 1,71 GiB). Os três substratos couberam com folga dentro da VM: o Cenário 18 mantém Docker + Kubernetes + AWS |
+| chamadas para `amazonaws.com` no conteúdo | zero linhas em `content\iac\**\*.tf` |
+| portas 8070, 8071 e 30070 livres | as três livres (`ocupada=False`) |

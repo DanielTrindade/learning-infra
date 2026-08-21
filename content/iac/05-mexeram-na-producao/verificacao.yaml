@@ -1,0 +1,13 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-web
+  - tipo: http_responde
+    url: http://localhost:8075
+    status: 200
+  - tipo: terraform_estado
+    endereco: docker_container.web
+    atributo: name
+    esperado: mirante-web
+    descricao: o container voltou pelo código, e não à mão
+  - tipo: terraform_plano_limpo
+    descricao: não há mais divergência entre o código, o state e o que está no ar

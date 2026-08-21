@@ -1,0 +1,13 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-web
+  - tipo: http_responde
+    url: http://localhost:8071
+    status: 200
+  - tipo: terraform_estado
+    endereco: docker_container.web
+    atributo: name
+    esperado: mirante-web
+    descricao: o container está sob gestão do Terraform
+  - tipo: terraform_plano_limpo
+    descricao: o arquivo e a infraestrutura no ar descrevem a mesma coisa

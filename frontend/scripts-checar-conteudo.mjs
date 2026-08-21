@@ -24,6 +24,9 @@ const visuaisValidos = new Set([
   'fronteiras-aws',
   'planos-aws',
   'fidelidade-local',
+  'ciclo-iac',
+  'triangulo-state',
+  'grafo-dependencias',
 ])
 
 function textoObrigatorio(valor, campo) {

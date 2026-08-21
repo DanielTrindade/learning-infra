@@ -1,0 +1,29 @@
+asercoes:
+  - tipo: http_responde
+    url: http://localhost:8071
+    status: 200
+  - tipo: comando_produz
+    comando: ["docker", "exec", "mirante-producao", "cat", "/var/lib/mirante/estoque.txt"]
+    contem: pedido-4711
+    descricao: o dado sobreviveu ao refactor
+  - tipo: kubernetes_jsonpath
+    recurso: deployment
+    nome: mirante-web
+    expressao: "{.spec.replicas}"
+    contem: "3"
+    descricao: o cluster voltou ao que o código declara
+  - tipo: aws_consulta
+    servico: sqs
+    operacao: list-queues
+    argumentos: ["--queue-name-prefix", "mirante-pedidos"]
+    consulta: "length(QueueUrls)"
+    esperado: "1"
+    descricao: existe exatamente uma fila, e não uma duplicata
+  - tipo: terraform_estado
+    endereco: aws_sqs_queue.pedidos
+    descricao: a fila criada à mão foi adotada, e não recriada
+  - tipo: terraform_estado
+    endereco: docker_volume.estoque
+    descricao: o volume está no endereço novo do state
+  - tipo: terraform_plano_limpo
+    descricao: nenhuma das quatro divergências sobrou

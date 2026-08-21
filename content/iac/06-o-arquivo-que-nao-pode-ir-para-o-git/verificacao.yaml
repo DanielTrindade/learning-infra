@@ -1,0 +1,17 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-painel
+  - tipo: http_responde
+    url: http://localhost:8076
+    status: 200
+  - tipo: comando_produz
+    comando: [cmd, /c, type, '..\work\.gitignore']
+    contem: "*.tfstate"
+    descricao: o state local está ignorado pelo Git
+  - tipo: terraform_estado
+    endereco: docker_container.web
+    atributo: name
+    esperado: mirante-painel
+    descricao: o painel nasceu do código
+  - tipo: terraform_plano_limpo
+    descricao: o código descreve a infraestrutura que está no ar

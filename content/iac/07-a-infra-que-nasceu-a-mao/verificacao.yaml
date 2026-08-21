@@ -1,0 +1,25 @@
+asercoes:
+  - tipo: container_rodando
+    nome: mirante-relatorios
+  - tipo: container_em_rede
+    nome: mirante-relatorios
+    rede: mirante-interna
+    presente: true
+  - tipo: volume_existe
+    nome: mirante-arquivos
+  - tipo: terraform_estado
+    endereco: docker_volume.arquivos
+    atributo: name
+    esperado: mirante-arquivos
+    descricao: o volume que já existia entrou no state sem ser recriado
+  - tipo: terraform_estado
+    endereco: docker_container.relatorios
+    atributo: name
+    esperado: mirante-relatorios
+    descricao: o container foi adotado, e não refeito
+  - tipo: comando_produz
+    comando: [powershell, -NoProfile, -Command, "if ((terraform '-chdir=..\\work' state show docker_container.relatorios) -match (Get-Content '..\\work\\container.id').Trim()) { 'mesmo-container' } else { 'id-mudou' }"]
+    contem: "mesmo-container"
+    descricao: o container no state é o mesmo que preparar.ps1 criou — o id não mudou
+  - tipo: terraform_plano_limpo
+    descricao: a adoção convergiu — não há mudança pendente

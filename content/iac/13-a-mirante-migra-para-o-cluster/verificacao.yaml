@@ -1,0 +1,23 @@
+asercoes:
+  - tipo: kubernetes_condicao
+    recurso: deployment
+    nome: mirante-web
+    condicao: Available
+    timeout: 20
+    descricao: as três réplicas da Mirante estão disponíveis no cluster
+  - tipo: kubernetes_jsonpath
+    recurso: service
+    nome: mirante-web
+    expressao: "{.spec.ports[0].nodePort}"
+    contem: "30070"
+    descricao: o Service publica a porta combinada
+  - tipo: http_responde
+    url: http://localhost:30070
+    status: 200
+  - tipo: terraform_estado
+    endereco: kubernetes_deployment_v1.web
+    atributo: name
+    esperado: mirante-web
+    descricao: o Deployment nasceu do Terraform, e não de um kubectl apply
+  - tipo: terraform_plano_limpo
+    descricao: o código descreve os objetos que estão no cluster
