@@ -27,8 +27,13 @@ class ExecutorDeComandoRealTest {
 
     @Test
     void acrescentaAmbienteSomenteAoProcessoFilho() {
+        boolean windows = System.getProperty("os.name").toLowerCase().contains("win");
+        List<String> comando = windows
+                ? List.of("cmd.exe", "/c", "echo", "%LEARNING_INFRA_TEST%")
+                : List.of("sh", "-c", "echo \"$LEARNING_INFRA_TEST\"");
+
         SaidaDeComando saida = new ExecutorDeComandoReal().executar(
-                List.of("cmd.exe", "/c", "echo", "%LEARNING_INFRA_TEST%"),
+                comando,
                 Map.of("LEARNING_INFRA_TEST", "credencial-sintetica"));
 
         assertTrue(saida.sucesso());
