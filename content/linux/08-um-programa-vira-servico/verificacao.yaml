@@ -7,3 +7,7 @@ asercoes:
   - tipo: http_responde
     url: http://localhost:8040
     status: 200
+  - tipo: arquivo_linux
+    caminho: /srv/catalogo/index.html
+    dono: root
+    descricao: o conteúdo do catálogo existe e pertence ao root

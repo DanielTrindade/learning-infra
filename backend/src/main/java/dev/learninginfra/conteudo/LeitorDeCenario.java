@@ -331,7 +331,13 @@ public class LeitorDeCenario {
 
     private Boolean booleanoOpcionalNulo(Map<String, Object> mapa, String chave) {
         Object valor = mapa.get(chave);
-        return valor instanceof Boolean booleano ? booleano : null;
+        if (valor == null) {
+            return null;
+        }
+        if (!(valor instanceof Boolean booleano)) {
+            throw new IllegalArgumentException("campo deve ser booleano: " + chave);
+        }
+        return booleano;
     }
 
     @SuppressWarnings("unchecked")

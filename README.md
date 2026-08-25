@@ -425,7 +425,8 @@ As duas Asserções tipadas recebem esse nome do frontmatter e nunca o repetem:
 container e compara **códigos de saída** — `0` é o único positivo, porque `is-active` de
 uma unit parada imprime `inactive` e uma checagem por substring aprovaria um serviço
 parado. `arquivo_linux` roda `stat -c` e compara modo, dono e grupo campo a campo; campos
-nulos não são verificados.
+nulos não são verificados. O `modo` precisa ser o valor canônico que `stat -c %a` imprime,
+sempre entre aspas — um `0440` sem aspas é lido como octal pelo parser YAML e vira `288`.
 
 Uma consulta tipada ao estado local fica em `verificacao.yaml`:
 

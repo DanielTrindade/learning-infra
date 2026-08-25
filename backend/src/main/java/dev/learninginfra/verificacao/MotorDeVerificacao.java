@@ -151,32 +151,60 @@ public class MotorDeVerificacao {
     /**
      * Compara códigos de saída, e não a saída em si: `systemctl is-active` de uma unit
      * parada imprime `inactive`, e `"inactive".contains("active")` aprovaria um serviço
-     * morto. `0` é o único positivo.
+     * morto. `0` é o único positivo; o código do "não" é específico de cada consulta.
      */
     private ResultadoDeAsercao avaliarServicoSystemd(Assercao.ServicoSystemd a) {
         if (a.ativo() != null) {
-            boolean ativo = executor.executar(List.of(
+            SaidaDeComando saida = executor.executar(List.of(
                     "docker", "exec", a.container(),
-                    "systemctl", "is-active", "--quiet", a.nome())).sucesso();
-            if (ativo != a.ativo()) {
-                return ResultadoDeAsercao.reprovada(a,
-                        ativo
-                                ? "o serviço `" + a.nome() + "` está ativo e não deveria"
-                                : "o serviço `" + a.nome() + "` não está ativo");
+                    "systemctl", "is-active", "--quiet", a.nome()));
+            ResultadoDeAsercao resultado = conferirEstado(a, saida, a.ativo(), "ativo", 3);
+            if (resultado != null) {
+                return resultado;
             }
         }
         if (a.habilitado() != null) {
-            boolean habilitado = executor.executar(List.of(
+            SaidaDeComando saida = executor.executar(List.of(
                     "docker", "exec", a.container(),
-                    "systemctl", "is-enabled", "--quiet", a.nome())).sucesso();
-            if (habilitado != a.habilitado()) {
-                return ResultadoDeAsercao.reprovada(a,
-                        habilitado
-                                ? "o serviço `" + a.nome() + "` está habilitado e não deveria"
-                                : "o serviço `" + a.nome() + "` não está habilitado");
+                    "systemctl", "is-enabled", "--quiet", a.nome()));
+            ResultadoDeAsercao resultado = conferirEstado(a, saida, a.habilitado(), "habilitado", 1);
+            if (resultado != null) {
+                return resultado;
             }
         }
         return ResultadoDeAsercao.aprovada(a);
+    }
+
+    /**
+     * `0` é o único código positivo; o código do "não" é específico (3 para is-active,
+     * 1 para is-enabled). Qualquer outro desfecho — 4 para unit inexistente, ou a falha
+     * do `docker exec` quando o container não está no ar — reprova, para um serviço
+     * ausente nunca aprovar como "parado".
+     */
+    private ResultadoDeAsercao conferirEstado(
+            Assercao.ServicoSystemd a, SaidaDeComando saida, boolean esperado,
+            String adjetivo, int codigoDoNao) {
+        if (!saida.stderr().isBlank()) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "não consegui consultar o serviço `" + a.nome()
+                    + "` — confirme que o container `" + a.container()
+                    + "` está no ar: " + ultimaLinha(saida.stderr()));
+        }
+        int codigo = saida.codigoDeSaida();
+        if (codigo == 0) {
+            return esperado
+                    ? null
+                    : ResultadoDeAsercao.reprovada(a,
+                            "o serviço `" + a.nome() + "` está " + adjetivo + " e não deveria");
+        }
+        if (codigo == codigoDoNao) {
+            return esperado
+                    ? ResultadoDeAsercao.reprovada(a,
+                            "o serviço `" + a.nome() + "` não está " + adjetivo)
+                    : null;
+        }
+        return ResultadoDeAsercao.reprovada(a,
+                "a unit `" + a.nome() + "` não existe no container `" + a.container() + "`");
     }
 
     private ResultadoDeAsercao avaliarArquivoLinux(Assercao.ArquivoLinux a) {

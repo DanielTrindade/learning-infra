@@ -62,7 +62,7 @@ class CatalogoRealTest {
         assertThat(linux).hasSize(1);
         assertThat(linux).allMatch(Cenario::usaLinux);
         assertThat(linux.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
-                .isEqualTo(2);
+                .isEqualTo(3);
     }
 
     @Test

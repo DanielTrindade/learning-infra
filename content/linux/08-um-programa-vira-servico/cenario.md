@@ -123,4 +123,5 @@ ar em <http://localhost:8040>.
 A Verificação cobra os dois estados: o serviço precisa estar **ativo** (rodando) **e**
 **habilitado** (sobe sozinho no boot). Um serviço iniciado com `start` na mão passa na
 primeira checagem e falha na segunda — subir o catálogo certo pelo caminho errado não
-conta.
+conta. Ela também confirma que o conteúdo do catálogo existe e pertence ao `root`: o
+arquivo `/srv/catalogo/index.html` que você criou mais acima precisa continuar no lugar.

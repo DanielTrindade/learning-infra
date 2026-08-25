@@ -520,6 +520,33 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void servicoSystemdReprovaUnitInexistente() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(4, "", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", true, null,
+                        "o catálogo vira serviço")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não existe"));
+    }
+
+    @Test
+    void servicoSystemdNaoAprovaParadoQuandoAConsultaFalha() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(
+                1, "", "Error response from daemon: ... not running");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", false, null,
+                        "o serviço não pode subir sozinho")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não consegui consultar"));
+    }
+
+    @Test
     void arquivoLinuxPassaQuandoOsCamposConferem() {
         List<List<String>> comandos = new java.util.ArrayList<>();
         ExecutorDeComando executor = comando -> {

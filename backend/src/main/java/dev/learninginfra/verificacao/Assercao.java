@@ -181,6 +181,13 @@ public sealed interface Assercao {
             Boolean ativo,
             Boolean habilitado,
             String descricao) implements Assercao {
+
+        public ServicoSystemd {
+            if (ativo == null && habilitado == null) {
+                throw new IllegalArgumentException(
+                        "ativo ou habilitado deve ser informado em servico_systemd");
+            }
+        }
     }
 
     /**

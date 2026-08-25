@@ -606,6 +606,57 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void servicoSystemdRejeitaAtivoNaoBooleano() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    ativo: "true"
+                    descricao: o catálogo vira serviço
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("booleano"));
+    }
+
+    @Test
+    void servicoSystemdSemAtivoNemHabilitadoEhRejeitado() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    descricao: o catálogo vira serviço
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("ativo ou habilitado"));
+    }
+
+    @Test
     void montaAsercaoDeArquivoLinuxComCamposNulosNaoVerificados() throws Exception {
         escreverCenarioCompleto();
         Files.writeString(diretorio.resolve("cenario.md"), """
