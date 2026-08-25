@@ -90,6 +90,7 @@ public class MotorDeVerificacao {
             case Assercao.AwsConsulta a -> avaliarConsultaAws(a);
             case Assercao.TerraformEstado a -> avaliarEstadoTerraform(a);
             case Assercao.TerraformPlanoLimpo a -> avaliarPlanoTerraform(a);
+            case Assercao.ServicoSystemd a -> avaliarServicoSystemd(a);
         };
     }
 
@@ -144,6 +145,37 @@ public class MotorDeVerificacao {
                     "não consegui planejar — confirme que você rodou `terraform init` neste "
                     + "diretório: " + ultimoDetalhe(saida));
         };
+    }
+
+    /**
+     * Compara códigos de saída, e não a saída em si: `systemctl is-active` de uma unit
+     * parada imprime `inactive`, e `"inactive".contains("active")` aprovaria um serviço
+     * morto. `0` é o único positivo.
+     */
+    private ResultadoDeAsercao avaliarServicoSystemd(Assercao.ServicoSystemd a) {
+        if (a.ativo() != null) {
+            boolean ativo = executor.executar(List.of(
+                    "docker", "exec", a.container(),
+                    "systemctl", "is-active", "--quiet", a.nome())).sucesso();
+            if (ativo != a.ativo()) {
+                return ResultadoDeAsercao.reprovada(a,
+                        ativo
+                                ? "o serviço `" + a.nome() + "` está ativo e não deveria"
+                                : "o serviço `" + a.nome() + "` não está ativo");
+            }
+        }
+        if (a.habilitado() != null) {
+            boolean habilitado = executor.executar(List.of(
+                    "docker", "exec", a.container(),
+                    "systemctl", "is-enabled", "--quiet", a.nome())).sucesso();
+            if (habilitado != a.habilitado()) {
+                return ResultadoDeAsercao.reprovada(a,
+                        habilitado
+                                ? "o serviço `" + a.nome() + "` está habilitado e não deveria"
+                                : "o serviço `" + a.nome() + "` não está habilitado");
+            }
+        }
+        return ResultadoDeAsercao.aprovada(a);
     }
 
     /**

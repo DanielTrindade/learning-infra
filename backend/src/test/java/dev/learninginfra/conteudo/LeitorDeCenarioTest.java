@@ -558,4 +558,50 @@ class LeitorDeCenarioTest {
                 # Primeiro apply
                 """);
     }
+
+    @Test
+    void montaAsercaoDeServicoSystemdComOContainerDoFrontmatter() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    ativo: true
+                    habilitado: true
+                    descricao: o catálogo vira serviço
+                """);
+
+        var asercao = (Assercao.ServicoSystemd) new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals("learning-infra-linux", asercao.container());
+        assertEquals("catalogo.service", asercao.nome());
+        assertTrue(asercao.ativo());
+        assertTrue(asercao.habilitado());
+    }
+
+    @Test
+    void asercaoDeServicoSystemdExigeContainerLinux() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    ativo: true
+                    descricao: o catálogo vira serviço
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("containerLinux"));
+    }
 }

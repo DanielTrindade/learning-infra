@@ -48,7 +48,8 @@ public class LeitorDeCenario {
                 contextoKubernetes,
                 namespaceKubernetes,
                 ministack,
-                diretorioTerraform);
+                diretorioTerraform,
+                containerLinux);
 
         return new Cenario(
                 exigirTexto(meta, "id"),
@@ -138,7 +139,8 @@ public class LeitorDeCenario {
             String contextoKubernetes,
             String namespaceKubernetes,
             boolean ministack,
-            String diretorioTerraform) {
+            String diretorioTerraform,
+            String containerLinux) {
         Map<String, Object> raiz = new Yaml().load(lerArquivo(arquivo));
         List<Map<String, Object>> itens = (List<Map<String, Object>>) raiz.get("asercoes");
         if (itens == null || itens.isEmpty()) {
@@ -152,7 +154,8 @@ public class LeitorDeCenario {
                     contextoKubernetes,
                     namespaceKubernetes,
                     ministack,
-                    diretorioTerraform));
+                    diretorioTerraform,
+                    containerLinux));
         }
         return List.copyOf(asercoes);
     }
@@ -163,7 +166,8 @@ public class LeitorDeCenario {
             String contextoKubernetes,
             String namespaceKubernetes,
             boolean ministack,
-            String diretorioTerraform) {
+            String diretorioTerraform,
+            String containerLinux) {
         String tipo = exigirTexto(item, "tipo");
         return switch (tipo) {
             case "container_rodando" -> new Assercao.ContainerRodando(exigirTexto(item, "nome"));
@@ -252,6 +256,15 @@ public class LeitorDeCenario {
                         diretorioTerraform,
                         exigirTexto(item, "descricao"));
             }
+            case "servico_systemd" -> {
+                exigirContainerLinux(containerLinux, tipo, arquivo);
+                yield new Assercao.ServicoSystemd(
+                        containerLinux,
+                        exigirTexto(item, "nome"),
+                        booleanoOpcionalNulo(item, "ativo"),
+                        booleanoOpcionalNulo(item, "habilitado"),
+                        exigirTexto(item, "descricao"));
+            }
             default -> throw new IllegalArgumentException(
                     "tipo de asserção desconhecido: " + tipo + " em " + arquivo);
         };
@@ -261,6 +274,13 @@ public class LeitorDeCenario {
         if (diretorioTerraform == null) {
             throw new IllegalArgumentException(
                     "a Asserção " + tipo + " exige terraform: true em " + arquivo);
+        }
+    }
+
+    private void exigirContainerLinux(String containerLinux, String tipo, Path arquivo) {
+        if (containerLinux == null || containerLinux.isBlank()) {
+            throw new IllegalArgumentException(
+                    "a Asserção " + tipo + " exige containerLinux em " + arquivo);
         }
     }
 
@@ -297,6 +317,11 @@ public class LeitorDeCenario {
             throw new IllegalArgumentException("campo deve ser booleano: " + chave);
         }
         return booleano;
+    }
+
+    private Boolean booleanoOpcionalNulo(Map<String, Object> mapa, String chave) {
+        Object valor = mapa.get(chave);
+        return valor instanceof Boolean booleano ? booleano : null;
     }
 
     @SuppressWarnings("unchecked")

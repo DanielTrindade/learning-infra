@@ -475,6 +475,51 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void servicoSystemdPassaQuandoAtivoEHabilitado() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "", "");
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", true, true,
+                        "o catálogo vira serviço")));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("docker", "exec", "learning-infra-linux",
+                "systemctl", "is-active", "--quiet", "catalogo.service"), comandos.get(0));
+        assertEquals(List.of("docker", "exec", "learning-infra-linux",
+                "systemctl", "is-enabled", "--quiet", "catalogo.service"), comandos.get(1));
+    }
+
+    @Test
+    void servicoSystemdReprovaServicoParado() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(3, "inactive", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", true, null,
+                        "o catálogo vira serviço")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não está ativo"));
+    }
+
+    @Test
+    void servicoSystemdNaoDeveEstarAtivoQuandoExigidoFalse() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "active", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", false, null,
+                        "o serviço não pode subir sozinho")));
+
+        assertFalse(resultado.concluido());
+    }
+
+    @Test
     void terraformEstadoFalhaDizendoOValorObservado() {
         var resultado = motorComTrabalho(ESTADO_DO_CONTAINER, 0, "../work")
                 .verificar(List.of(new Assercao.TerraformEstado(
