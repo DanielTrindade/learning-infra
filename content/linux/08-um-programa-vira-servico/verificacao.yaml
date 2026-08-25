@@ -1,0 +1,9 @@
+asercoes:
+  - tipo: servico_systemd
+    nome: catalogo.service
+    ativo: true
+    habilitado: true
+    descricao: o catálogo é um serviço ativo e habilitado
+  - tipo: http_responde
+    url: http://localhost:8040
+    status: 200
