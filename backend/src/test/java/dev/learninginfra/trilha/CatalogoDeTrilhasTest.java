@@ -23,8 +23,8 @@ class CatalogoDeTrilhasTest {
 
     @Test
     void listaTrilhasExplicitasEmOrdemECompoeSeusCenarios() throws Exception {
-        escreverTrilha("kubernetes", "Kubernetes");
-        escreverTrilha("docker", "Docker");
+        escreverTrilha("kubernetes", "Kubernetes", 3);
+        escreverTrilha("docker", "Docker", 2);
         escreverCenarioDocker();
 
         var catalogo = catalogo();
@@ -104,11 +104,22 @@ class CatalogoDeTrilhasTest {
     void rejeitaManifestoCujoIdDifereDoDiretorio() throws Exception {
         Path diretorio = raiz.resolve("content/docker");
         Files.createDirectories(diretorio);
-        Files.writeString(diretorio.resolve("trilha.yaml"), "id: outro\ntitulo: Docker\n");
+        Files.writeString(diretorio.resolve("trilha.yaml"), "id: outro\ntitulo: Docker\nordem: 2\n");
 
         assertThat(org.assertj.core.api.Assertions.catchThrowable(() -> catalogo().listar()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("deve ser docker");
+    }
+
+    @Test
+    void rejeitaManifestoSemOrdem() throws Exception {
+        Path diretorio = raiz.resolve("content/docker");
+        Files.createDirectories(diretorio);
+        Files.writeString(diretorio.resolve("trilha.yaml"), "id: docker\ntitulo: Docker\n");
+
+        assertThat(org.assertj.core.api.Assertions.catchThrowable(() -> catalogo().listar()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ordem");
     }
 
     @Test
@@ -189,13 +200,14 @@ class CatalogoDeTrilhasTest {
                 Clock.fixed(Instant.parse("2026-08-07T12:00:00Z"), ZoneOffset.UTC));
     }
 
-    private void escreverTrilha(String id, String titulo) throws Exception {
+    private void escreverTrilha(String id, String titulo, int ordem) throws Exception {
         Path diretorio = raiz.resolve("content").resolve(id);
         Files.createDirectories(diretorio);
         Files.writeString(diretorio.resolve("trilha.yaml"), """
                 id: %s
                 titulo: %s
-                """.formatted(id, titulo));
+                ordem: %d
+                """.formatted(id, titulo, ordem));
     }
 
     private void escreverCenarioDocker() throws Exception {
@@ -224,6 +236,7 @@ class CatalogoDeTrilhasTest {
         Files.writeString(diretorio.resolve("trilha.yaml"), """
                 id: docker
                 titulo: Docker
+                ordem: 2
                 fundamentos:
                   titulo: Fundamentos do Docker
                   artigo: fundamentos.md

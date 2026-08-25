@@ -1,5 +1,6 @@
 id: docker
 titulo: Docker
+ordem: 2
 fundamentos:
   titulo: Fundamentos do Docker
   artigo: fundamentos.md

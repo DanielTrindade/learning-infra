@@ -1,5 +1,6 @@
 id: iac
 titulo: Infraestrutura como Código
+ordem: 7
 fundamentos:
   titulo: Fundamentos de Infraestrutura como Código
   artigo: fundamentos.md

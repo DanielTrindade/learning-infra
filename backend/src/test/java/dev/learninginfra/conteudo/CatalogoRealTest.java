@@ -72,7 +72,7 @@ class CatalogoRealTest {
         var trilhas = catalogo.listar();
 
         assertThat(trilhas).extracting(trilha -> trilha.id())
-                .containsExactly("aws", "docker", "iac", "kubernetes");
+                .containsExactly("docker", "kubernetes", "aws", "iac");
         assertThat(catalogo.buscar("iac").orElseThrow().fundamentos()).isNotNull();
         assertThat(catalogo.buscar("iac").orElseThrow().fundamentos().questionario())
                 .isNotNull();

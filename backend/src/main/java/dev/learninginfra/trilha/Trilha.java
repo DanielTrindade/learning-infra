@@ -7,6 +7,7 @@ import java.util.List;
 public record Trilha(
         String id,
         String titulo,
+        int ordem,
         Fundamentos fundamentos,
         List<Cenario> cenarios) {
 

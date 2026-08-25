@@ -65,7 +65,7 @@ public class CatalogoDeTrilhas {
                     .map(diretorio -> diretorio.resolve(MANIFESTO))
                     .filter(Files::isRegularFile)
                     .map(manifesto -> montarTrilha(manifesto, cenarios))
-                    .sorted(Comparator.comparing(Trilha::id))
+                    .sorted(Comparator.comparingInt(Trilha::ordem).thenComparing(Trilha::id))
                     .toList();
         } catch (IOException e) {
             throw new UncheckedIOException("não consegui listar " + diretorioDeConteudo, e);
@@ -151,6 +151,7 @@ public class CatalogoDeTrilhas {
                 .filter(cenario -> cenario.id().startsWith(metadados.id() + "/"))
                 .toList();
         return new Trilha(
-                metadados.id(), metadados.titulo(), metadados.fundamentos(), cenarios);
+                metadados.id(), metadados.titulo(), metadados.ordem(),
+                metadados.fundamentos(), cenarios);
     }
 }
