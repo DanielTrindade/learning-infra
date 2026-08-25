@@ -367,6 +367,26 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leOContainerLinuxDeclarado() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                projetoCompose: linux-08
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+
+        Cenario cenario = new LeitorDeCenario().ler(diretorio);
+
+        assertEquals("learning-infra-linux", cenario.containerLinux());
+        assertTrue(cenario.usaLinux());
+    }
+
+    @Test
     void cenarioSemTerraformNaoDeclaraDiretorio() throws Exception {
         escreverCenarioCompleto();
 

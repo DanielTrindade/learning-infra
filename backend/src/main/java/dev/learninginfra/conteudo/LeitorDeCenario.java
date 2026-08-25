@@ -42,6 +42,7 @@ public class LeitorDeCenario {
         if (terraform && diretorioTerraform == null) {
             diretorioTerraform = ".";
         }
+        String containerLinux = textoOpcional(meta, "containerLinux");
         List<Assercao> asercoes = lerAsercoes(
                 diretorioDoCenario.resolve("verificacao.yaml"),
                 contextoKubernetes,
@@ -66,7 +67,8 @@ public class LeitorDeCenario {
                 infraestruturaRealAws,
                 inicializacaoAws,
                 terraform,
-                diretorioTerraform);
+                diretorioTerraform,
+                containerLinux);
     }
 
     private void validarMetadadosAws(
