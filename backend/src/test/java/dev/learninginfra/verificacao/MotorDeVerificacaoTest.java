@@ -520,6 +520,50 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void arquivoLinuxPassaQuandoOsCamposConferem() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "2770 root ana\n", "");
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ArquivoLinux(
+                        "learning-infra-linux", "/srv/dados", "2770", "root", "ana",
+                        "o diretório tem o dono e o modo certos")));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("docker", "exec", "learning-infra-linux",
+                "stat", "-c", "%a %U %G", "/srv/dados"), comandos.getFirst());
+    }
+
+    @Test
+    void arquivoLinuxReprovaModoErradoDizendoOObservado() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "755 root ana\n", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ArquivoLinux(
+                        "learning-infra-linux", "/srv/dados", "2770", null, null,
+                        "o diretório tem o modo certo")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("755"));
+    }
+
+    @Test
+    void arquivoLinuxReprovaCaminhoInexistente() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(1, "", "No such file");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ArquivoLinux(
+                        "learning-infra-linux", "/nao/existe", "440", null, null,
+                        "o arquivo existe")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não existe"));
+    }
+
+    @Test
     void terraformEstadoFalhaDizendoOValorObservado() {
         var resultado = motorComTrabalho(ESTADO_DO_CONTAINER, 0, "../work")
                 .verificar(List.of(new Assercao.TerraformEstado(

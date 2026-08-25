@@ -182,4 +182,17 @@ public sealed interface Assercao {
             Boolean habilitado,
             String descricao) implements Assercao {
     }
+
+    /**
+     * Um arquivo ou diretório dentro do container Linux tem o modo, o dono e o grupo
+     * esperados. Campos nulos não são verificados. A descrição vem do Cenário.
+     */
+    record ArquivoLinux(
+            String container,
+            String caminho,
+            String modo,
+            String dono,
+            String grupo,
+            String descricao) implements Assercao {
+    }
 }

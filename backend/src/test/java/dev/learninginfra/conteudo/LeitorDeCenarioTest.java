@@ -604,4 +604,32 @@ class LeitorDeCenarioTest {
 
         assertTrue(erro.getMessage().contains("containerLinux"));
     }
+
+    @Test
+    void montaAsercaoDeArquivoLinuxComCamposNulosNaoVerificados() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/13-acesso-minimo
+                titulo: Acesso mínimo
+                dificuldade: autonomo
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: arquivo_linux
+                    caminho: /etc/sudoers.d/plantao
+                    modo: "440"
+                    dono: root
+                    descricao: a regra de sudo não é editável por quem ela beneficia
+                """);
+
+        var asercao = (Assercao.ArquivoLinux) new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals("440", asercao.modo());
+        assertEquals("root", asercao.dono());
+        assertNull(asercao.grupo());
+    }
 }

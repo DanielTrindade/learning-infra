@@ -265,6 +265,16 @@ public class LeitorDeCenario {
                         booleanoOpcionalNulo(item, "habilitado"),
                         exigirTexto(item, "descricao"));
             }
+            case "arquivo_linux" -> {
+                exigirContainerLinux(containerLinux, tipo, arquivo);
+                yield new Assercao.ArquivoLinux(
+                        containerLinux,
+                        exigirTexto(item, "caminho"),
+                        textoOpcional(item, "modo"),
+                        textoOpcional(item, "dono"),
+                        textoOpcional(item, "grupo"),
+                        exigirTexto(item, "descricao"));
+            }
             default -> throw new IllegalArgumentException(
                     "tipo de asserção desconhecido: " + tipo + " em " + arquivo);
         };

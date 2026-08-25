@@ -91,6 +91,7 @@ public class MotorDeVerificacao {
             case Assercao.TerraformEstado a -> avaliarEstadoTerraform(a);
             case Assercao.TerraformPlanoLimpo a -> avaliarPlanoTerraform(a);
             case Assercao.ServicoSystemd a -> avaliarServicoSystemd(a);
+            case Assercao.ArquivoLinux a -> avaliarArquivoLinux(a);
         };
     }
 
@@ -174,6 +175,31 @@ public class MotorDeVerificacao {
                                 ? "o serviço `" + a.nome() + "` está habilitado e não deveria"
                                 : "o serviço `" + a.nome() + "` não está habilitado");
             }
+        }
+        return ResultadoDeAsercao.aprovada(a);
+    }
+
+    private ResultadoDeAsercao avaliarArquivoLinux(Assercao.ArquivoLinux a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "docker", "exec", a.container(),
+                "stat", "-c", "%a %U %G", a.caminho()));
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "o caminho `" + a.caminho() + "` não existe no container `"
+                    + a.container() + "`");
+        }
+        String[] campos = saida.stdout().strip().split("\\s+");
+        if (campos.length < 3) {
+            return ResultadoDeAsercao.reprovada(a, "não consegui ler o `stat` de `" + a.caminho() + "`");
+        }
+        if (a.modo() != null && !campos[0].equals(a.modo())) {
+            return ResultadoDeAsercao.reprovada(a, "o modo de `" + a.caminho() + "` é `" + campos[0] + "`");
+        }
+        if (a.dono() != null && !campos[1].equals(a.dono())) {
+            return ResultadoDeAsercao.reprovada(a, "o dono de `" + a.caminho() + "` é `" + campos[1] + "`");
+        }
+        if (a.grupo() != null && !campos[2].equals(a.grupo())) {
+            return ResultadoDeAsercao.reprovada(a, "o grupo de `" + a.caminho() + "` é `" + campos[2] + "`");
         }
         return ResultadoDeAsercao.aprovada(a);
     }
