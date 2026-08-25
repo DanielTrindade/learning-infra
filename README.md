@@ -95,6 +95,23 @@ do projeto. Ao reiniciar ou trocar de Cenário AWS, a plataforma remove o MiniSt
 os containers com o label global `ministack`. Portanto, **não rode outro projeto MiniStack
 ao mesmo tempo**.
 
+### Preparando a Trilha Linux
+
+Nada precisa ser baixado adiante: a imagem é construída pelo próprio Compose a partir do
+`Dockerfile` de cada Cenário. O primeiro **Iniciar cenário** constrói a imagem e leva
+alguns minutos; os seguintes aproveitam o cache de camadas e levam segundos.
+
+Você entra na máquina pelo terminal dele, com:
+
+```powershell
+docker exec -it learning-infra-linux bash
+```
+
+Essa linha é uma incantação com prazo de validade — a Trilha Docker, logo em seguida,
+explica cada pedaço dela. O container da Trilha Linux sobe o systemd com `cgroup: host`
+no Compose: é o mesmo alcance da VM do Docker Desktop que a plataforma já usa no
+MiniStack, e estritamente menos poder que montar o socket do Docker.
+
 ## Rodando
 
 Dois processos, em dois terminais. Nenhum dos dois é o terminal onde você vai fazer os
@@ -142,7 +159,7 @@ Abra **<http://localhost:5180>**.
 
 ## Fundamentos e evolução das Trilhas
 
-As quatro Trilhas oferecem **Fundamentos** e um Questionário com 12 situações,
+As quatro Trilhas publicadas oferecem **Fundamentos** e um Questionário com 12 situações,
 aproveitamento recomendado de 80%, feedback por questão e links para revisar cada
 conceito:
 
@@ -177,6 +194,11 @@ A quarta Trilha, **Infraestrutura como Código**, tem Fundamentos publicados e o
 [`docs/research/iac-course.md`](docs/research/iac-course.md) e o desenho completo —
 Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
+
+A quinta Trilha, **Linux**, abre o catálogo — ela é a primeira da ordem recomendada de
+estudo. A Etapa 1 entregou a plataforma de verificação e o Cenário 08; Fundamentos e os
+demais Cenários vêm nas próximas etapas. O desenho completo está em
+[`docs/superpowers/specs/2026-08-21-trilha-linux-design.md`](docs/superpowers/specs/2026-08-21-trilha-linux-design.md).
 
 ## O que a plataforma mexe na sua máquina
 
@@ -222,6 +244,7 @@ A partir do Cenário 10 a Trilha IaC **reusa** o bloco 8070–8079: 8070 no 10, 
 publica o cluster pelo **NodePort 30070** — alcançado no navegador pela mesma 30070, via
 `kubectl port-forward`. Como só existe um Cenário Ativo por vez, dois Cenários podem
 declarar a mesma porta sem colidir.
+A Trilha Linux usa o bloco **8040–8049**, começando pela **8040** no Cenário 08.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está
@@ -282,7 +305,9 @@ Cenário continua sendo um diretório em `content/<trilha>/<slug>/`:
   dez segundos por padrão, em vez de depender de um `sleep` fixo. Para AWS há
   `aws_consulta`: o endpoint local, região e credenciais sintéticas são injetados pelo
   backend e não podem ser substituídos no conteúdo. Para IaC há também
-  `terraform_estado` e `terraform_plano_limpo`.
+  `terraform_estado` e `terraform_plano_limpo`. Para Linux há também
+  `servico_systemd` e `arquivo_linux`: o container vem do frontmatter `containerLinux` e
+  não se repete em cada Asserção.
 - `workspace/` — opcional. Copiado para `work/` no Iniciar. Se contiver um
   `compose.yaml` **e** o Cenário declarar `projetoCompose`, o stack sobe sozinho; é
   assim que um Cenário entrega ambiente pronto ou quebrado de propósito.
@@ -372,6 +397,35 @@ sem `atributo` e `esperado`, ela apenas exige que o endereço exista no state.
 `terraform_plano_limpo` roda `terraform plan -detailed-exitcode` e prova idempotência e
 ausência de drift. As duas juntas impedem que a Verificação aprove uma infraestrutura
 certa construída pelo caminho errado.
+
+Um Cenário da Trilha Linux declara `containerLinux`, o nome do container que hospeda a
+máquina:
+
+```yaml
+projetoCompose: linux-08
+containerLinux: learning-infra-linux
+```
+
+As duas Asserções tipadas recebem esse nome do frontmatter e nunca o repetem:
+
+```yaml
+- tipo: servico_systemd
+  nome: catalogo.service
+  ativo: true
+  habilitado: true
+  descricao: o catálogo é um serviço ativo e habilitado
+- tipo: arquivo_linux
+  caminho: /etc/sudoers.d/plantao
+  modo: "440"
+  dono: root
+  descricao: a regra de sudo não é editável por quem ela beneficia
+```
+
+`servico_systemd` roda `systemctl is-active --quiet` e `is-enabled --quiet` dentro do
+container e compara **códigos de saída** — `0` é o único positivo, porque `is-active` de
+uma unit parada imprime `inactive` e uma checagem por substring aprovaria um serviço
+parado. `arquivo_linux` roda `stat -c` e compara modo, dono e grupo campo a campo; campos
+nulos não são verificados.
 
 Uma consulta tipada ao estado local fica em `verificacao.yaml`:
 
