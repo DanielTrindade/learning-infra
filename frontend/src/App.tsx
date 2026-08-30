@@ -1,10 +1,22 @@
-import { BotaoDeTema } from './BotaoDeTema'
-import { Catalogo } from './Catalogo'
-import { MarcaDaPlataforma } from './MarcaDaPlataforma'
-import { PaginaDoCenario } from './PaginaDoCenario'
-import { PaginaDeFundamentos } from './PaginaDeFundamentos'
+import { lazy, Suspense } from 'react'
+import { CabecalhoDaPlataforma } from './CabecalhoDaPlataforma'
+import { LandingPage } from './LandingPage'
 import { useRota } from './useRota'
 import './estilos.css'
+
+const Catalogo = lazy(() => import('./Catalogo').then((modulo) => ({ default: modulo.Catalogo })))
+const PaginaDoCenario = lazy(() => import('./PaginaDoCenario').then((modulo) => ({ default: modulo.PaginaDoCenario })))
+const PaginaDeFundamentos = lazy(() => import('./PaginaDeFundamentos').then((modulo) => ({ default: modulo.PaginaDeFundamentos })))
+
+function CarregamentoDaRota() {
+  return (
+    <div className="carregamento-rota" role="status" aria-label="Carregando conteúdo">
+      <span />
+      <span />
+      <span />
+    </div>
+  )
+}
 
 export default function App() {
   const rota = useRota()
@@ -12,38 +24,43 @@ export default function App() {
   const rotaDeFundamentos = rota.match(/^trilhas\/([^/]+)\/fundamentos$/)
   const idDaTrilha = rotaDeFundamentos?.[1] ?? null
   const emConteudo = Boolean(idDoCenario || idDaTrilha)
+  const naAreaDeAprendizado = rota === 'aprender'
+  const naLanding = !emConteudo && !naAreaDeAprendizado
+  const contextoDoCabecalho = emConteudo
+    ? 'conteudo'
+    : naAreaDeAprendizado
+      ? 'aprendizado'
+      : 'landing'
 
   return (
     <div className="app-shell">
       <a className="pular-para-conteudo" href="#conteudo-principal">Pular para o conteúdo</a>
 
-      <header className="barra-superior">
-        <a className="marca" href="#/" aria-label="Learning Infra — início">
-          <MarcaDaPlataforma />
-          <span>
-            <strong>Learning Infra</strong>
-            <small>laboratórios locais</small>
-          </span>
-        </a>
-        <div className="barra-acoes">
-          <span className="contexto-local" title="Os Cenários rodam na sua máquina">
-            <span aria-hidden="true" />
-            ambiente local
-          </span>
-          <BotaoDeTema />
-        </div>
-      </header>
+      <CabecalhoDaPlataforma contexto={contextoDoCabecalho} />
 
       {/* Progresso de leitura: só nas páginas longas, e sem uma linha de JS.
           Onde o browser não implementa scroll timelines, a barra fica em 0 e some. */}
       {emConteudo && <div className="progresso-leitura" aria-hidden="true"><span /></div>}
 
-      <main id="conteudo-principal" className={emConteudo ? 'app-main app-main-aula' : 'app-main'}>
-        {idDoCenario
-          ? <PaginaDoCenario id={idDoCenario} />
-          : idDaTrilha
-            ? <PaginaDeFundamentos idDaTrilha={idDaTrilha} />
-            : <Catalogo />}
+      <main
+        id="conteudo-principal"
+        className={
+          emConteudo
+            ? 'app-main app-main-aula'
+            : naLanding
+              ? 'app-main app-main-landing'
+              : 'app-main app-main-aprendizado'
+        }
+      >
+        <Suspense fallback={<CarregamentoDaRota />}>
+          {idDoCenario
+            ? <PaginaDoCenario id={idDoCenario} />
+            : idDaTrilha
+              ? <PaginaDeFundamentos idDaTrilha={idDaTrilha} />
+              : naAreaDeAprendizado
+                ? <Catalogo />
+                : <LandingPage />}
+        </Suspense>
       </main>
     </div>
   )

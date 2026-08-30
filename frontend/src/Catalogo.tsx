@@ -5,7 +5,6 @@ import {
   type FundamentosResumo,
   type TrilhaResumo,
 } from './api'
-import { IlustracaoDoHero } from './IlustracaoDoHero'
 import { glifoDaTrilha } from './identidadeDaTrilha'
 import {
   carregarTrilhaAtual,
@@ -513,51 +512,39 @@ export function Catalogo() {
 
   return (
     <>
-      <section className="hero-catalogo" aria-labelledby="titulo-catalogo">
-        <div className="hero-texto">
-          <h1 id="titulo-catalogo">Infraestrutura se aprende com a mão no terminal.</h1>
-          <p className="hero-descricao">
-            Escolha uma trilha, avance no seu ritmo e prove cada conceito no ambiente local.
-          </p>
-          {hrefDoFoco ? (
-            <a className="botao botao-primario" href={hrefDoFoco}>
-              {fundamentosPendentes
-                ? 'Começar pelos Fundamentos'
-                : focoDaTrilhaAtual && estadoDoCenario(focoDaTrilhaAtual) === 'andamento'
-                  ? 'Continuar Cenário'
-                  : 'Continuar trilha'}
-              <span aria-hidden="true">→</span>
-            </a>
-          ) : (
-            <button
-              type="button"
-              className="botao botao-primario"
-              onClick={() => rolarAte(trilhasDisponiveis.length > 0 ? 'titulo-trilhas' : 'titulo-concluidas')}
-            >
-              {trilhasDisponiveis.length > 0 ? 'Escolher uma trilha' : 'Ver trilhas concluídas'}
-              <span aria-hidden="true">↓</span>
-            </button>
-          )}
+      <header className="area-aprendizado-cabecalho">
+        <div>
+          <h1>Minha aprendizagem</h1>
+          <p>Continue a trilha atual ou escolha um novo tema para estudar no seu ritmo.</p>
         </div>
-
-        <div className="hero-visual" aria-hidden="true">
-          <IlustracaoDoHero />
-        </div>
-      </section>
+        <span>{resumos.length} {resumos.length === 1 ? 'trilha disponível' : 'trilhas disponíveis'}</span>
+      </header>
 
       {resumoDaTrilhaAtual ? (
-        <section className="painel-progresso" aria-labelledby="titulo-progresso">
+        <section className="painel-progresso painel-progresso-atual" aria-labelledby="titulo-progresso">
           <div className="progresso-cabecalho">
             <div>
-              <p className="eyebrow">Trilha atual</p>
+              <p className="eyebrow">Em foco</p>
               <h2 id="titulo-progresso">{resumoDaTrilhaAtual.nome}</h2>
+              <p className="progresso-proximo-passo">
+                {fundamentosPendentes
+                  ? 'Comece pelos Fundamentos para preparar o modelo mental da trilha.'
+                  : focoDaTrilhaAtual && estadoDoCenario(focoDaTrilhaAtual) === 'andamento'
+                    ? 'Retome o Cenário que já está em andamento.'
+                    : 'Seu próximo Cenário está pronto para começar.'}
+              </p>
             </div>
             <div className="progresso-acoes">
-              <button type="button" onClick={() => rolarAte('titulo-trilhas')}>Trocar trilha</button>
               <p className="progresso-resumo">
                 <strong>{resumoDaTrilhaAtual.percentual}%</strong>
                 <span>{resumoDaTrilhaAtual.concluidas} de {resumoDaTrilhaAtual.total} concluídos</span>
               </p>
+              {hrefDoFoco && (
+                <a className="botao botao-primario" href={hrefDoFoco}>
+                  {fundamentosPendentes ? 'Abrir Fundamentos' : 'Continuar Cenário'}
+                </a>
+              )}
+              <button type="button" onClick={() => rolarAte('titulo-trilhas')}>Trocar trilha</button>
             </div>
           </div>
 
@@ -587,12 +574,12 @@ export function Catalogo() {
       ) : (
         <section className="painel-progresso painel-sem-trilha" aria-labelledby="titulo-progresso">
           <div>
-            <h2 id="titulo-progresso">Escolha uma trilha para começar</h2>
-            <p>O progresso geral aparecerá aqui somente depois que você aderir a uma trilha.</p>
+            <h2 id="titulo-progresso">Escolha sua primeira trilha</h2>
+            <p>Depois da escolha, o próximo conteúdo e o progresso ficam em destaque aqui.</p>
           </div>
           {trilhasDisponiveis.length > 0 && (
             <button type="button" className="botao botao-secundario" onClick={() => rolarAte('titulo-trilhas')}>
-              Ver trilhas disponíveis
+              Explorar trilhas
             </button>
           )}
         </section>
@@ -602,7 +589,7 @@ export function Catalogo() {
         <section className="catalogo-lista" aria-labelledby="titulo-trilhas">
           <div className="lista-cabecalho">
             <div>
-              <h2 id="titulo-trilhas">Trilhas para estudar</h2>
+              <h2 id="titulo-trilhas">Explorar trilhas</h2>
               <p className="lista-descricao">Mantenha uma trilha atual por vez. Trocar não apaga o que você já concluiu.</p>
             </div>
             <div className="filtros" aria-label="Filtrar Cenários">

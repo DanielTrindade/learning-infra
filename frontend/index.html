@@ -6,27 +6,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f4f6f7" />
-    <meta name="description" content="Laboratórios práticos de infraestrutura no seu próprio ambiente." />
-    <title>Learning Infra — laboratórios práticos</title>
-    <script>
-      // Aplica o tema salvo antes da primeira pintura. Sem isto a página abre
-      // clara e pisca para escura assim que o React monta.
-      (function () {
-        try {
-          var tema = localStorage.getItem('learning-infra:tema:v1')
-          if (tema === 'claro' || tema === 'escuro') {
-            document.documentElement.setAttribute('data-tema', tema)
-          }
-          var escuro = (tema || (matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro')) === 'escuro'
-          document
-            .querySelector('meta[name="theme-color"]')
-            .setAttribute('content', escuro ? '#0c0f11' : '#f4f6f7')
-        } catch (e) {
-          // Sem armazenamento local o tema do sistema decide, que é o padrão.
-        }
-      })()
-    </script>
+    <meta name="theme-color" content="#f2f4f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1211" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Aprenda infraestrutura com fundamentos claros, laboratórios locais e verificação prática." />
+    <title>Learning Infra | laboratórios práticos</title>
   </head>
   <body>
     <div id="root"></div>
