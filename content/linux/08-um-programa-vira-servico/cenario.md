@@ -35,12 +35,12 @@ você vai usar para conversar com ele.
 
 ## O programa
 
-O catálogo da Aurora é um site estático servido pelo Python, que já está instalado. Crie
-o conteúdo e experimente o programa rodando na mão:
+O catálogo da Aurora é um site estático servido pelo Python, que já está instalado. O
+conteúdo está em `/srv/catalogo` desde o Cenário 01 — o que falta é servi-lo. Experimente
+o programa rodando na mão:
 
 ```bash
-mkdir -p /srv/catalogo
-echo '<h1>Aurora — catálogo</h1>' > /srv/catalogo/index.html
+cat /srv/catalogo/index.html
 python3 -m http.server 8040 --directory /srv/catalogo
 ```
 
