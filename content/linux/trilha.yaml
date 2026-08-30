@@ -1,3 +1,8 @@
 id: linux
 titulo: Linux
 ordem: 1
+fundamentos:
+  titulo: Fundamentos do Linux
+  artigo: fundamentos.md
+  questionario: questionario.yaml
+  aproveitamentoMinimo: 80
