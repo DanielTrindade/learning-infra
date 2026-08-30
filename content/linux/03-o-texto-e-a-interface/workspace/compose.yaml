@@ -1,0 +1,12 @@
+services:
+  servidor:
+    image: learning-infra-linux:1
+    build: .
+    container_name: learning-infra-linux
+    hostname: aurora
+    cgroup: host
+    tmpfs:
+      - /run
+      - /run/lock
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw

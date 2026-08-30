@@ -1,0 +1,17 @@
+asercoes:
+  - tipo: arquivo_linux
+    caminho: /srv/relatorio-500.txt
+    dono: root
+    descricao: o relatório de erros existe e pertence ao root
+
+  - tipo: comando_produz
+    descricao: o relatório aponta a livraria-do-porto como origem da maior fatia dos erros
+    comando: ["docker", "exec", "learning-infra-linux",
+              "head", "-1", "/srv/relatorio-500.txt"]
+    contem: "37 livraria-do-porto"
+
+  - tipo: comando_produz
+    descricao: o erro do comando foi para o arquivo de erros, e não para o relatório
+    comando: ["docker", "exec", "learning-infra-linux",
+              "cat", "/srv/erros.txt"]
+    contem: "No such file or directory"
