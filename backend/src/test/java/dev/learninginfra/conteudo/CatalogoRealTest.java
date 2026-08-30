@@ -66,7 +66,7 @@ class CatalogoRealTest {
     }
 
     @Test
-    void carregaCincoTrilhasComFundamentosPublicadosNasQuatroAnteriores() {
+    void carregaCincoTrilhasComFundamentosPublicados() {
         Path conteudo = localizarConteudo();
         var cenarios = new RepositorioDeCenarios(
                 conteudo.toString(), new LeitorDeCenario());
@@ -80,7 +80,11 @@ class CatalogoRealTest {
 
         assertThat(trilhas).extracting(trilha -> trilha.id())
                 .containsExactly("linux", "docker", "kubernetes", "aws", "iac");
-        assertThat(catalogo.buscar("linux").orElseThrow().fundamentos()).isNull();
+        assertThat(catalogo.buscar("linux").orElseThrow().fundamentos())
+                .satisfies(fundamentos -> {
+                    assertThat(fundamentos.questionario().questoes()).hasSize(12);
+                    assertThat(fundamentos.markdown()).contains("## Kernel e espaço de usuário");
+                });
         assertThat(catalogo.buscar("iac").orElseThrow().fundamentos()).isNotNull();
         assertThat(catalogo.buscar("iac").orElseThrow().fundamentos().questionario())
                 .isNotNull();
