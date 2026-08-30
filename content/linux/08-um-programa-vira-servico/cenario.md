@@ -7,6 +7,10 @@ containerLinux: learning-infra-linux
 ---
 # Um programa vira serviço
 
+Você já inventariou a máquina, organizou o acesso do editorial e descobriu no log de onde
+vinham os erros de pedido. Tudo isso foi olhar. Agora você vai mudar como a máquina se
+comporta.
+
 Até aqui a Aurora tocava seus programas na mão: para servir o catálogo, alguém abria
 uma sessão e deixava um processo rodando. Na primeira reinicialização, o catálogo sumia
 e ninguém lembrava como ele subia de novo.
@@ -22,9 +26,9 @@ Clique em **Iniciar cenário**. Depois, no seu terminal:
 docker exec -it learning-infra-linux bash
 ```
 
-Essa linha é a porta de entrada da Trilha inteira — ela te coloca dentro da máquina da
-Aurora. A Trilha Docker, logo em seguida, explica cada pedaço dela; por ora, use-a como
-uma incantação. Confirme que a máquina está saudável:
+A mesma linha do Cenário 01. Antes de mexer em qualquer coisa, confirme que a máquina está
+saudável — esse é o primeiro reflexo de quem opera um servidor, e é a linha de base contra
+a qual você vai comparar tudo que quebrar depois:
 
 ```bash
 systemctl is-system-running
@@ -35,12 +39,12 @@ você vai usar para conversar com ele.
 
 ## O programa
 
-O catálogo da Aurora é um site estático servido pelo Python, que já está instalado. Crie
-o conteúdo e experimente o programa rodando na mão:
+O catálogo da Aurora é um site estático servido pelo Python, que já está instalado. O
+conteúdo está em `/srv/catalogo` desde o Cenário 01 — o que falta é servi-lo. Experimente
+o programa rodando na mão:
 
 ```bash
-mkdir -p /srv/catalogo
-echo '<h1>Aurora — catálogo</h1>' > /srv/catalogo/index.html
+cat /srv/catalogo/index.html
 python3 -m http.server 8040 --directory /srv/catalogo
 ```
 

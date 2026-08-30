@@ -1,0 +1,13 @@
+asercoes:
+  - tipo: arquivo_linux
+    caminho: /srv/inventario.md
+    modo: "644"
+    dono: root
+    grupo: root
+    descricao: o inventário existe, é legível por todos e pertence ao root
+
+  - tipo: comando_produz
+    descricao: o inventário nomeia o log de pedidos que você encontrou
+    comando: ["docker", "exec", "learning-infra-linux",
+              "grep", "-c", "/var/log/aurora/pedidos.log", "/srv/inventario.md"]
+    contem: "1"
