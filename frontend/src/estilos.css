@@ -1,43 +1,41 @@
 /* ============================================================================
-   Learning Infra — sistema de tokens "blueprint técnico"
+   Learning Infra: sistema de tokens mineral e técnico
 
-   Uma escala de raio, um acento (ciano-petróleo) e três estados semânticos que
+   Uma escala de forma, um acento (ciano-petróleo) e três estados semânticos que
    nunca competem com ele. Todo valor de cor da folha sai daqui: nenhuma cor
    literal deve aparecer fora deste bloco, para que o tema escuro seja apenas
    uma troca de valores.
 
-   Tema: claro por padrão, escuro por `prefers-color-scheme` e sobreposição
-   manual via `data-tema` no <html>.
+   Tema: claro por padrão e escuro exclusivamente por `prefers-color-scheme`.
    ============================================================================ */
 
 :root {
   color-scheme: light;
 
   /* superfícies */
-  --canvas: #f4f6f7;
-  --surface: #ffffff;
-  --surface-soft: #eaeef0;
-  --surface-sunken: #f7f9fa;
-  --surface-vidro: rgb(255 255 255 / 66%);
+  --canvas: #f2f4f3;
+  --surface: #fbfcfc;
+  --surface-soft: #e8ecea;
+  --surface-sunken: #f6f8f7;
+  --surface-vidro: rgb(251 252 252 / 82%);
 
   /* tinta */
-  --ink: #0f1417;
-  --ink-soft: #55636b;
-  --ink-faint: #87949b;
+  --ink: #111816;
+  --ink-soft: #52615d;
+  --ink-faint: #7d8b87;
 
   /* traços */
-  --line: #dbe2e6;
-  --line-soft: #e9eef1;
-  --line-strong: #c2ccd2;
+  --line: #d8dfdc;
+  --line-soft: #e7ece9;
+  --line-strong: #bec9c5;
 
-  /* acento — marca, links, foco, ação primária */
-  --acento: #0d6c80;
-  --acento-forte: #0a5163;
-  --acento-suave: #dcf0f5;
-  --acento-linha: #a7d5e0;
-  --acento-tinta: #06414f;
-  --acento-contraste: #ffffff;
-  --malha: rgb(13 108 128 / 5%);
+  /* acento: marca, links, foco e ação primária */
+  --acento: #0f7182;
+  --acento-forte: #0a5361;
+  --acento-suave: #dceff1;
+  --acento-linha: #9fcfd6;
+  --acento-tinta: #063f49;
+  --acento-contraste: #f7fbfc;
 
   /* estado: concluído */
   --ok: #1c7a4f;
@@ -57,7 +55,7 @@
   --perigo-linha: #efc2c7;
   --perigo-tinta: #7f202b;
 
-  /* bloco de código — sempre escuro no claro, por convenção de terminal */
+  /* bloco de código: sempre escuro no claro, por convenção de terminal */
   --codigo-fundo: #101a1e;
   --codigo-tinta: #d9e4e8;
   --codigo-linha: #223137;
@@ -67,25 +65,25 @@
   --codigo-inline-fundo: #e8f4f7;
   --codigo-inline-linha: #c3e0e8;
 
-  /* escala de raio — uma só, aplicada em toda a interface */
-  --r-xs: 4px;
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
+  /* controles: 10px. Superfícies: 16-18px. Pills apenas em filtros. */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
   --r-pill: 999px;
 
-  /* elevação — tingida na base fria, nunca preto puro */
-  --shadow-small: 0 1px 2px rgb(15 23 28 / 6%), 0 6px 18px rgb(15 23 28 / 5%);
-  --shadow-raised: 0 14px 40px rgb(15 23 28 / 9%);
+  /* elevação tingida na base fria, nunca preto puro */
+  --shadow-small: 0 1px 2px rgb(15 24 21 / 5%), 0 10px 30px rgb(15 24 21 / 5%);
+  --shadow-raised: 0 18px 52px rgb(15 24 21 / 9%);
   --foco: 0 0 0 3px rgb(13 108 128 / 26%);
   --sombra-acento: 0 6px 16px rgb(13 108 128 / 22%);
   --sombra-acento-alta: 0 8px 22px rgb(13 108 128 / 28%);
 
   /* tipografia */
-  --fonte-texto: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui,
+  --fonte-texto: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui,
     Roboto, Helvetica, Arial, sans-serif;
-  --fonte-display: Bahnschrift, "DIN Alternate", "Segoe UI Variable Display",
+  --fonte-display: "Segoe UI Variable Display", "Aptos Display", "Segoe UI Variable",
     ui-sans-serif, system-ui, "Segoe UI", sans-serif;
   --fonte-mono: "Cascadia Code", "Cascadia Mono", ui-monospace, Consolas,
     "SF Mono", Menlo, monospace;
@@ -100,26 +98,25 @@
   text-rendering: optimizeLegibility;
 }
 
-/* Tema escuro: mesma hierarquia, mesmos papéis, valores trocados.
-   O seletor :not([data-tema="claro"]) deixa a escolha manual vencer o sistema. */
+/* Tema escuro: mesma hierarquia, mesmos papéis, seguindo o sistema. */
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-tema="claro"]) {
+  :root {
     color-scheme: dark;
 
-    --canvas: #0c0f11;
-    --surface: #13181b;
-    --surface-soft: #1b2226;
-    --surface-sunken: #0f1416;
-    --surface-vidro: rgb(27 34 38 / 62%);
+    --canvas: #0d1211;
+    --surface: #141a18;
+    --surface-soft: #1b2421;
+    --surface-sunken: #101614;
+    --surface-vidro: rgb(20 26 24 / 82%);
 
     --ink: #e3e9ec;
     --ink-soft: #96a2aa;
     --ink-faint: #6a767d;
 
-    --line: #232c31;
-    --line-soft: #1c2428;
-    --line-strong: #35424a;
+    --line: #27312e;
+    --line-soft: #1d2623;
+    --line-strong: #394742;
 
     --acento: #45bcd6;
     --acento-forte: #74d3e7;
@@ -127,7 +124,6 @@
     --acento-linha: #17414d;
     --acento-tinta: #8fd9e8;
     --acento-contraste: #04222a;
-    --malha: rgb(69 188 214 / 4%);
 
     --ok: #4fbc80;
     --ok-suave: #102b1d;
@@ -162,62 +158,6 @@
   }
 }
 
-:root[data-tema="escuro"] {
-  color-scheme: dark;
-
-  --canvas: #0c0f11;
-  --surface: #13181b;
-  --surface-soft: #1b2226;
-  --surface-sunken: #0f1416;
-  --surface-vidro: rgb(27 34 38 / 62%);
-
-  --ink: #e3e9ec;
-  --ink-soft: #96a2aa;
-  --ink-faint: #6a767d;
-
-  --line: #232c31;
-  --line-soft: #1c2428;
-  --line-strong: #35424a;
-
-  --acento: #45bcd6;
-  --acento-forte: #74d3e7;
-  --acento-suave: #0e2b33;
-  --acento-linha: #17414d;
-  --acento-tinta: #8fd9e8;
-  --acento-contraste: #04222a;
-  --malha: rgb(69 188 214 / 4%);
-
-  --ok: #4fbc80;
-  --ok-suave: #102b1d;
-  --ok-linha: #1c452f;
-  --ok-tinta: #83d6a5;
-
-  --atencao: #d99a2b;
-  --atencao-suave: #2e2411;
-  --atencao-linha: #4a3a1a;
-  --atencao-tinta: #e9b95e;
-
-  --perigo: #ef8290;
-  --perigo-suave: #2f1418;
-  --perigo-linha: #4a2027;
-  --perigo-tinta: #f4a4ae;
-
-  --codigo-fundo: #090d0f;
-  --codigo-tinta: #d9e4e8;
-  --codigo-linha: #1e272c;
-  --codigo-tinta-fraca: #7d8d95;
-  --codigo-barra: #45bcd6;
-  --codigo-inline-tinta: #8fd9e8;
-  --codigo-inline-fundo: #10252b;
-  --codigo-inline-linha: #1b3d47;
-
-  --shadow-small: 0 1px 2px rgb(0 0 0 / 34%), 0 6px 18px rgb(0 0 0 / 26%);
-  --shadow-raised: 0 14px 40px rgb(0 0 0 / 42%);
-  --foco: 0 0 0 3px rgb(69 188 214 / 34%);
-  --sombra-acento: 0 4px 14px rgb(0 0 0 / 40%);
-  --sombra-acento-alta: 0 6px 20px rgb(0 0 0 / 48%);
-}
-
 * {
   box-sizing: border-box;
 }
@@ -229,13 +169,8 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
-  /* malha de planta baixa: dá textura de blueprint sem virar decoração */
-  background:
-    linear-gradient(var(--malha) 1px, transparent 1px),
-    linear-gradient(90deg, var(--malha) 1px, transparent 1px),
-    var(--canvas);
-  background-size: 32px 32px;
+  min-height: 100dvh;
+  background: var(--canvas);
   line-height: 1.55;
 }
 
@@ -287,7 +222,8 @@ a:focus-visible,
 }
 
 .app-shell {
-  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
 }
 
 .barra-superior {
@@ -296,8 +232,8 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(1180px, calc(100% - 48px));
-  height: 78px;
+  width: min(1280px, calc(100% - 48px));
+  height: 72px;
   margin: 0 auto;
   border-bottom: 1px solid var(--line);
 }
@@ -350,67 +286,49 @@ a:focus-visible,
   gap: 14px;
 }
 
-.botao-tema {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  place-items: center;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
+.barra-navegacao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.barra-navegacao nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.barra-navegacao nav button,
+.atalho-aprendizado,
+.atalho-inicio {
+  padding: 8px 10px;
+  border: 0;
   color: var(--ink-soft);
-  background: var(--surface);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 620;
+  text-decoration: none;
   cursor: pointer;
-  transition:
-    color 160ms ease,
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 140ms var(--ease-out);
 }
 
-.botao-tema:active {
-  transform: scale(0.94);
+.acesso-aprendizado {
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 680;
+  text-decoration: none;
+  transition: transform 140ms var(--ease-out), border-color 160ms ease, background-color 160ms ease;
 }
 
-.botao-tema-icones {
-  display: grid;
-  place-items: center;
-}
-
-.botao-tema svg {
-  grid-area: 1 / 1;
-  transition: opacity 180ms ease, transform 260ms var(--ease-out);
-}
-
-/* No claro mostra o sol; no escuro, a lua. A troca é o feedback da ação. */
-.botao-tema svg:last-child {
-  opacity: 0;
-  transform: rotate(-70deg) scale(0.6);
-}
-
-:root[data-tema="escuro"] .botao-tema svg:first-child,
-:root[data-tema="claro"] .botao-tema svg:last-child {
-  opacity: 0;
-  transform: rotate(70deg) scale(0.6);
-}
-
-:root[data-tema="escuro"] .botao-tema svg:last-child,
-:root[data-tema="claro"] .botao-tema svg:first-child {
-  opacity: 1;
-  transform: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-tema]) .botao-tema svg:first-child {
-    opacity: 0;
-    transform: rotate(70deg) scale(0.6);
-  }
-
-  :root:not([data-tema]) .botao-tema svg:last-child {
-    opacity: 1;
-    transform: none;
-  }
+.acesso-aprendizado:active,
+.atalho-aprendizado:active,
+.atalho-inicio:active {
+  transform: scale(0.97);
 }
 
 /* Progresso de leitura: puro CSS, atrelado à rolagem da página.
@@ -450,25 +368,48 @@ a:focus-visible,
 .contexto-local {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   color: var(--ink-soft);
   font-family: var(--fonte-mono);
   font-size: 0.69rem;
   letter-spacing: 0.03em;
 }
 
-.contexto-local > span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ok);
-  box-shadow: 0 0 0 4px var(--ok-suave);
-}
-
 .app-main {
   width: min(1120px, calc(100% - 48px));
   margin: 0 auto;
   padding: 64px 0 100px;
+}
+
+.app-main-landing {
+  width: min(1280px, calc(100% - 48px));
+  padding: 0;
+}
+
+.app-main-aprendizado {
+  padding-top: 48px;
+}
+
+.carregamento-rota {
+  display: grid;
+  gap: 12px;
+  min-height: 360px;
+  align-content: center;
+}
+
+.carregamento-rota span {
+  display: block;
+  height: 58px;
+  border-radius: var(--r-lg);
+  background: var(--surface-soft);
+  animation: skeleton-pulso 1.4s ease-in-out infinite alternate;
+}
+
+.carregamento-rota span:nth-child(2) {
+  width: 82%;
+}
+
+.carregamento-rota span:nth-child(3) {
+  width: 64%;
 }
 
 .app-main-aula {
@@ -501,40 +442,436 @@ h3 {
   margin-right: 4px;
 }
 
-.hero-catalogo {
-  position: relative;
+/* Landing pública */
+
+.landing-page {
+  min-width: 0;
+}
+
+.landing-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(330px, 0.8fr);
-  min-height: 380px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  background:
-    radial-gradient(circle at 92% 5%, color-mix(in oklab, var(--acento) 12%, transparent), transparent 35%),
-    var(--surface);
-  box-shadow: var(--shadow-small);
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.72fr);
+  gap: clamp(44px, 7vw, 96px);
+  align-items: center;
+  min-height: min(780px, calc(100dvh - 72px));
+  padding: 48px 0 72px;
 }
 
-.hero-texto {
-  align-self: center;
-  padding: 54px 24px 54px 60px;
+.landing-hero-copy {
+  max-width: 710px;
+  padding-left: clamp(0px, 2vw, 24px);
+  animation: landing-entrar 620ms var(--ease-out) both;
 }
 
-.hero-texto h1 {
-  max-width: 670px;
-  margin-bottom: 22px;
-  font-size: clamp(2.15rem, 4.2vw, 3.4rem);
-  line-height: 1.04;
-  letter-spacing: -0.045em;
+.landing-hero h1 {
+  max-width: 700px;
+  margin-bottom: 24px;
+  font-size: clamp(3.1rem, 4.7vw, 4.25rem);
+  font-weight: 690;
+  line-height: 0.98;
+  letter-spacing: -0.058em;
 }
 
-.hero-descricao {
-  max-width: 570px;
-  margin: 0 0 30px;
+.landing-hero-copy > p {
+  max-width: 540px;
+  margin: 0 0 32px;
   color: var(--ink-soft);
-  font-size: 1.05rem;
+  font-size: clamp(1.02rem, 1.5vw, 1.22rem);
   line-height: 1.65;
 }
+
+.landing-hero-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.landing-hero-acoes .botao {
+  min-height: 50px;
+  padding-inline: 20px;
+}
+
+.botao-texto {
+  border-color: transparent;
+  color: var(--ink);
+  background: transparent;
+  box-shadow: inset 0 -1px 0 var(--line-strong);
+}
+
+.landing-hero-midia {
+  position: relative;
+  align-self: stretch;
+  max-height: 700px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-raised);
+  animation: landing-entrar 720ms 80ms var(--ease-out) both;
+}
+
+.landing-hero-midia::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgb(247 251 252 / 28%);
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgb(247 251 252 / 20%);
+  content: "";
+  pointer-events: none;
+}
+
+.landing-hero-midia img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes landing-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.landing-metodo,
+.landing-trilhas {
+  padding: clamp(90px, 11vw, 144px) clamp(0px, 3vw, 44px);
+  border-top: 1px solid var(--line);
+}
+
+.landing-secao-introducao {
+  max-width: 720px;
+  margin-bottom: clamp(36px, 5vw, 62px);
+}
+
+.landing-secao-introducao h2,
+.landing-pratica h2,
+.landing-cta h2 {
+  margin-bottom: 18px;
+  font-size: clamp(2.25rem, 4.7vw, 4.4rem);
+  font-weight: 680;
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
+.landing-secao-introducao p,
+.landing-pratica > div > p,
+.landing-cta p {
+  max-width: 610px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.metodo-grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.metodo-grade article {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: clamp(28px, 4vw, 48px);
+  border-radius: var(--r-xl);
+}
+
+.metodo-grade article > span {
+  margin-bottom: clamp(34px, 5vw, 64px);
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.metodo-grade h3 {
+  max-width: 530px;
+  margin: 0 0 12px;
+  font-size: clamp(1.45rem, 2.6vw, 2.35rem);
+  font-weight: 670;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+}
+
+.metodo-grade p {
+  max-width: 520px;
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.metodo-grade .metodo-principal {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr) minmax(220px, 0.7fr);
+  align-items: end;
+  gap: clamp(24px, 4vw, 56px);
+  color: var(--acento-contraste);
+  background: var(--acento);
+}
+
+.metodo-principal > span {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  margin-bottom: 0;
+}
+
+.metodo-principal h3 {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--acento-contraste);
+}
+
+.metodo-principal p {
+  grid-column: 3;
+  grid-row: 1;
+  color: color-mix(in oklab, var(--acento-contraste) 82%, transparent);
+}
+
+.metodo-pratica {
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.metodo-verificacao {
+  background: var(--surface-soft);
+}
+
+.landing-pratica {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+  gap: clamp(48px, 8vw, 112px);
+  align-items: center;
+  padding: clamp(80px, 10vw, 132px) clamp(0px, 3vw, 44px);
+  border-top: 1px solid var(--line);
+}
+
+.landing-pratica figure {
+  min-height: 510px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--surface-soft);
+}
+
+.landing-pratica img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 510px;
+  object-fit: cover;
+}
+
+.landing-pratica dl {
+  display: grid;
+  gap: 0;
+  margin: 36px 0 0;
+}
+
+.landing-pratica dl > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.42fr) minmax(0, 1fr);
+  gap: 22px;
+  padding: 17px 0;
+  border-top: 1px solid var(--line);
+}
+
+.landing-pratica dt {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.landing-pratica dd {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.landing-trilhas-lista {
+  margin: 0;
+  padding: 0;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-small);
+  list-style: none;
+}
+
+.landing-trilhas-lista li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  min-height: 104px;
+  padding: 24px 30px;
+}
+
+.landing-trilhas-lista li + li {
+  border-top: 1px solid var(--line);
+}
+
+.landing-trilhas-lista li > div {
+  display: grid;
+  gap: 5px;
+}
+
+.landing-trilhas-lista strong {
+  color: var(--ink);
+  font-family: var(--fonte-display);
+  font-size: 1.2rem;
+  font-weight: 670;
+  letter-spacing: -0.02em;
+}
+
+.landing-trilhas-lista span {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.landing-trilhas-lista a,
+.landing-trilhas-estado a {
+  color: var(--acento-forte);
+  font-size: 0.78rem;
+  font-weight: 720;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.landing-trilhas-skeleton {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--line);
+}
+
+.landing-trilhas-skeleton span {
+  display: block;
+  height: 104px;
+  background: var(--surface);
+  animation: skeleton-pulso 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes skeleton-pulso {
+  to { opacity: 0.68; }
+}
+
+.landing-trilhas-estado {
+  padding: 44px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-xl);
+  background: var(--surface-vidro);
+}
+
+.landing-trilhas-estado p {
+  margin: 7px 0 18px;
+  color: var(--ink-soft);
+}
+
+.landing-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 36px;
+  align-items: end;
+  margin: 0 clamp(0px, 3vw, 44px);
+  padding: clamp(46px, 7vw, 76px);
+  border-radius: var(--r-xl);
+  background: var(--acento-suave);
+}
+
+.landing-cta h2 {
+  max-width: 760px;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+}
+
+.landing-cta .botao {
+  white-space: nowrap;
+}
+
+.landing-footer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  margin: 80px clamp(0px, 3vw, 44px) 0;
+  padding: 26px 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.landing-footer strong {
+  color: var(--ink);
+  font-family: var(--fonte-display);
+}
+
+.landing-footer a {
+  color: var(--ink);
+  font-weight: 680;
+  text-underline-offset: 4px;
+}
+
+/* Área de aprendizagem */
+
+.area-aprendizado-cabecalho {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: end;
+  padding: 10px 0 38px;
+}
+
+.area-aprendizado-cabecalho h1 {
+  margin-bottom: 10px;
+  font-size: clamp(2.5rem, 5vw, 4.4rem);
+  font-weight: 680;
+  line-height: 1;
+  letter-spacing: -0.052em;
+}
+
+.area-aprendizado-cabecalho p {
+  max-width: 610px;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.area-aprendizado-cabecalho > span {
+  padding-bottom: 7px;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+.painel-progresso-atual {
+  margin-top: 0;
+  padding: 34px 38px 28px;
+}
+
+.progresso-proximo-passo {
+  max-width: 520px;
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.painel-progresso-atual .progresso-acoes {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-items: end;
+}
+
+.painel-progresso-atual .progresso-resumo {
+  grid-column: 1 / -1;
+}
+
+.painel-progresso-atual .progresso-acoes > button {
+  align-self: center;
+}
+
 
 .botao {
   display: inline-flex;
@@ -577,48 +914,6 @@ h3 {
   border-color: var(--line);
   background: var(--surface);
 }
-
-.hero-texto .botao {
-  min-height: 48px;
-  padding-inline: 20px;
-}
-
-.hero-visual {
-  position: relative;
-  min-height: 330px;
-}
-
-.hero-ilustracao {
-  position: absolute;
-  top: 50%;
-  right: 28px;
-  width: min(94%, 400px);
-  height: auto;
-  transform: translateY(-50%);
-}
-
-/* Cada traço lê um token: a peça acompanha o tema em vez de trazer o seu. */
-.hero-malha,
-.hero-base,
-.hero-caixa,
-.hero-rack,
-.hero-cubo,
-.hero-enlace,
-.hero-no {
-  vector-effect: non-scaling-stroke;
-}
-
-.hero-malha { stroke: var(--line-strong); }
-.hero-base { stroke: var(--ink-faint); }
-.hero-caixa { stroke: var(--line-strong); }
-.hero-rack { stroke: var(--acento); }
-.hero-cubo { stroke: var(--acento); }
-.hero-enlace { stroke: var(--acento); opacity: 0.55; }
-.hero-no { fill: var(--surface); stroke: var(--acento); }
-
-.hero-face { fill: var(--surface); }
-.hero-face-lateral { fill: var(--surface-soft); }
-.hero-face-topo { fill: var(--acento-suave); }
 
 .painel-progresso {
   margin-top: 24px;
@@ -2426,7 +2721,7 @@ h3 {
 }
 
 /* ============================================================================
-   Diagramas declarativos — versão leve
+   Diagramas declarativos: versão leve
    Substitui, em frontend/src/estilos.css:
      1. o bloco "/* Diagramas declarativos ... *\/" (linhas ~2069 a ~2635,
         de `.diagrama {` até o fim de `.diagrama-erro`);
@@ -2596,7 +2891,7 @@ h3 {
   font-family: var(--fonte-mono);
 }
 
-/* nó — o tom vira o próprio fundo, sem borda nem marcador */
+/* nó: o tom vira o próprio fundo, sem borda nem marcador */
 
 .no {
   display: grid;
@@ -2658,7 +2953,7 @@ h3 {
   color: color-mix(in oklab, var(--tinta-forte) 62%, var(--ink-soft));
 }
 
-/* fluxo — índices em círculo sobre um trilho de 1px */
+/* fluxo: índices em círculo sobre um trilho de 1px */
 
 .fluxo {
   display: grid;
@@ -2734,7 +3029,7 @@ h3 {
   border: 0;
 }
 
-/* camadas — pilha com barra de tom à esquerda */
+/* camadas: pilha com barra de tom à esquerda */
 
 .camadas {
   display: grid;
@@ -2764,7 +3059,7 @@ h3 {
   content: "";
 }
 
-/* comparacao — colunas independentes, com respiro entre elas */
+/* comparacao: colunas independentes, com respiro entre elas */
 
 .comparacao {
   display: grid;
@@ -2822,7 +3117,7 @@ h3 {
   border-top: 1px solid var(--tinta-linha);
 }
 
-/* ciclo — cadeia com seta leve e retorno com pílula */
+/* ciclo: cadeia com seta leve e retorno com pílula */
 
 .ciclo-cadeia {
   display: flex;
@@ -3116,6 +3411,31 @@ h3 {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .barra-navegacao nav button:hover,
+  .atalho-aprendizado:hover,
+  .atalho-inicio:hover {
+    color: var(--ink);
+  }
+
+  .acesso-aprendizado:hover {
+    border-color: var(--acento-linha);
+    background: var(--acento-suave);
+  }
+
+  .botao-texto:hover {
+    color: var(--acento-forte);
+    box-shadow: inset 0 -1px 0 var(--acento);
+  }
+
+  .landing-trilhas-lista li:hover {
+    background: var(--surface-sunken);
+  }
+
+  .landing-trilhas-lista a:hover,
+  .landing-trilhas-estado a:hover {
+    color: var(--acento);
+  }
+
   .botao-primario:hover {
     background: var(--acento-forte);
     box-shadow: var(--sombra-acento-alta);
@@ -3193,20 +3513,22 @@ h3 {
 }
 
 @media (max-width: 960px) {
-  .hero-catalogo {
-    grid-template-columns: 1fr minmax(260px, 0.6fr);
+  .landing-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(310px, 0.72fr);
+    gap: 34px;
   }
 
-  .hero-texto {
-    padding-left: 42px;
+  .landing-hero h1 {
+    font-size: clamp(3rem, 6.5vw, 4.5rem);
   }
 
-  .hero-texto h1 {
-    font-size: clamp(2.1rem, 5vw, 3rem);
+  .landing-pratica {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+    gap: 48px;
   }
 
-  .hero-ilustracao {
-    right: -22px;
+  .painel-progresso-atual .progresso-cabecalho {
+    align-items: start;
   }
 
   .layout-aula {
@@ -3245,6 +3567,22 @@ h3 {
     height: 68px;
   }
 
+  .barra-navegacao nav,
+  .atalho-aprendizado {
+    display: none;
+  }
+
+  .barra-navegacao {
+    gap: 8px;
+  }
+
+  .acesso-aprendizado {
+    min-height: 36px;
+    padding-inline: 10px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+
   .contexto-local {
     font-size: 0;
   }
@@ -3253,30 +3591,156 @@ h3 {
     padding-top: 30px;
   }
 
-  .hero-catalogo {
-    display: block;
+  .app-main-landing {
+    padding-top: 0;
+  }
+
+  .app-main-aprendizado {
+    padding-top: 36px;
+  }
+
+  .landing-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 38px;
     min-height: 0;
+    padding: 42px 0 72px;
   }
 
-  .hero-texto {
-    padding: 38px 28px 30px;
+  .landing-hero-copy {
+    padding-left: 0;
   }
 
-  .hero-texto h1 {
-    font-size: clamp(2rem, 9vw, 2.7rem);
+  .landing-hero h1 {
+    font-size: clamp(2.65rem, 12vw, 4.2rem);
+    line-height: 1;
   }
 
-  .hero-visual {
-    min-height: 250px;
-    border-top: 1px solid var(--line);
+  .landing-hero-midia {
+    aspect-ratio: 4 / 3;
+    max-height: none;
   }
 
-  .hero-ilustracao {
-    top: 50%;
-    right: auto;
-    left: 50%;
-    width: 240px;
-    transform: translate(-50%, -50%);
+  .landing-hero-midia img {
+    object-position: center 52%;
+  }
+
+  .landing-metodo,
+  .landing-trilhas,
+  .landing-pratica {
+    padding: 80px 0;
+  }
+
+  .landing-secao-introducao h2,
+  .landing-pratica h2 {
+    font-size: clamp(2.15rem, 10vw, 3.4rem);
+  }
+
+  .metodo-grade {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .metodo-grade article {
+    min-height: 240px;
+  }
+
+  .metodo-grade .metodo-principal {
+    display: flex;
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .metodo-principal > span {
+    margin-bottom: 34px;
+  }
+
+  .metodo-principal > span,
+  .metodo-principal h3,
+  .metodo-principal p {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .landing-pratica {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 46px;
+  }
+
+  .landing-pratica figure,
+  .landing-pratica img {
+    min-height: 300px;
+  }
+
+  .landing-pratica figure {
+    aspect-ratio: 4 / 3;
+  }
+
+  .landing-pratica dl > div {
+    grid-template-columns: minmax(96px, 0.38fr) minmax(0, 1fr);
+  }
+
+  .landing-trilhas-lista li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 22px;
+  }
+
+  .landing-trilhas-lista a {
+    justify-self: start;
+  }
+
+  .landing-cta {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    margin-inline: 0;
+    padding: 34px 28px;
+  }
+
+  .landing-cta .botao {
+    justify-self: start;
+  }
+
+  .landing-footer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    margin: 64px 0 0;
+  }
+
+  .landing-footer a {
+    margin-top: 12px;
+    justify-self: start;
+  }
+
+  .area-aprendizado-cabecalho {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding-bottom: 28px;
+  }
+
+  .area-aprendizado-cabecalho h1 {
+    font-size: clamp(2.45rem, 12vw, 3.8rem);
+  }
+
+  .area-aprendizado-cabecalho > span {
+    padding: 0;
+  }
+
+  .painel-progresso-atual {
+    padding: 26px 22px;
+  }
+
+  .painel-progresso-atual .progresso-acoes {
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-items: stretch;
+    width: 100%;
+  }
+
+  .painel-progresso-atual .progresso-resumo {
+    justify-content: space-between;
+  }
+
+  .painel-progresso-atual .progresso-acoes > button {
+    justify-self: end;
   }
 
   .painel-progresso {
@@ -3403,6 +3867,29 @@ h3 {
     font-size: 0.96rem;
   }
 
+  .pagina-aula,
+  .cabecalho-aula,
+  .layout-aula,
+  .lateral-aula,
+  .conteudo-aula,
+  .coluna-fundamentos,
+  .painel-modelo-mental,
+  .bloco-questionario {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .cabecalho-aula h1,
+  .cabecalho-fundamentos h1,
+  .introducao-fundamentos,
+  .metadados-aula,
+  .fluxo-aprendizado {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-wrap: pretty;
+  }
+
   .bloco-codigo {
     margin-inline: -10px;
   }
@@ -3431,8 +3918,47 @@ h3 {
 }
 
 @media (max-width: 430px) {
-  .hero-texto .botao {
+  .marca {
+    gap: 8px;
+  }
+
+  .marca small {
+    display: none;
+  }
+
+  .barra-superior-landing .marca strong {
+    font-size: 0.86rem;
+  }
+
+  .acesso-aprendizado {
+    padding-inline: 8px;
+    font-size: 0.66rem;
+  }
+
+  .landing-hero-acoes {
+    display: grid;
+  }
+
+  .landing-hero-acoes .botao,
+  .landing-cta .botao {
     width: 100%;
+  }
+
+  .landing-cta .botao {
+    justify-self: stretch;
+  }
+
+  .landing-pratica dl > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .painel-progresso-atual .progresso-acoes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .painel-progresso-atual .progresso-acoes > button {
+    justify-self: start;
   }
 
   .progresso-resumo span {

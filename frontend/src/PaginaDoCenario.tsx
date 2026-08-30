@@ -95,7 +95,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
         <strong>Não foi possível abrir esta aula.</strong>
         <span>Volte ao catálogo ou confira se o backend está rodando.</span>
         <code>{erro}</code>
-        <a href="#/">Voltar aos Cenários</a>
+        <a href="#/aprender">Voltar aos Cenários</a>
       </div>
     )
   }
@@ -120,7 +120,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
 
   return (
     <div className="pagina-aula">
-      <a className="voltar" href="#/"><span aria-hidden="true">←</span> Todos os Cenários</a>
+      <a className="voltar" href="#/aprender"><span aria-hidden="true">←</span> Todos os Cenários</a>
 
       <header className="cabecalho-aula">
         <p className="terminal-label">

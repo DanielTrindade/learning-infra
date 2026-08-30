@@ -59,7 +59,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
         <strong>Não foi possível abrir os Fundamentos.</strong>
         <span>Volte ao catálogo ou confira se o backend está rodando.</span>
         <code>{erro}</code>
-        <a href="#/">Voltar às Trilhas</a>
+        <a href="#/aprender">Voltar às Trilhas</a>
       </div>
     )
   }
@@ -82,7 +82,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
 
   return (
     <div className="pagina-aula pagina-fundamentos">
-      <a className="voltar" href="#/"><span aria-hidden="true">←</span> Todas as Trilhas</a>
+      <a className="voltar" href="#/aprender"><span aria-hidden="true">←</span> Todas as Trilhas</a>
 
       <header className="cabecalho-aula cabecalho-fundamentos">
         <p className="terminal-label">
