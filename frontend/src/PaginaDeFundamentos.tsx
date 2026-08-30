@@ -8,15 +8,8 @@ import {
 import { ConteudoMarkdown } from './ConteudoMarkdown'
 import { Questionario } from './Questionario'
 import { salvarTrilhaAtual } from './progresso'
-import { slugificar } from './texto'
-
-function secoesDoArtigo(markdown: string) {
-  return markdown
-    .split('\n')
-    .filter((linha) => /^##\s+/.test(linha))
-    .map((linha) => linha.replace(/^##\s+/, '').trim())
-    .map((titulo) => ({ titulo, id: slugificar(titulo) }))
-}
+import { SumarioDaAula } from './SumarioDaAula'
+import { rolarAteSecao, secoesDoMarkdown } from './secoesDaAula'
 
 const rotulosDeEstado = {
   NAO_INICIADO: 'Não iniciado',
@@ -50,12 +43,6 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
     }
   }, [idDaTrilha])
 
-  function rolarAte(id: string) {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-    })
-  }
-
   function atualizarResultado(resultado: ResultadoDoQuestionario) {
     setFundamentos((atual) => atual ? {
       ...atual,
@@ -86,7 +73,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
     )
   }
 
-  const secoes = secoesDoArtigo(fundamentos.markdown)
+  const secoes = secoesDoMarkdown(fundamentos.markdown)
   const estadoVisual = fundamentos.estado === 'CONCLUIDO'
     ? 'concluido'
     : fundamentos.estado === 'EM_ANDAMENTO'
@@ -99,9 +86,9 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
 
       <header className="cabecalho-aula cabecalho-fundamentos">
         <p className="terminal-label">
-          <span>{idDaTrilha}</span>
+          <span>Fundamentos</span>
           <i aria-hidden="true">/</i>
-          <span>modelo mental → checagem → terminal</span>
+          <span>{idDaTrilha}</span>
         </p>
         <h1>{fundamentos.titulo}</h1>
         <p className="introducao-fundamentos">
@@ -126,7 +113,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
               <strong>modelo mental</strong><span>→</span><strong>checagem</strong><span>→</span><strong>terminal</strong>
             </div>
             <div className="acoes">
-              <button className="botao botao-primario" type="button" onClick={() => rolarAte('inicio-questionario')}>
+              <button className="botao botao-primario" type="button" onClick={() => rolarAteSecao('inicio-questionario')}>
                 Ir ao Questionário <span aria-hidden="true">↓</span>
               </button>
               {primeiroCenario && (
@@ -137,19 +124,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
             </div>
           </section>
 
-          <nav className="sumario" aria-label="Neste artigo">
-            <p>Neste artigo</p>
-            <ol>
-              {secoes.map((secao, indice) => (
-                <li key={secao.id}>
-                  <button type="button" onClick={() => rolarAte(secao.id)}>
-                    <span>{String(indice + 1).padStart(2, '0')}</span>
-                    {secao.titulo}
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </nav>
+          <SumarioDaAula secoes={secoes} rotulo="Neste artigo" />
         </aside>
 
         <div className="coluna-fundamentos">
@@ -159,7 +134,6 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
 
           <section className="bloco-questionario" id="inicio-questionario" aria-labelledby="titulo-questionario">
             <header className="cabecalho-questionario">
-              <p className="terminal-label"><span aria-hidden="true">?</span> checagem formativa</p>
               <h2 id="titulo-questionario">Teste seu modelo mental</h2>
               <p>
                 Responda as {fundamentos.questoes.length} situações sem consultar o texto.
@@ -171,7 +145,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
               questoes={fundamentos.questoes}
               primeiroCenario={primeiroCenario}
               aoResultado={atualizarResultado}
-              aoRevisar={rolarAte}
+              aoRevisar={rolarAteSecao}
             />
           </section>
         </div>

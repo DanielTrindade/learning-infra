@@ -5,7 +5,8 @@ import {
   type FundamentosResumo,
   type TrilhaResumo,
 } from './api'
-import hero from './assets/hero-infra.svg'
+import { IlustracaoDoHero } from './IlustracaoDoHero'
+import { glifoDaTrilha } from './identidadeDaTrilha'
 import {
   carregarTrilhaAtual,
   estadoDoCenario,
@@ -300,7 +301,7 @@ function CartaoDeTrilha({
         }}
       >
         <div className="trilha-identidade">
-          <span className="trilha-icone" aria-hidden="true">▣</span>
+          <span className="trilha-icone" aria-hidden="true">{glifoDaTrilha(resumo.id)}</span>
           <div>
             <h3 className="trilha-titulo" id={idDoTitulo}>{resumo.nome}</h3>
             <span className="trilha-legenda">{legenda}</span>
@@ -540,7 +541,7 @@ export function Catalogo() {
         </div>
 
         <div className="hero-visual" aria-hidden="true">
-          <img src={hero} alt="" />
+          <IlustracaoDoHero />
         </div>
       </section>
 
@@ -586,7 +587,6 @@ export function Catalogo() {
       ) : (
         <section className="painel-progresso painel-sem-trilha" aria-labelledby="titulo-progresso">
           <div>
-            <p className="eyebrow">Seu roteiro</p>
             <h2 id="titulo-progresso">Escolha uma trilha para começar</h2>
             <p>O progresso geral aparecerá aqui somente depois que você aderir a uma trilha.</p>
           </div>
@@ -602,7 +602,6 @@ export function Catalogo() {
         <section className="catalogo-lista" aria-labelledby="titulo-trilhas">
           <div className="lista-cabecalho">
             <div>
-              <p className="eyebrow">Roteiro de estudo</p>
               <h2 id="titulo-trilhas">Trilhas para estudar</h2>
               <p className="lista-descricao">Mantenha uma trilha atual por vez. Trocar não apaga o que você já concluiu.</p>
             </div>
@@ -690,9 +689,8 @@ export function Catalogo() {
         <section className="arquivo-trilhas" aria-labelledby="titulo-concluidas">
           <div className="arquivo-cabecalho">
             <div>
-              <p className="eyebrow">Arquivo de conquistas</p>
               <h2 id="titulo-concluidas">Trilhas concluídas</h2>
-              <p className="arquivo-descricao">Restaurar devolve a Trilha ao roteiro de estudo para refazer ou revisitar.</p>
+              <p className="arquivo-descricao">Restaurar traz a Trilha de volta à lista para refazer ou revisitar.</p>
             </div>
             <span>{trilhasConcluidas.length} {trilhasConcluidas.length === 1 ? 'trilha' : 'trilhas'}</span>
           </div>

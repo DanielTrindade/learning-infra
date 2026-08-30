@@ -18,15 +18,8 @@ import {
   rotulosEstado,
   salvarTrilhaAtual,
 } from './progresso'
-import { slugificar } from './texto'
-
-function secoesDoCenario(markdown: string) {
-  return markdown
-    .split('\n')
-    .filter((linha) => /^##\s+/.test(linha))
-    .map((linha) => linha.replace(/^##\s+/, '').trim())
-    .map((titulo) => ({ titulo, id: slugificar(titulo) }))
-}
+import { SumarioDaAula } from './SumarioDaAula'
+import { secoesDoMarkdown } from './secoesDaAula'
 
 export function PaginaDoCenario({ id }: { id: string }) {
   const [cenario, setCenario] = useState<CenarioDetalhado | null>(null)
@@ -117,7 +110,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
   }
 
   const estado = estadoDoCenario(cenario)
-  const secoes = secoesDoCenario(cenario.markdown)
+  const secoes = secoesDoMarkdown(cenario.markdown)
   const podeVerificar = Boolean(diretorio || cenario.ativo)
   const textoStatus = estado === 'concluido'
     ? 'Todas as verificações já passaram. Você pode revisar ou refazer este laboratório.'
@@ -200,26 +193,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
 
           {resultado && <ChecklistDeVerificacao resultado={resultado} />}
 
-          {secoes.length > 0 && (
-            <nav className="sumario" aria-label="Nesta aula">
-              <p>Neste Cenário</p>
-              <ol>
-                {secoes.map((secao, indice) => (
-                  <li key={secao.id}>
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById(secao.id)?.scrollIntoView({
-                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-                      })}
-                    >
-                      <span>{String(indice + 1).padStart(2, '0')}</span>
-                      {secao.titulo}
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            </nav>
-          )}
+          <SumarioDaAula secoes={secoes} rotulo="Neste Cenário" />
         </aside>
 
         <article className="conteudo-aula">
