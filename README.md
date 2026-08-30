@@ -159,16 +159,20 @@ Abra **<http://localhost:5180>**.
 
 ## Fundamentos e evolução das Trilhas
 
-As quatro Trilhas publicadas oferecem **Fundamentos** e um Questionário com 12 situações,
+As cinco Trilhas publicadas oferecem **Fundamentos** e um Questionário com 12 situações,
 aproveitamento recomendado de 80%, feedback por questão e links para revisar cada
 conceito:
 
+- **Linux:** kernel e espaço de usuário, tudo é arquivo, processo e sinal, identidade e
+  permissão, shell, pacote, systemd, journald, rede no host e acesso mínimo;
 - **Docker:** arquitetura, imagens, containers, isolamento, rede, persistência, Compose
   e distribuição;
 - **Kubernetes:** estado desejado, control plane, reconciliação, workloads, rede,
   agendamento, persistência e mínimo privilégio;
 - **AWS:** responsabilidade compartilhada, regiões e AZs, IAM, APIs, control plane e
-  data plane, IaC, custo e guardrails do MiniStack.
+  data plane, IaC, custo e guardrails do MiniStack;
+- **Infraestrutura como Código:** imperativo e declarativo, o ciclo plan/apply/state,
+  grafo de dependências, provider, módulos, drift e blast radius.
 
 Fundamentos não transformam teoria em um Cenário artificial nem bloqueiam a prática. O
 contrato está na [ADR 0003](docs/adr/0003-fundamentos-pertencem-a-trilha.md), os diagramas
@@ -195,9 +199,9 @@ A quarta Trilha, **Infraestrutura como Código**, tem Fundamentos publicados e o
 Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
 
-A quinta Trilha, **Linux**, abre o catálogo — ela é a primeira da ordem recomendada de
-estudo. A Etapa 1 entregou a plataforma de verificação e o Cenário 08; Fundamentos e os
-demais Cenários vêm nas próximas etapas. O desenho completo está em
+A quinta Trilha, **Linux**, abre o catálogo — é a primeira da ordem recomendada de estudo.
+Fundamentos publicados e os Cenários 01 a 14 em construção, com o Cenário 08 já no ar como
+prova da plataforma. O desenho completo — Fundamentos e 14 Cenários em quatro atos — está em
 [`docs/superpowers/specs/2026-08-21-trilha-linux-design.md`](docs/superpowers/specs/2026-08-21-trilha-linux-design.md).
 
 ## O que a plataforma mexe na sua máquina
