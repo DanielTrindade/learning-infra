@@ -1,0 +1,26 @@
+asercoes:
+  - tipo: servico_systemd
+    nome: catalogo.service
+    ativo: true
+    habilitado: true
+    descricao: o catálogo voltou, ativo e habilitado
+
+  - tipo: http_responde
+    url: http://localhost:8044
+    status: 200
+
+  - tipo: http_corpo_contem
+    url: http://localhost:8044
+    texto: Aurora
+
+  - tipo: arquivo_linux
+    caminho: /srv/catalogo/index.html
+    modo: "644"
+    dono: root
+    descricao: o conteúdo do catálogo está legível por quem serve
+
+  - tipo: comando_produz
+    descricao: a partição de log saiu do vermelho
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "P=$(df --output=pcent /var/log/aurora | tail -1 | tr -d ' %'); if [ \"$P\" -lt 50 ]; then echo espaco-liberado; else echo ainda-cheio; fi"]
+    contem: espaco-liberado
