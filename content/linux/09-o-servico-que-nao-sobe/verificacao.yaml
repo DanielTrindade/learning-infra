@@ -1,0 +1,10 @@
+asercoes:
+  - tipo: servico_systemd
+    nome: pedidos.service
+    ativo: true
+    habilitado: true
+    descricao: a entrada de pedidos está ativa e sobe sozinha no boot
+
+  - tipo: http_responde
+    url: http://localhost:8041
+    status: 200
