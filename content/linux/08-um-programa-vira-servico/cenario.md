@@ -7,6 +7,10 @@ containerLinux: learning-infra-linux
 ---
 # Um programa vira serviço
 
+Você já inventariou a máquina, organizou o acesso do editorial e descobriu no log de onde
+vinham os erros de pedido. Tudo isso foi olhar. Agora você vai mudar como a máquina se
+comporta.
+
 Até aqui a Aurora tocava seus programas na mão: para servir o catálogo, alguém abria
 uma sessão e deixava um processo rodando. Na primeira reinicialização, o catálogo sumia
 e ninguém lembrava como ele subia de novo.
@@ -22,9 +26,9 @@ Clique em **Iniciar cenário**. Depois, no seu terminal:
 docker exec -it learning-infra-linux bash
 ```
 
-Essa linha é a porta de entrada da Trilha inteira — ela te coloca dentro da máquina da
-Aurora. A Trilha Docker, logo em seguida, explica cada pedaço dela; por ora, use-a como
-uma incantação. Confirme que a máquina está saudável:
+A mesma linha do Cenário 01. Antes de mexer em qualquer coisa, confirme que a máquina está
+saudável — esse é o primeiro reflexo de quem opera um servidor, e é a linha de base contra
+a qual você vai comparar tudo que quebrar depois:
 
 ```bash
 systemctl is-system-running

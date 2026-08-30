@@ -99,7 +99,16 @@ ao mesmo tempo**.
 
 Nada precisa ser baixado adiante: a imagem é construída pelo próprio Compose a partir do
 `Dockerfile` de cada Cenário. O primeiro **Iniciar cenário** constrói a imagem e leva
-alguns minutos; os seguintes aproveitam o cache de camadas e levam segundos.
+cerca de **50 segundos**; os seguintes aproveitam o cache de camadas e levam segundos —
+inclusive ao trocar de Cenário, porque **todos os Cenários da Trilha carregam o mesmo
+`Dockerfile`, byte a byte**. O `SubstratoLinuxTest` reprova o build se algum divergir.
+
+Essa imagem é um Ubuntu 26.04 pinado por digest, com systemd como PID 1. Além do
+essencial, ela traz `less`, `nano`, `file` e `lsof` — os Cenários leem e editam arquivos
+na máquina. E ela **semeia** o servidor da Aurora: `/srv/catalogo`,
+`/etc/aurora/catalogo.conf` e um `/var/log/aurora/pedidos.log` de 2160 linhas, gerado com
+semente fixa e portanto idêntico em qualquer máquina. A Trilha começa com "você herdou um
+servidor", e um servidor sem passado não teria o que inventariar.
 
 Você entra na máquina pelo terminal dele, com:
 
@@ -200,8 +209,9 @@ Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
 
 A quinta Trilha, **Linux**, abre o catálogo — é a primeira da ordem recomendada de estudo.
-Fundamentos publicados e os Cenários 01 a 14 em construção, com o Cenário 08 já no ar como
-prova da plataforma. O desenho completo — Fundamentos e 14 Cenários em quatro atos — está em
+Fundamentos publicados e o **Ato I completo** — os Cenários 01 a 03 estão no catálogo, mais
+o Cenário 08, que saiu antes como prova da plataforma. Os Atos II a IV estão em construção.
+O desenho completo — Fundamentos e 14 Cenários em quatro atos — está em
 [`docs/superpowers/specs/2026-08-21-trilha-linux-design.md`](docs/superpowers/specs/2026-08-21-trilha-linux-design.md).
 
 ## O que a plataforma mexe na sua máquina
@@ -248,7 +258,9 @@ A partir do Cenário 10 a Trilha IaC **reusa** o bloco 8070–8079: 8070 no 10, 
 publica o cluster pelo **NodePort 30070** — alcançado no navegador pela mesma 30070, via
 `kubectl port-forward`. Como só existe um Cenário Ativo por vez, dois Cenários podem
 declarar a mesma porta sem colidir.
-A Trilha Linux usa o bloco **8040–8049**, começando pela **8040** no Cenário 08.
+A Trilha Linux usa o bloco **8040–8049**, começando pela **8040** no Cenário 08. Os
+Cenários 01 a 03 não servem nada e não publicam porta nenhuma — o `compose.yaml` deles
+não tem bloco `ports:`.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está
