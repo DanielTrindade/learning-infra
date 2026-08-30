@@ -1,0 +1,11 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: o importador travado não está mais consumindo a máquina
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "if pgrep -x importador >/dev/null; then echo presente; else echo ausente; fi"]
+    contem: ausente
+
+  - tipo: arquivo_linux
+    caminho: /srv/relatorio-noturno.txt
+    dono: root
+    descricao: o relatório que o importador impedia finalmente saiu
