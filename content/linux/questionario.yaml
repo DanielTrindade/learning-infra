@@ -1,0 +1,156 @@
+questoes:
+  - id: processo-que-ignora-o-kill
+    enunciado: Você roda kill <pid> num processo e ele continua rodando. Qual é a explicação mais provável?
+    alternativas:
+      - id: sinal-terminavel
+        texto: O processo pode estar ignorando ou bloqueando o SIGTERM — o kill padrão envia um sinal que o alvo pode recusar, enquanto o SIGKILL não pode.
+      - id: pid-errado
+        texto: O número do PID estava errado e o kill atingiu outro processo.
+      - id: precisa-de-root
+        texto: Só o root pode matar processos; o sinal foi silenciosamente descartado.
+    alternativaCorreta: sinal-terminavel
+    explicacao: kill envia sinal, não executa morte. O SIGTERM é um pedido que o processo pode ignorar ou tratar; o SIGKILL é o recurso que nem o alvo recusa, porque quem o aplica é o kernel. A diferença entre pedir e impor é a matéria do Cenário 04.
+    revisar: processo-quem-esta-pedindo
+
+  - id: grupo-certo-sem-escrita
+    enunciado: O arquivo pertence ao grupo do seu colega e o grupo tem permissão de escrita, mas ele não consegue gravar. O que explica?
+    alternativas:
+      - id: processo-nao-tem-o-grupo
+        texto: O processo do colega não está rodando com aquele grupo entre seus grupos ativos — a permissão de grupo vale para processos cuja identidade inclui o grupo.
+      - id: dono-unico-escreve
+        texto: Só o dono escreve; permissão de grupo é herança de outro sistema operacional.
+      - id: precisa-de-root
+        texto: A escrita exige root, e o colega não é.
+    alternativaCorreta: processo-nao-tem-o-grupo
+    explicacao: Permissão é conferida ao processo, não à pessoa. O processo do colega nasce com um conjunto de grupos (id -G); se o grupo do arquivo não está nesse conjunto, o sistema enxerga "outros". Ser do grupo no papel não basta — o processo precisa carregar essa identidade. Cenário 02.
+    revisar: identidade-e-permissao
+
+  - id: disco-cheio-que-o-du-nao-ve
+    enunciado: df diz que o disco está 100% e du soma muito menos. Qual é a causa clássica?
+    alternativas:
+      - id: arquivo-apagado-com-descritor-aberto
+        texto: Um processo ainda mantém aberto o descritor de um arquivo que você apagou — o nome sumiu do diretório, mas o espaço só é devolvido quando o último descritor fecha.
+      - id: du-nao-conta-ocultos
+        texto: O du não conta arquivos ocultos nem diretórios do sistema.
+      - id: disco-fragmentado
+        texto: O espaço existe, mas está fragmentado demais para o df reportar.
+    alternativaCorreta: arquivo-apagado-com-descritor-aberto
+    explicacao: No Linux o nome é só um ponteiro para o inode; o espaço pertence ao inode enquanto houver um descritor aberto. Apagar o nome não libera o disco — o processo que ainda escreve continua acumulando. É o Cenário 07 inteiro.
+    revisar: tudo-e-arquivo
+
+  - id: sobe-na-mao-nao-no-boot
+    enunciado: O serviço sobe com systemctl start, mas depois de reiniciar a máquina ele não volta. Por quê?
+    alternativas:
+      - id: faltou-enable
+        texto: 'Faltou systemctl enable: start sobe agora, mas só o enable grava a intenção de subir no boot.'
+      - id: unit-com-erro
+        texto: A unit tem erro de sintaxe que só aparece no boot.
+      - id: systemd-nao-persiste
+        texto: O systemd não guarda estado entre reinicializações, por desenho.
+    alternativaCorreta: faltou-enable
+    explicacao: start responde "agora", enable responde "sempre". O vínculo de boot é criado pelo [Install] mais o enable, que cria o symlink no target. Sem isso, o systemd nem olha para a unit no boot. É a diferença que o Cenário 08 existe para ensinar.
+    revisar: servico-e-init
+
+  - id: a-morte-das-tres
+    enunciado: Um serviço morreu às 3h e você precisa saber por quê. Onde procura primeiro?
+    alternativas:
+      - id: journalctl-da-unit
+        texto: 'No journal da unit: journalctl -u traz as mensagens do serviço e o código de saída, mesmo que ele já não rode.'
+      - id: arquivo-de-log-do-app
+        texto: No arquivo de log que a aplicação escreve em /var/log, que toda aplicação mantém por conta própria.
+      - id: dmesg
+        texto: No dmesg, que registra toda morte de processo do espaço de usuário.
+    alternativaCorreta: journalctl-da-unit
+    explicacao: O systemd captura a saída do serviço no journal, e ele sobrevive ao processo — é o único registro de por que a unit saiu, com prioridade e timestamp. A aplicação pode nem escrever em arquivo; o dmesg fala do kernel, não da sua unit. Cenário 09.
+    revisar: log
+
+  - id: funciona-no-seu-shell-nao-no-cron
+    enunciado: O comando funciona no seu shell e falha quando o cron roda. Qual é a causa mais comum?
+    alternativas:
+      - id: ambiente-diferente
+        texto: O cron roda com um ambiente mínimo — $PATH curto e sem as variáveis da sua sessão interativa.
+      - id: cron-nao-pode-executar
+        texto: O cron não tem permissão para executar aquele binário.
+      - id: relogio-adiantado
+        texto: O cron rodou num horário em que o comando ainda não estava instalado.
+    alternativaCorreta: ambiente-diferente
+    explicacao: 'O que "o comando funciona" significa é: funciona no ambiente da sua sessão, com seu $PATH, suas variáveis e seu diretório. O cron herda quase nada disso. A lição do Ato II: o ambiente é parte do comando, e confiar nele é assumir o que não está escrito. Cenário 10.'
+    revisar: o-shell
+
+  - id: a-porta-ocupada
+    enunciado: Dois serviços querem escutar na mesma porta 8080. O que acontece?
+    alternativas:
+      - id: o-segundo-falha
+        texto: 'O segundo não consegue vincular: uma porta é um recurso exclusivo, e o primeiro que faz bind fica com ela.'
+      - id: dividem-a-porta
+        texto: Os dois dividem a porta e o kernel reparte as conexões entre eles.
+      - id: o-segundo-toma
+        texto: O segundo assume a porta e o primeiro é silenciosamente desconectado.
+    alternativaCorreta: o-segundo-falha
+    explicacao: 'Porta em escuta é recurso exclusivo: o segundo bind falha com "address already in use". É por isso que diagnóstico de "não sobe" quase sempre começa em ss -tlnp para ver quem já está com a porta — o erro do serviço novo é a evidência do antigo. Cenário 12.'
+    revisar: rede-no-host
+
+  - id: o-777-que-resolve-errado
+    enunciado: Um processo de serviço falha por permissão, e alguém sugere chmod 777. O que há de errado?
+    alternativas:
+      - id: da-mais-que-o-necessario
+        texto: 777 dá leitura e escrita para todo o sistema, quando o processo precisa de muito menos — o mínimo necessário resolve sem abrir a porta para qualquer um.
+      - id: nao-funciona
+        texto: O 777 não resolve permissão de execução em serviço.
+      - id: sempre-perigoso-mas-necessario
+        texto: É perigoso mas é a única forma de um serviço gravar em disco.
+    alternativaCorreta: da-mais-que-o-necessario
+    explicacao: 'O problema quase nunca é "permissão de menos", é identidade errada: o processo deveria rodar como um usuário que já pode o que precisa. 777 é conceder a todos o que um só precisava — e o princípio do acesso mínimo é exatamente o inverso. Cenário 13.'
+    revisar: acesso-minimo
+
+  - id: versao-empacotada-mais-antiga
+    enunciado: O site do projeto anuncia a versão 3.2, mas apt install entregou a 3.0. Por quê?
+    alternativas:
+      - id: repositorio-da-distribuicao
+        texto: A versão no repositório da distribuição é a que foi empacotada e congelada para aquela versão da distro, não a mais nova do upstream.
+      - id: apt-desatualizado
+        texto: O apt está desatualizado e precisa de upgrade antes de ver versões novas.
+      - id: arquitetura-diferente
+        texto: A 3.2 só existe para outra arquitetura de processador.
+    alternativaCorreta: repositorio-da-distribuicao
+    explicacao: 'A distribuição promete estabilidade, não novidade: ela empacota, testa e congela versões. O upstream pode lançar todo mês; o repositório só move quando a distro decide. Daí a diferença entre versão empacotada e versão do upstream. Cenário 06.'
+    revisar: pacote-e-distribuicao
+
+  - id: o-que-o-sudo-concede
+    enunciado: O que o sudo realmente concede a quem usa?
+    alternativas:
+      - id: executa-como-outro-usuario
+        texto: Executa um comando como outro usuário (por padrão root), conforme as regras de /etc/sudoers — não é um privilégio em bloco.
+      - id: vira-root-permanente
+        texto: Transforma a sessão inteira em root até o logout.
+      - id: desativa-permissoes
+        texto: Desativa as checagens de permissão da máquina enquanto o comando roda.
+    alternativaCorreta: executa-como-outro-usuario
+    explicacao: 'sudo é delegação seletiva: o sudoers descreve quem pode executar o quê como quem. Uma regra bem feita dá a um usuário apenas o comando de que ele precisa — é acesso mínimo em ação, não um botão de "virar root". Cenário 13.'
+    revisar: acesso-minimo
+
+  - id: o-pid-1-do-container
+    enunciado: Por que o PID 1 de um container não reaproveita processos órfãos como o init de uma máquina normal?
+    alternativas:
+      - id: init-de-uso-geral
+        texto: O PID 1 de um container costuma ser um programa comum que não foi escrito para colher processos órfãos — um init de verdade faz essa tarefa.
+      - id: kernel-diferente
+        texto: O kernel dentro do container é diferente e não reaproveita órfãos.
+      - id: nao-ha-orfaos
+        texto: Não existem processos órfãos dentro de container, então não há o que reaproveitar.
+    alternativaCorreta: init-de-uso-geral
+    explicacao: A tarefa de reaproveitar órfãos (chamar wait nos filhos que perderam o pai) é do PID 1, e nem todo processo que vira PID 1 num container foi escrito para isso — órfãos se acumulam como zumbis. É por isso que o container desta Trilha sobe um systemd como PID 1. Cenário 05.
+    revisar: processo-quem-esta-pedindo
+
+  - id: o-que-o-container-nao-prova
+    enunciado: Tudo nesta Trilha roda num container Ubuntu. O que esse resultado não prova sobre uma máquina Linux de verdade?
+    alternativas:
+      - id: kernel-boot-disco
+        texto: Nada sobre kernel próprio, boot, módulos, discos e firewall do host — o container compartilha o kernel da VM e não os expõe.
+      - id: nada-sobre-processos
+        texto: Nada sobre processos, que se comportam diferente dentro de container.
+      - id: nada-sobre-permissoes
+        texto: Nada sobre permissões e donos, que o container ignora.
+    alternativaCorreta: kernel-boot-disco
+    explicacao: Processo, sinal, permissão, serviço e log são reais e transferíveis. Kernel, boot, initramfs, módulo, disco e firewall do host são da VM do Docker Desktop — o Cenário observa, não altera. A tabela de fidelidade existe para separar os dois.
+    revisar: o-ambiente-desta-trilha
