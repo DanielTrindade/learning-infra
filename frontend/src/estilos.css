@@ -1,29 +1,221 @@
+/* ============================================================================
+   Learning Infra — sistema de tokens "blueprint técnico"
+
+   Uma escala de raio, um acento (ciano-petróleo) e três estados semânticos que
+   nunca competem com ele. Todo valor de cor da folha sai daqui: nenhuma cor
+   literal deve aparecer fora deste bloco, para que o tema escuro seja apenas
+   uma troca de valores.
+
+   Tema: claro por padrão, escuro por `prefers-color-scheme` e sobreposição
+   manual via `data-tema` no <html>.
+   ============================================================================ */
+
 :root {
   color-scheme: light;
-  font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
-  color: #19172b;
-  background: #f5f6fa;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  --canvas: #f5f6fa;
+
+  /* superfícies */
+  --canvas: #f4f6f7;
   --surface: #ffffff;
-  --surface-soft: #f0eff8;
-  --ink: #19172b;
-  --ink-soft: #6d6a7f;
-  --line: #dfdeea;
-  --violet: #6541dc;
-  --violet-dark: #4d2eb5;
-  --violet-soft: #ece8ff;
-  --green: #147a65;
-  --green-soft: #e4f4ef;
-  --amber: #ad601c;
-  --amber-soft: #fff0df;
-  --red: #b33b4b;
-  --red-soft: #ffeaed;
+  --surface-soft: #eaeef0;
+  --surface-sunken: #f7f9fa;
+  --surface-vidro: rgb(255 255 255 / 66%);
+
+  /* tinta */
+  --ink: #0f1417;
+  --ink-soft: #55636b;
+  --ink-faint: #87949b;
+
+  /* traços */
+  --line: #dbe2e6;
+  --line-soft: #e9eef1;
+  --line-strong: #c2ccd2;
+
+  /* acento — marca, links, foco, ação primária */
+  --acento: #0d6c80;
+  --acento-forte: #0a5163;
+  --acento-suave: #dcf0f5;
+  --acento-linha: #a7d5e0;
+  --acento-tinta: #06414f;
+  --acento-contraste: #ffffff;
+  --malha: rgb(13 108 128 / 5%);
+
+  /* estado: concluído */
+  --ok: #1c7a4f;
+  --ok-suave: #e0f2e8;
+  --ok-linha: #a9d9be;
+  --ok-tinta: #0f5334;
+
+  /* estado: em andamento */
+  --atencao: #97590f;
+  --atencao-suave: #fbefdb;
+  --atencao-linha: #ecd4a6;
+  --atencao-tinta: #77450a;
+
+  /* estado: falhou */
+  --perigo: #a72f3d;
+  --perigo-suave: #fbe8ea;
+  --perigo-linha: #efc2c7;
+  --perigo-tinta: #7f202b;
+
+  /* bloco de código — sempre escuro no claro, por convenção de terminal */
+  --codigo-fundo: #101a1e;
+  --codigo-tinta: #d9e4e8;
+  --codigo-linha: #223137;
+  --codigo-tinta-fraca: #93a5ad;
+  --codigo-barra: #45bcd6;
+  --codigo-inline-tinta: #06414f;
+  --codigo-inline-fundo: #e8f4f7;
+  --codigo-inline-linha: #c3e0e8;
+
+  /* escala de raio — uma só, aplicada em toda a interface */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  /* elevação — tingida na base fria, nunca preto puro */
+  --shadow-small: 0 1px 2px rgb(15 23 28 / 6%), 0 6px 18px rgb(15 23 28 / 5%);
+  --shadow-raised: 0 14px 40px rgb(15 23 28 / 9%);
+  --foco: 0 0 0 3px rgb(13 108 128 / 26%);
+  --sombra-acento: 0 6px 16px rgb(13 108 128 / 22%);
+  --sombra-acento-alta: 0 8px 22px rgb(13 108 128 / 28%);
+
+  /* tipografia */
+  --fonte-texto: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui,
+    Roboto, Helvetica, Arial, sans-serif;
+  --fonte-display: Bahnschrift, "DIN Alternate", "Segoe UI Variable Display",
+    ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --fonte-mono: "Cascadia Code", "Cascadia Mono", ui-monospace, Consolas,
+    "SF Mono", Menlo, monospace;
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --shadow-small: 0 1px 2px rgb(25 23 43 / 5%), 0 8px 24px rgb(25 23 43 / 5%);
-  --shadow-raised: 0 18px 50px rgb(48 38 90 / 11%);
+
+  font-family: var(--fonte-texto);
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tema escuro: mesma hierarquia, mesmos papéis, valores trocados.
+   O seletor :not([data-tema="claro"]) deixa a escolha manual vencer o sistema. */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    color-scheme: dark;
+
+    --canvas: #0c0f11;
+    --surface: #13181b;
+    --surface-soft: #1b2226;
+    --surface-sunken: #0f1416;
+    --surface-vidro: rgb(27 34 38 / 62%);
+
+    --ink: #e3e9ec;
+    --ink-soft: #96a2aa;
+    --ink-faint: #6a767d;
+
+    --line: #232c31;
+    --line-soft: #1c2428;
+    --line-strong: #35424a;
+
+    --acento: #45bcd6;
+    --acento-forte: #74d3e7;
+    --acento-suave: #0e2b33;
+    --acento-linha: #17414d;
+    --acento-tinta: #8fd9e8;
+    --acento-contraste: #04222a;
+    --malha: rgb(69 188 214 / 4%);
+
+    --ok: #4fbc80;
+    --ok-suave: #102b1d;
+    --ok-linha: #1c452f;
+    --ok-tinta: #83d6a5;
+
+    --atencao: #d99a2b;
+    --atencao-suave: #2e2411;
+    --atencao-linha: #4a3a1a;
+    --atencao-tinta: #e9b95e;
+
+    --perigo: #ef8290;
+    --perigo-suave: #2f1418;
+    --perigo-linha: #4a2027;
+    --perigo-tinta: #f4a4ae;
+
+    --codigo-fundo: #090d0f;
+    --codigo-tinta: #d9e4e8;
+    --codigo-linha: #1e272c;
+    --codigo-tinta-fraca: #7d8d95;
+    --codigo-barra: #45bcd6;
+    --codigo-inline-tinta: #8fd9e8;
+    --codigo-inline-fundo: #10252b;
+    --codigo-inline-linha: #1b3d47;
+
+    --shadow-small: 0 1px 2px rgb(0 0 0 / 34%), 0 6px 18px rgb(0 0 0 / 26%);
+    --shadow-raised: 0 14px 40px rgb(0 0 0 / 42%);
+    --foco: 0 0 0 3px rgb(69 188 214 / 34%);
+    /* no escuro a sombra colorida vira neon: some, a borda resolve */
+    --sombra-acento: 0 4px 14px rgb(0 0 0 / 40%);
+    --sombra-acento-alta: 0 6px 20px rgb(0 0 0 / 48%);
+  }
+}
+
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+
+  --canvas: #0c0f11;
+  --surface: #13181b;
+  --surface-soft: #1b2226;
+  --surface-sunken: #0f1416;
+  --surface-vidro: rgb(27 34 38 / 62%);
+
+  --ink: #e3e9ec;
+  --ink-soft: #96a2aa;
+  --ink-faint: #6a767d;
+
+  --line: #232c31;
+  --line-soft: #1c2428;
+  --line-strong: #35424a;
+
+  --acento: #45bcd6;
+  --acento-forte: #74d3e7;
+  --acento-suave: #0e2b33;
+  --acento-linha: #17414d;
+  --acento-tinta: #8fd9e8;
+  --acento-contraste: #04222a;
+  --malha: rgb(69 188 214 / 4%);
+
+  --ok: #4fbc80;
+  --ok-suave: #102b1d;
+  --ok-linha: #1c452f;
+  --ok-tinta: #83d6a5;
+
+  --atencao: #d99a2b;
+  --atencao-suave: #2e2411;
+  --atencao-linha: #4a3a1a;
+  --atencao-tinta: #e9b95e;
+
+  --perigo: #ef8290;
+  --perigo-suave: #2f1418;
+  --perigo-linha: #4a2027;
+  --perigo-tinta: #f4a4ae;
+
+  --codigo-fundo: #090d0f;
+  --codigo-tinta: #d9e4e8;
+  --codigo-linha: #1e272c;
+  --codigo-tinta-fraca: #7d8d95;
+  --codigo-barra: #45bcd6;
+  --codigo-inline-tinta: #8fd9e8;
+  --codigo-inline-fundo: #10252b;
+  --codigo-inline-linha: #1b3d47;
+
+  --shadow-small: 0 1px 2px rgb(0 0 0 / 34%), 0 6px 18px rgb(0 0 0 / 26%);
+  --shadow-raised: 0 14px 40px rgb(0 0 0 / 42%);
+  --foco: 0 0 0 3px rgb(69 188 214 / 34%);
+  --sombra-acento: 0 4px 14px rgb(0 0 0 / 40%);
+  --sombra-acento-alta: 0 6px 20px rgb(0 0 0 / 48%);
 }
 
 * {
@@ -38,9 +230,10 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* malha de planta baixa: dá textura de blueprint sem virar decoração */
   background:
-    linear-gradient(rgb(101 65 220 / 3%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(101 65 220 / 3%) 1px, transparent 1px),
+    linear-gradient(var(--malha) 1px, transparent 1px),
+    linear-gradient(90deg, var(--malha) 1px, transparent 1px),
     var(--canvas);
   background-size: 32px 32px;
   line-height: 1.55;
@@ -60,14 +253,37 @@ a {
 }
 
 button:focus-visible,
-a:focus-visible {
-  outline: 3px solid rgb(101 65 220 / 28%);
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--acento);
   outline-offset: 3px;
 }
 
 ::selection {
-  color: #fff;
-  background: var(--violet);
+  color: var(--acento-contraste);
+  background: var(--acento);
+}
+
+/* Atalho de teclado: primeira parada do Tab em qualquer página. */
+.pular-para-conteudo {
+  position: fixed;
+  z-index: 60;
+  top: 12px;
+  left: 12px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  color: var(--acento-contraste);
+  background: var(--acento);
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 160ms var(--ease-out);
+}
+
+.pular-para-conteudo:focus-visible {
+  outline-offset: 2px;
+  transform: none;
 }
 
 .app-shell {
@@ -99,7 +315,7 @@ a:focus-visible {
 }
 
 .marca strong {
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-family: var(--fonte-display);
   font-size: 0.95rem;
   font-weight: 650;
   letter-spacing: -0.01em;
@@ -108,16 +324,127 @@ a:focus-visible {
 .marca small {
   margin-top: 5px;
   color: var(--ink-soft);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.65rem;
   letter-spacing: 0.04em;
 }
 
 .marca-simbolo {
   display: block;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+}
+
+.marca-fundo {
+  fill: var(--acento);
+}
+
+.marca-traco {
+  stroke: var(--acento-contraste);
+}
+
+.barra-acoes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.botao-tema {
+  display: grid;
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink-soft);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 140ms var(--ease-out);
+}
+
+.botao-tema:active {
+  transform: scale(0.94);
+}
+
+.botao-tema-icones {
+  display: grid;
+  place-items: center;
+}
+
+.botao-tema svg {
+  grid-area: 1 / 1;
+  transition: opacity 180ms ease, transform 260ms var(--ease-out);
+}
+
+/* No claro mostra o sol; no escuro, a lua. A troca é o feedback da ação. */
+.botao-tema svg:last-child {
+  opacity: 0;
+  transform: rotate(-70deg) scale(0.6);
+}
+
+:root[data-tema="escuro"] .botao-tema svg:first-child,
+:root[data-tema="claro"] .botao-tema svg:last-child {
+  opacity: 0;
+  transform: rotate(70deg) scale(0.6);
+}
+
+:root[data-tema="escuro"] .botao-tema svg:last-child,
+:root[data-tema="claro"] .botao-tema svg:first-child {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema]) .botao-tema svg:first-child {
+    opacity: 0;
+    transform: rotate(70deg) scale(0.6);
+  }
+
+  :root:not([data-tema]) .botao-tema svg:last-child {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Progresso de leitura: puro CSS, atrelado à rolagem da página.
+   Sem suporte a scroll timelines a barra fica zerada e não aparece. */
+.progresso-leitura {
+  position: sticky;
+  z-index: 9;
+  top: 0;
+  width: min(1180px, calc(100% - 48px));
+  height: 2px;
+  margin: 0 auto;
+  overflow: hidden;
+  background: transparent;
+}
+
+.progresso-leitura > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--acento);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+@supports (animation-timeline: scroll()) {
+  .progresso-leitura > span {
+    animation: avancar-leitura linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes avancar-leitura {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 .contexto-local {
@@ -125,7 +452,7 @@ a:focus-visible {
   align-items: center;
   gap: 8px;
   color: var(--ink-soft);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.69rem;
   letter-spacing: 0.03em;
 }
@@ -134,8 +461,8 @@ a:focus-visible {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 0 4px var(--green-soft);
+  background: var(--ok);
+  box-shadow: 0 0 0 4px var(--ok-suave);
 }
 
 .app-main {
@@ -154,7 +481,7 @@ h2,
 h3 {
   margin-top: 0;
   color: var(--ink);
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-family: var(--fonte-display);
   font-weight: 600;
   text-wrap: balance;
 }
@@ -162,11 +489,11 @@ h3 {
 .eyebrow,
 .terminal-label {
   margin: 0 0 10px;
-  color: var(--violet);
-  font-family: "Cascadia Code", Consolas, monospace;
-  font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  font-family: var(--fonte-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
@@ -178,26 +505,26 @@ h3 {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(330px, 0.8fr);
-  min-height: 430px;
+  min-height: 380px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: var(--r-xl);
   background:
-    radial-gradient(circle at 92% 5%, rgb(101 65 220 / 12%), transparent 35%),
+    radial-gradient(circle at 92% 5%, color-mix(in oklab, var(--acento) 12%, transparent), transparent 35%),
     var(--surface);
   box-shadow: var(--shadow-small);
 }
 
 .hero-texto {
   align-self: center;
-  padding: 60px 24px 60px 64px;
+  padding: 54px 24px 54px 60px;
 }
 
 .hero-texto h1 {
   max-width: 670px;
   margin-bottom: 22px;
-  font-size: clamp(2.7rem, 5.2vw, 4.7rem);
-  line-height: 0.98;
+  font-size: clamp(2.15rem, 4.2vw, 3.4rem);
+  line-height: 1.04;
   letter-spacing: -0.045em;
 }
 
@@ -217,7 +544,7 @@ h3 {
   min-height: 44px;
   padding: 10px 16px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: var(--r-md);
   font-weight: 650;
   line-height: 1.2;
   text-decoration: none;
@@ -240,9 +567,9 @@ h3 {
 }
 
 .botao-primario {
-  color: #fff;
-  background: var(--violet);
-  box-shadow: 0 6px 16px rgb(101 65 220 / 22%);
+  color: var(--acento-contraste);
+  background: var(--acento);
+  box-shadow: var(--sombra-acento);
 }
 
 .botao-secundario {
@@ -258,10 +585,10 @@ h3 {
 
 .hero-visual {
   position: relative;
-  min-height: 360px;
+  min-height: 330px;
 }
 
-.hero-visual img {
+.hero-ilustracao {
   position: absolute;
   top: 50%;
   right: 28px;
@@ -270,11 +597,34 @@ h3 {
   transform: translateY(-50%);
 }
 
+/* Cada traço lê um token: a peça acompanha o tema em vez de trazer o seu. */
+.hero-malha,
+.hero-base,
+.hero-caixa,
+.hero-rack,
+.hero-cubo,
+.hero-enlace,
+.hero-no {
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-malha { stroke: var(--line-strong); }
+.hero-base { stroke: var(--ink-faint); }
+.hero-caixa { stroke: var(--line-strong); }
+.hero-rack { stroke: var(--acento); }
+.hero-cubo { stroke: var(--acento); }
+.hero-enlace { stroke: var(--acento); opacity: 0.55; }
+.hero-no { fill: var(--surface); stroke: var(--acento); }
+
+.hero-face { fill: var(--surface); }
+.hero-face-lateral { fill: var(--surface-soft); }
+.hero-face-topo { fill: var(--acento-suave); }
+
 .painel-progresso {
   margin-top: 24px;
   padding: 28px 32px 24px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-xl);
   background: var(--surface);
   box-shadow: var(--shadow-small);
 }
@@ -302,7 +652,7 @@ h3 {
 }
 
 .progresso-resumo strong {
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-family: var(--fonte-display);
   font-size: 1.9rem;
   font-weight: 600;
   letter-spacing: -0.03em;
@@ -322,8 +672,8 @@ h3 {
 .progresso-acoes > button {
   padding: 5px 0;
   border: 0;
-  border-bottom: 1px solid #bdb7d3;
-  color: var(--violet-dark);
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--acento-forte);
   background: transparent;
   font-size: 0.72rem;
   font-weight: 650;
@@ -352,8 +702,8 @@ h3 {
   position: relative;
   height: 6px;
   overflow: hidden;
-  border-radius: 999px;
-  background: #e7e6ee;
+  border-radius: var(--r-pill);
+  background: var(--surface-soft);
 }
 
 .barra-linear-grande {
@@ -371,11 +721,11 @@ h3 {
 }
 
 .barra-linear-concluido {
-  background: var(--green);
+  background: var(--ok);
 }
 
 .barra-linear-andamento {
-  background: var(--amber);
+  background: var(--atencao);
 }
 
 @starting-style {
@@ -410,15 +760,15 @@ h3 {
 }
 
 .resumo-concluido::before {
-  background: var(--green);
+  background: var(--ok);
 }
 
 .resumo-andamento::before {
-  background: var(--amber);
+  background: var(--atencao);
 }
 
 .resumo-nao-iniciado::before {
-  background: #bbb9c5;
+  background: var(--ink-faint);
 }
 
 .resumo-estados dt {
@@ -429,7 +779,7 @@ h3 {
 .resumo-estados dd {
   order: -1;
   margin: 0;
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.76rem;
   font-weight: 650;
 }
@@ -450,8 +800,8 @@ h3 {
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--line);
-  border-radius: 11px;
-  background: rgb(255 255 255 / 68%);
+  border-radius: var(--r-lg);
+  background: var(--surface-vidro);
 }
 
 .filtros button {
@@ -461,7 +811,7 @@ h3 {
   min-height: 34px;
   padding: 6px 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   color: var(--ink-soft);
   background: transparent;
   font-size: 0.75rem;
@@ -478,31 +828,31 @@ h3 {
   min-width: 19px;
   height: 19px;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   background: var(--surface-soft);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.63rem;
 }
 
 .filtros .filtro-ativo {
   color: var(--ink);
   background: var(--surface);
-  box-shadow: 0 1px 5px rgb(25 23 43 / 10%);
+  box-shadow: var(--shadow-small);
 }
 
 .trilha {
   margin-top: 34px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-xl);
   background: var(--surface);
   box-shadow: var(--shadow-small);
   transition: box-shadow 240ms ease, border-color 240ms ease;
 }
 
 .trilha-atual {
-  border-color: #cfc7ee;
-  box-shadow: 0 8px 28px rgb(78 55 148 / 10%);
+  border-color: var(--acento-linha);
+  box-shadow: var(--shadow-raised);
 }
 
 .trilha-colapsada {
@@ -533,7 +883,7 @@ h3 {
 }
 
 .trilha-atual .trilha-cabecalho::before {
-  background: linear-gradient(90deg, #f4f1ff, var(--surface));
+  background: linear-gradient(90deg, var(--acento-suave), var(--surface));
 }
 
 .trilha-colapsada .trilha-cabecalho {
@@ -556,17 +906,17 @@ h3 {
   width: 36px;
   height: 36px;
   place-items: center;
-  border: 1px solid #d8d3f2;
-  border-radius: 10px;
-  color: var(--violet);
-  background: var(--violet-soft);
-  font-family: "Cascadia Code", Consolas, monospace;
+  border: 1px solid var(--acento-linha);
+  border-radius: var(--r-md);
+  color: var(--acento);
+  background: var(--acento-suave);
+  font-family: var(--fonte-mono);
   font-size: 0.92rem;
 }
 
 .trilha-titulo {
   margin: 0 0 2px;
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-family: var(--fonte-display);
   font-size: 1.12rem;
   font-weight: 650;
 }
@@ -594,7 +944,7 @@ h3 {
 
 .trilha-progresso-topo strong {
   color: var(--ink);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.76rem;
 }
 
@@ -622,22 +972,22 @@ h3 {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #bbb9c5;
+  background: var(--ink-faint);
   content: "";
   transform: translateY(-50%);
 }
 
 .trilha-estados .trilha-estado-concluido::before {
-  background: var(--green);
+  background: var(--ok);
 }
 
 .trilha-estados .trilha-estado-andamento::before {
-  background: var(--amber);
+  background: var(--atencao);
 }
 
 .trilha-estados b {
   color: var(--ink);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-weight: 650;
 }
 
@@ -651,9 +1001,9 @@ h3 {
 .trilha-aderir {
   min-height: 36px;
   padding: 7px 11px;
-  border-color: #cfc7ee;
-  color: var(--violet-dark);
-  background: #f5f2ff;
+  border-color: var(--acento-linha);
+  color: var(--acento-forte);
+  background: var(--acento-suave);
   box-shadow: none;
   font-size: 0.7rem;
 }
@@ -664,9 +1014,9 @@ h3 {
   gap: 6px;
   min-height: 32px;
   padding: 6px 9px;
-  border-radius: 8px;
-  color: var(--violet-dark);
-  background: var(--violet-soft);
+  border-radius: var(--r-md);
+  color: var(--acento-forte);
+  background: var(--acento-suave);
   font-size: 0.67rem;
   font-weight: 700;
 }
@@ -675,7 +1025,7 @@ h3 {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--violet);
+  background: var(--acento);
 }
 
 .trilha-recolher {
@@ -685,10 +1035,10 @@ h3 {
   flex: 0 0 auto;
   place-items: center;
   padding: 0;
-  border: 1px solid #d9d6e5;
-  border-radius: 8px;
-  color: var(--violet);
-  background: rgb(255 255 255 / 70%);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--acento);
+  background: var(--surface-vidro);
   cursor: pointer;
   transition: transform 140ms var(--ease-out), border-color 160ms ease, background-color 160ms ease;
 }
@@ -698,7 +1048,7 @@ h3 {
 }
 
 .trilha-recolher:focus-visible {
-  outline: 3px solid rgb(99 78 190 / 30%);
+  outline: 2px solid var(--acento);
   outline-offset: 2px;
 }
 
@@ -768,7 +1118,7 @@ h3 {
 }
 
 .cenario:not(:last-child) {
-  border-bottom: 1px solid #eeedf3;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .cenario .linha-progresso {
@@ -789,7 +1139,7 @@ h3 {
 }
 
 .cenario-concluido .linha-progresso {
-  background: rgb(20 122 101 / 40%);
+  background: color-mix(in oklab, var(--ok) 45%, transparent);
 }
 
 .marcador-estado {
@@ -801,26 +1151,27 @@ h3 {
   width: 27px;
   height: 27px;
   place-items: center;
-  border: 2px solid #cccbd4;
+  border: 2px solid var(--line-strong);
   border-radius: 50%;
-  color: #fff;
+  color: var(--acento-contraste);
   background: var(--surface);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.68rem;
   font-weight: 700;
   transform: translateY(-50%);
 }
 
 .marcador-concluido {
-  border-color: var(--green);
-  background: var(--green);
+  border-color: var(--ok);
+  color: var(--surface);
+  background: var(--ok);
 }
 
 .marcador-andamento {
-  border-color: var(--amber);
-  color: var(--amber);
-  background: var(--amber-soft);
-  box-shadow: 0 0 0 5px var(--surface), 0 0 0 6px rgb(173 96 28 / 18%);
+  border-color: var(--atencao);
+  color: var(--atencao);
+  background: var(--atencao-suave);
+  box-shadow: 0 0 0 5px var(--surface), 0 0 0 6px color-mix(in oklab, var(--atencao) 26%, transparent);
   font-size: 0.56rem;
 }
 
@@ -840,12 +1191,12 @@ h3 {
 }
 
 .cenario-preview .cenario-seta {
-  color: #c4c1ce;
+  color: var(--ink-faint);
 }
 
 .cenario-numero {
   color: var(--ink-soft);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.65rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -859,7 +1210,7 @@ h3 {
 
 .cenario-corpo > strong {
   overflow: hidden;
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-family: var(--fonte-display);
   font-size: 1rem;
   font-weight: 570;
   text-overflow: ellipsis;
@@ -880,11 +1231,11 @@ h3 {
 }
 
 .estado-concluido {
-  color: var(--green);
+  color: var(--ok);
 }
 
 .estado-andamento {
-  color: var(--amber);
+  color: var(--atencao);
 }
 
 .estado-nao-iniciado {
@@ -897,7 +1248,7 @@ h3 {
   height: 30px;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   color: var(--ink-soft);
   transition: transform 180ms var(--ease-out), color 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
@@ -908,10 +1259,10 @@ h3 {
   justify-items: center;
   gap: 9px;
   padding: 70px 24px;
-  border: 1px dashed #cbc9d8;
-  border-radius: 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-xl);
   color: var(--ink-soft);
-  background: rgb(255 255 255 / 65%);
+  background: var(--surface-vidro);
   text-align: center;
 }
 
@@ -942,10 +1293,10 @@ h3 {
 .arquivo-cabecalho > span {
   padding: 5px 8px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   color: var(--ink-soft);
   background: var(--surface);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.65rem;
 }
 
@@ -961,9 +1312,9 @@ h3 {
 .trilha-restaurar {
   min-height: 36px;
   padding: 7px 11px;
-  border-color: #b7e6d2;
-  color: var(--green);
-  background: var(--green-soft);
+  border-color: var(--ok-linha);
+  color: var(--ok);
+  background: var(--ok-suave);
   box-shadow: none;
   font-size: 0.7rem;
 }
@@ -994,7 +1345,7 @@ h3 {
   margin-top: 8px;
   padding: 7px 10px;
   overflow-wrap: anywhere;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   background: var(--surface-soft);
   font-size: 0.72rem;
 }
@@ -1003,7 +1354,7 @@ h3 {
 .filtro-vazio button {
   margin-top: 7px;
   border: 0;
-  color: var(--violet);
+  color: var(--acento);
   background: transparent;
   font-weight: 650;
   text-decoration: underline;
@@ -1012,8 +1363,8 @@ h3 {
 }
 
 .estado-erro {
-  border-color: #e5bbc2;
-  background: var(--red-soft);
+  border-color: var(--perigo-linha);
+  background: var(--perigo-suave);
 }
 
 .estado-icone {
@@ -1021,10 +1372,10 @@ h3 {
   width: 38px;
   height: 38px;
   place-items: center;
-  border-radius: 10px;
-  color: var(--red);
-  background: #fff;
-  font-family: "Cascadia Code", Consolas, monospace;
+  border-radius: var(--r-md);
+  color: var(--perigo);
+  background: var(--surface);
+  font-family: var(--fonte-mono);
   font-weight: 700;
 }
 
@@ -1032,8 +1383,8 @@ h3 {
   display: inline-block;
   width: 22px;
   height: 22px;
-  border: 2px solid rgb(101 65 220 / 18%);
-  border-top-color: var(--violet);
+  border: 2px solid color-mix(in oklab, var(--acento) 18%, transparent);
+  border-top-color: var(--acento);
   border-radius: 50%;
   animation: girar 700ms linear infinite;
 }
@@ -1070,14 +1421,14 @@ h3 {
 }
 
 .cabecalho-aula .terminal-label i {
-  color: #b5b2c3;
+  color: var(--ink-faint);
   font-style: normal;
 }
 
 .cabecalho-aula h1 {
   margin-bottom: 22px;
-  font-size: clamp(2.5rem, 5vw, 4.6rem);
-  line-height: 1;
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  line-height: 1.08;
   letter-spacing: -0.045em;
 }
 
@@ -1091,9 +1442,9 @@ h3 {
 .metadados-aula > span:not(.status) {
   padding: 5px 9px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   color: var(--ink-soft);
-  background: rgb(255 255 255 / 55%);
+  background: var(--surface-vidro);
   font-size: 0.72rem;
 }
 
@@ -1103,7 +1454,7 @@ h3 {
   gap: 7px;
   width: fit-content;
   padding: 5px 9px;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   font-size: 0.7rem;
   font-weight: 700;
 }
@@ -1116,18 +1467,18 @@ h3 {
 }
 
 .status-concluido {
-  color: var(--green);
-  background: var(--green-soft);
+  color: var(--ok);
+  background: var(--ok-suave);
 }
 
 .status-andamento {
-  color: var(--amber);
-  background: var(--amber-soft);
+  color: var(--atencao);
+  background: var(--atencao-suave);
 }
 
 .status-nao-iniciado {
-  color: #6f6c7b;
-  background: #ebeaf0;
+  color: var(--ink-soft);
+  background: var(--surface-soft);
 }
 
 .layout-aula {
@@ -1143,10 +1494,10 @@ h3 {
   min-width: 0;
   padding: clamp(30px, 5vw, 56px);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-xl);
   background: var(--surface);
   box-shadow: var(--shadow-small);
-  color: #343143;
+  color: var(--ink);
   font-size: 1.02rem;
   line-height: 1.76;
 }
@@ -1179,13 +1530,13 @@ h3 {
 }
 
 .conteudo-aula li::marker {
-  color: var(--violet);
-  font-family: "Cascadia Code", Consolas, monospace;
+  color: var(--acento);
+  font-family: var(--fonte-mono);
   font-weight: 650;
 }
 
 .conteudo-aula a {
-  color: var(--violet-dark);
+  color: var(--acento-forte);
   font-weight: 600;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
@@ -1198,15 +1549,15 @@ h3 {
 .conteudo-aula code,
 .diretorio code,
 .acao-ajuda code {
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
 }
 
 .conteudo-aula :not(pre) > code {
   padding: 0.16em 0.38em;
-  border: 1px solid #e1ddef;
-  border-radius: 5px;
-  color: #4e329e;
-  background: #f3f0fd;
+  border: 1px solid var(--codigo-inline-linha);
+  border-radius: var(--r-xs);
+  color: var(--codigo-inline-tinta);
+  background: var(--codigo-inline-fundo);
   font-size: 0.86em;
 }
 
@@ -1219,17 +1570,17 @@ h3 {
   margin: 0;
   padding: 20px 22px;
   overflow-x: auto;
-  border: 1px solid #332d4c;
-  border-radius: 11px;
-  color: #e9e5f7;
-  background: #211d36;
-  box-shadow: inset 3px 0 0 #7c5be8;
+  border: 1px solid var(--codigo-linha);
+  border-radius: var(--r-lg);
+  color: var(--codigo-tinta);
+  background: var(--codigo-fundo);
+  box-shadow: inset 3px 0 0 var(--codigo-barra);
   font-size: 0.84rem;
   line-height: 1.65;
 }
 
 .conteudo-aula pre code {
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
 }
 
 .copiar-codigo {
@@ -1241,10 +1592,10 @@ h3 {
   height: 32px;
   place-items: center;
   padding: 0;
-  border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 8px;
-  color: #beb6dd;
-  background: rgb(48 42 77 / 92%);
+  border: 1px solid color-mix(in oklab, var(--codigo-tinta) 16%, transparent);
+  border-radius: var(--r-md);
+  color: var(--codigo-tinta-fraca);
+  background: color-mix(in oklab, var(--codigo-fundo) 88%, var(--codigo-tinta));
   cursor: pointer;
   transition:
     transform 140ms var(--ease-out),
@@ -1264,13 +1615,13 @@ h3 {
 }
 
 .copiar-codigo .icone-check {
-  color: #78ddb3;
+  color: var(--ok);
   opacity: 0;
   transform: scale(0.4);
 }
 
 .copiar-codigo.copiado {
-  border-color: rgb(96 214 166 / 45%);
+  border-color: color-mix(in oklab, var(--ok) 55%, transparent);
 }
 
 .copiar-codigo.copiado .icone-copiar {
@@ -1286,10 +1637,10 @@ h3 {
 .conteudo-aula blockquote {
   margin: 1.7rem 0;
   padding: 15px 18px;
-  border-left: 3px solid var(--violet);
-  border-radius: 0 9px 9px 0;
-  color: #504b65;
-  background: var(--violet-soft);
+  border-left: 3px solid var(--acento);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  color: var(--ink);
+  background: var(--acento-suave);
 }
 
 .conteudo-aula blockquote > :last-child {
@@ -1326,10 +1677,10 @@ h3 {
   gap: 12px;
   margin-bottom: 38px;
   padding: 15px 17px;
-  border: 1px solid #dcd5f7;
-  border-radius: 10px;
-  color: #5b5276;
-  background: #f7f5ff;
+  border: 1px solid var(--acento-linha);
+  border-radius: var(--r-md);
+  color: var(--acento-tinta);
+  background: var(--acento-suave);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -1340,9 +1691,9 @@ h3 {
   width: 25px;
   height: 25px;
   place-items: center;
-  border-radius: 7px;
-  color: #fff;
-  background: var(--violet);
+  border-radius: var(--r-sm);
+  color: var(--acento-contraste);
+  background: var(--acento);
   font-size: 0.72rem;
 }
 
@@ -1362,9 +1713,23 @@ h3 {
 .checklist,
 .sumario {
   border: 1px solid var(--line);
-  border-radius: 15px;
+  border-radius: var(--r-lg);
   background: var(--surface);
   box-shadow: var(--shadow-small);
+}
+
+.checklist:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 3px;
+}
+
+/* O sumário não é um cartão: é navegação. Uma linha basta para agrupá-lo. */
+.sumario {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
 }
 
 .painel-execucao {
@@ -1404,13 +1769,13 @@ h3 {
 .spinner-botao {
   width: 14px;
   height: 14px;
-  border-color: rgb(255 255 255 / 32%);
+  border-color: color-mix(in oklab, var(--codigo-tinta) 34%, transparent);
   border-top-color: currentColor;
 }
 
 .botao-secundario .spinner-botao {
-  border-color: rgb(101 65 220 / 20%);
-  border-top-color: var(--violet);
+  border-color: color-mix(in oklab, var(--acento) 20%, transparent);
+  border-top-color: var(--acento);
 }
 
 .diretorio {
@@ -1419,9 +1784,9 @@ h3 {
   margin-top: 16px;
   padding: 12px;
   overflow: hidden;
-  border: 1px solid #ddd8f0;
-  border-radius: 9px;
-  background: #f7f5ff;
+  border: 1px solid var(--acento-linha);
+  border-radius: var(--r-md);
+  background: var(--acento-suave);
 }
 
 .diretorio > span {
@@ -1434,7 +1799,7 @@ h3 {
 
 .diretorio code {
   overflow: hidden;
-  color: #4e3c86;
+  color: var(--acento-tinta);
   font-size: 0.68rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1444,7 +1809,7 @@ h3 {
   justify-self: start;
   padding: 0;
   border: 0;
-  color: var(--violet);
+  color: var(--acento);
   background: transparent;
   font-size: 0.69rem;
   font-weight: 650;
@@ -1476,7 +1841,7 @@ h3 {
 }
 
 .copiar-caminho.copiado {
-  color: var(--green);
+  color: var(--ok);
 }
 
 .copiar-caminho.copiado .icone-copiar {
@@ -1492,21 +1857,21 @@ h3 {
 .erro {
   margin: 14px 0 0;
   padding: 10px 11px;
-  border-radius: 8px;
-  color: var(--red);
-  background: var(--red-soft);
+  border-radius: var(--r-md);
+  color: var(--perigo);
+  background: var(--perigo-suave);
   font-size: 0.72rem;
   overflow-wrap: anywhere;
 }
 
 .sumario {
-  padding: 18px 20px;
+  padding: 20px 23px 4px;
 }
 
 .sumario > p {
   margin: 0 0 11px;
   color: var(--ink);
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.66rem;
   font-weight: 650;
   letter-spacing: 0.08em;
@@ -1538,9 +1903,20 @@ h3 {
 }
 
 .sumario button span {
-  color: #aaa5bc;
-  font-family: "Cascadia Code", Consolas, monospace;
+  color: var(--ink-faint);
+  font-family: var(--fonte-mono);
   font-size: 0.62rem;
+  transition: color 150ms ease;
+}
+
+/* Onde a leitura está agora. Cor e peso, não um fundo: a lista continua calma. */
+.sumario button.sumario-ativo {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.sumario button.sumario-ativo span {
+  color: var(--acento);
 }
 
 .checklist {
@@ -1560,20 +1936,20 @@ h3 {
   width: 32px;
   height: 32px;
   place-items: center;
-  border-radius: 9px;
-  font-family: "Cascadia Code", Consolas, monospace;
+  border-radius: var(--r-md);
+  font-family: var(--fonte-mono);
   font-size: 0.76rem;
   font-weight: 700;
 }
 
 .checklist-concluido .checklist-icone {
-  color: var(--green);
-  background: var(--green-soft);
+  color: var(--ok);
+  background: var(--ok-suave);
 }
 
 .checklist-pendente .checklist-icone {
-  color: var(--amber);
-  background: var(--amber-soft);
+  color: var(--atencao);
+  background: var(--atencao-suave);
 }
 
 .checklist header p {
@@ -1593,8 +1969,8 @@ h3 {
   height: 4px;
   margin: 15px 0;
   overflow: hidden;
-  border-radius: 99px;
-  background: #e9e8ef;
+  border-radius: var(--r-pill);
+  background: var(--surface-soft);
 }
 
 .checklist-barra span {
@@ -1602,7 +1978,7 @@ h3 {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: var(--green);
+  background: var(--ok);
   transform-origin: left;
   transition: transform 240ms var(--ease-out);
 }
@@ -1621,8 +1997,8 @@ h3 {
   gap: 7px;
   align-items: start;
   padding: 9px;
-  border-radius: 8px;
-  background: #f7f7fa;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
 }
 
 .checklist li > span:last-child {
@@ -1638,7 +2014,7 @@ h3 {
 }
 
 .checklist li small {
-  color: var(--red);
+  color: var(--perigo);
   font-size: 0.63rem;
   line-height: 1.4;
 }
@@ -1649,19 +2025,19 @@ h3 {
   height: 19px;
   place-items: center;
   border-radius: 50%;
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.64rem;
   font-weight: 700;
 }
 
 .passou .check-asserção {
-  color: var(--green);
-  background: var(--green-soft);
+  color: var(--ok);
+  background: var(--ok-suave);
 }
 
 .falhou .check-asserção {
-  color: var(--red);
-  background: var(--red-soft);
+  color: var(--perigo);
+  background: var(--perigo-suave);
 }
 
 .proxima-aula {
@@ -1670,7 +2046,7 @@ h3 {
   margin-top: 15px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
-  color: var(--violet);
+  color: var(--acento);
   font-size: 0.7rem;
   font-weight: 700;
   text-decoration: none;
@@ -1680,17 +2056,17 @@ h3 {
 
 .fundamentos-item {
   background:
-    linear-gradient(90deg, rgb(101 65 220 / 7%), transparent 42%),
+    linear-gradient(90deg, color-mix(in oklab, var(--acento) 7%, transparent), transparent 42%),
     var(--surface);
 }
 
 .fundamentos-item .cenario-numero {
-  color: var(--violet);
+  color: var(--acento);
   font-weight: 750;
 }
 
 .fundamentos-item .cenario-corpo > strong {
-  color: var(--violet-dark);
+  color: var(--acento-forte);
 }
 
 .cabecalho-fundamentos {
@@ -1733,16 +2109,16 @@ h3 {
   gap: 6px;
   margin-top: 18px;
   padding: 11px 12px;
-  border: 1px solid #ddd8f0;
-  border-radius: 9px;
-  color: #a09aaa;
-  background: #f8f6ff;
-  font-family: "Cascadia Code", Consolas, monospace;
+  border: 1px solid var(--acento-linha);
+  border-radius: var(--r-md);
+  color: var(--ink-faint);
+  background: var(--acento-suave);
+  font-family: var(--fonte-mono);
   font-size: 0.62rem;
 }
 
 .fluxo-aprendizado strong {
-  color: #55457d;
+  color: var(--acento-tinta);
   font-weight: 650;
 }
 
@@ -1760,9 +2136,9 @@ h3 {
 .bloco-questionario {
   scroll-margin-top: 28px;
   padding: clamp(30px, 5vw, 54px);
-  border: 1px solid #d7d2e9;
-  border-radius: 18px;
-  background: #fdfdff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: var(--surface);
   box-shadow: var(--shadow-raised);
 }
 
@@ -1799,18 +2175,18 @@ h3 {
   margin: 0;
   padding: 22px;
   border: 1px solid var(--line);
-  border-radius: 13px;
+  border-radius: var(--r-lg);
   background: var(--surface);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .questionario fieldset:focus-within {
-  border-color: #b8abe8;
-  box-shadow: 0 0 0 3px rgb(101 65 220 / 8%);
+  border-color: var(--acento);
+  box-shadow: var(--foco);
 }
 
 .questionario fieldset:focus-visible {
-  outline: 3px solid rgb(101 65 220 / 22%);
+  outline: 2px solid var(--acento);
   outline-offset: 3px;
 }
 
@@ -1826,8 +2202,8 @@ h3 {
 }
 
 .questionario legend span {
-  color: var(--violet);
-  font-family: "Cascadia Code", Consolas, monospace;
+  color: var(--acento);
+  font-family: var(--fonte-mono);
   font-size: 0.72rem;
   line-height: 1.9;
 }
@@ -1844,19 +2220,19 @@ h3 {
   gap: 10px;
   align-items: start;
   padding: 11px 12px;
-  border: 1px solid #e7e5ed;
-  border-radius: 9px;
-  color: #4f4b5d;
-  background: #fafafd;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  background: var(--surface-sunken);
   font-size: 0.85rem;
   line-height: 1.5;
   cursor: pointer;
 }
 
 .alternativas label:has(input:checked) {
-  border-color: #b7a9ec;
-  color: #33265c;
-  background: var(--violet-soft);
+  border-color: var(--acento);
+  color: var(--acento-tinta);
+  background: var(--acento-suave);
 }
 
 .alternativas input {
@@ -1872,23 +2248,23 @@ h3 {
   height: 17px;
   margin-top: 2px;
   place-items: center;
-  border: 1.5px solid #aaa6b7;
+  border: 1.5px solid var(--line-strong);
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
 }
 
 .alternativas label > span::after {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--violet);
+  background: var(--acento);
   content: "";
   transform: scale(0);
   transition: transform 140ms var(--ease-out);
 }
 
 .alternativas input:checked + span {
-  border-color: var(--violet);
+  border-color: var(--acento);
 }
 
 .alternativas input:checked + span::after {
@@ -1896,7 +2272,7 @@ h3 {
 }
 
 .alternativas input:focus-visible + span {
-  outline: 3px solid rgb(101 65 220 / 25%);
+  outline: 2px solid var(--acento);
   outline-offset: 2px;
 }
 
@@ -1908,16 +2284,16 @@ h3 {
 .erro-questionario {
   margin: 0;
   padding: 12px 14px;
-  border-radius: 9px;
-  color: var(--red);
-  background: var(--red-soft);
+  border-radius: var(--r-md);
+  color: var(--perigo);
+  background: var(--perigo-suave);
   font-size: 0.82rem;
 }
 
 .resultado-questionario {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 15px;
+  border-radius: var(--r-lg);
   background: var(--surface);
 }
 
@@ -1930,11 +2306,11 @@ h3 {
 }
 
 .resultado-aprovado > header {
-  background: var(--green-soft);
+  background: var(--ok-suave);
 }
 
 .resultado-revisar > header {
-  background: var(--amber-soft);
+  background: var(--atencao-suave);
 }
 
 .resultado-nota {
@@ -1944,18 +2320,18 @@ h3 {
   place-items: center;
   border: 2px solid currentColor;
   border-radius: 50%;
-  color: var(--violet-dark);
-  font-family: "Cascadia Code", Consolas, monospace;
+  color: var(--acento-forte);
+  font-family: var(--fonte-mono);
   font-size: 1.15rem;
   font-weight: 750;
 }
 
 .resultado-aprovado .resultado-nota {
-  color: var(--green);
+  color: var(--ok);
 }
 
 .resultado-revisar .resultado-nota {
-  color: var(--amber);
+  color: var(--atencao);
 }
 
 .resultado-questionario h3 {
@@ -1966,7 +2342,7 @@ h3 {
 
 .resultado-questionario header p:last-child {
   margin: 0;
-  color: #625e70;
+  color: var(--ink-soft);
   font-size: 0.84rem;
 }
 
@@ -1992,19 +2368,19 @@ h3 {
   height: 24px;
   place-items: center;
   border-radius: 50%;
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
   font-size: 0.72rem;
   font-weight: 750;
 }
 
 .feedback-acertou .feedback-icone {
-  color: var(--green);
-  background: var(--green-soft);
+  color: var(--ok);
+  background: var(--ok-suave);
 }
 
 .feedback-errou .feedback-icone {
-  color: var(--red);
-  background: var(--red-soft);
+  color: var(--perigo);
+  background: var(--perigo-suave);
 }
 
 .feedback-questionario strong {
@@ -2023,7 +2399,7 @@ h3 {
 
 .feedback-questionario small {
   display: block;
-  color: var(--red);
+  color: var(--perigo);
   font-size: 0.72rem;
 }
 
@@ -2031,7 +2407,7 @@ h3 {
   margin-top: 8px;
   padding: 0;
   border: 0;
-  color: var(--violet);
+  color: var(--acento);
   background: transparent;
   font-size: 0.72rem;
   font-weight: 700;
@@ -2062,17 +2438,17 @@ h3 {
    ============================================================================ */
 
 .diagrama {
-  --conector: #d7d4e4;
-  --trilho: #e8e7f0;
-  --sinal: #a49eb8;
-  --tinta: #f8f8fb;
-  --tinta-linha: #ecebf2;
+  --conector: var(--line);
+  --trilho: var(--line);
+  --sinal: var(--ink-faint);
+  --tinta: var(--surface-sunken);
+  --tinta-linha: var(--line-soft);
   --tinta-forte: var(--ink);
   position: relative;
   margin: 2.6rem 0;
   overflow: hidden;
   border: 1px solid var(--trilho);
-  border-radius: 16px;
+  border-radius: var(--r-xl);
   background: var(--surface);
 }
 
@@ -2092,8 +2468,8 @@ h3 {
 
 .diagrama-tipo {
   width: fit-content;
-  color: #8b84a6;
-  font-family: "Cascadia Code", Consolas, monospace;
+  color: var(--ink-faint);
+  font-family: var(--fonte-mono);
   font-size: 0.58rem;
   font-weight: 650;
   letter-spacing: 0.11em;
@@ -2102,7 +2478,7 @@ h3 {
 
 .diagrama-titulo {
   color: var(--ink);
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-family: var(--fonte-display);
   font-size: 1.22rem;
   font-weight: 650;
   letter-spacing: -0.02em;
@@ -2144,25 +2520,25 @@ h3 {
 
 .ilustracao-plano,
 .ilustracao-no {
-  fill: #fbfbfd;
-  stroke: #c9c5d6;
+  fill: var(--surface-sunken);
+  stroke: var(--line-strong);
 }
 
 .ilustracao-plano-destaque,
 .ilustracao-no-destaque {
-  fill: #f4f1ff;
-  stroke: #a892f0;
+  fill: var(--acento-suave);
+  stroke: var(--acento);
 }
 
 .ilustracao-no-sucesso {
-  fill: var(--green-soft);
-  stroke: #4aa88f;
+  fill: var(--ok-suave);
+  stroke: var(--ok);
 }
 
 .ilustracao-plano-alerta,
 .ilustracao-no-alerta {
-  fill: var(--amber-soft);
-  stroke: #d59a54;
+  fill: var(--atencao-suave);
+  stroke: var(--atencao);
 }
 
 .ilustracao-linha,
@@ -2171,7 +2547,7 @@ h3 {
 .ilustracao-seta {
   fill: none;
   vector-effect: non-scaling-stroke;
-  stroke: #c9c5d6;
+  stroke: var(--line-strong);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.3;
@@ -2187,16 +2563,16 @@ h3 {
 }
 
 .ilustracao-seta {
-  stroke: var(--violet);
+  stroke: var(--acento);
   stroke-width: 1.6;
 }
 
 .ilustracao-ponto {
-  fill: var(--violet);
+  fill: var(--acento);
 }
 
 .ilustracao-ponto-alerta {
-  fill: var(--amber);
+  fill: var(--atencao);
 }
 
 .diagrama-corpo {
@@ -2215,9 +2591,9 @@ h3 {
 
 .diagrama-legenda::before {
   flex: 0 0 auto;
-  color: #a892f0;
+  color: var(--acento);
   content: "↳";
-  font-family: "Cascadia Code", Consolas, monospace;
+  font-family: var(--fonte-mono);
 }
 
 /* nó — o tom vira o próprio fundo, sem borda nem marcador */
@@ -2228,14 +2604,14 @@ h3 {
   min-width: 0;
   padding: 11px 15px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   background: var(--tinta);
   text-align: left;
 }
 
 .no > strong {
   color: var(--tinta-forte);
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-family: var(--fonte-display);
   font-size: 0.95rem;
   font-weight: 650;
   line-height: 1.25;
@@ -2248,31 +2624,31 @@ h3 {
 }
 
 .diagrama-tom-destaque {
-  --sinal: var(--violet);
-  --tinta: #f5f2ff;
-  --tinta-linha: #e5dffa;
-  --tinta-forte: #3c2a86;
+  --sinal: var(--acento);
+  --tinta: var(--acento-suave);
+  --tinta-linha: var(--acento-linha);
+  --tinta-forte: var(--acento-tinta);
 }
 
 .diagrama-tom-sucesso {
-  --sinal: var(--green);
-  --tinta: #eef7f3;
-  --tinta-linha: #dceee7;
-  --tinta-forte: #0f5c4c;
+  --sinal: var(--ok);
+  --tinta: var(--ok-suave);
+  --tinta-linha: var(--ok-linha);
+  --tinta-forte: var(--ok-tinta);
 }
 
 .diagrama-tom-alerta {
-  --sinal: var(--amber);
-  --tinta: #fdf5eb;
-  --tinta-linha: #f2e3cf;
-  --tinta-forte: #8d4d15;
+  --sinal: var(--atencao);
+  --tinta: var(--atencao-suave);
+  --tinta-linha: var(--atencao-linha);
+  --tinta-forte: var(--atencao-tinta);
 }
 
 .diagrama-tom-perigo {
-  --sinal: var(--red);
-  --tinta: #fdf0f2;
-  --tinta-linha: #f6dde1;
-  --tinta-forte: #8f2b39;
+  --sinal: var(--perigo);
+  --tinta: var(--perigo-suave);
+  --tinta-linha: var(--perigo-linha);
+  --tinta-forte: var(--perigo-tinta);
 }
 
 .diagrama-tom-destaque > span,
@@ -2326,17 +2702,17 @@ h3 {
   place-items: center;
   border: 0;
   border-radius: 50%;
-  color: #8b84a6;
-  background: #f2f1f7;
-  font-family: "Cascadia Code", Consolas, monospace;
+  color: var(--ink-faint);
+  background: var(--surface-soft);
+  font-family: var(--fonte-mono);
   font-size: 0.55rem;
   font-weight: 700;
   transform: translateY(-50%);
 }
 
 .fluxo-item:has(.diagrama-tom-destaque) .fluxo-indice {
-  color: var(--violet-dark);
-  background: var(--violet-soft);
+  color: var(--acento-forte);
+  background: var(--acento-suave);
 }
 
 .fluxo-grade {
@@ -2404,7 +2780,7 @@ h3 {
   align-content: start;
   padding: 16px 18px 18px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   background: var(--tinta);
 }
 
@@ -2479,7 +2855,7 @@ h3 {
   position: absolute;
   top: 50%;
   left: 50%;
-  color: #b6b1c6;
+  color: var(--ink-faint);
   content: "→";
   font-size: 0.8rem;
   line-height: 1;
@@ -2493,7 +2869,7 @@ h3 {
   border-right: 1px solid var(--trilho);
   border-bottom: 1px solid var(--trilho);
   border-left: 1px solid var(--trilho);
-  border-radius: 0 0 11px 11px;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
 }
 
 .ciclo-retorno::before {
@@ -2502,8 +2878,8 @@ h3 {
   left: -4px;
   width: 7px;
   height: 7px;
-  border-top: 1px solid #b6b1c6;
-  border-right: 1px solid #b6b1c6;
+  border-top: 1px solid var(--ink-faint);
+  border-right: 1px solid var(--ink-faint);
   content: "";
   transform: rotate(-45deg);
 }
@@ -2519,10 +2895,10 @@ h3 {
   align-items: center;
   gap: 7px;
   padding: 4px 12px;
-  border-radius: 999px;
-  color: var(--violet-dark);
-  background: var(--violet-soft);
-  font-family: "Cascadia Code", Consolas, monospace;
+  border-radius: var(--r-pill);
+  color: var(--acento-forte);
+  background: var(--acento-suave);
+  font-family: var(--fonte-mono);
   font-size: 0.63rem;
   letter-spacing: 0.03em;
 }
@@ -2597,8 +2973,8 @@ h3 {
 /* bloco que não virou diagrama: fonte visível, erro contido */
 
 .diagrama-invalido {
-  border: 1px solid #ecd5ae;
-  background: var(--amber-soft);
+  border: 1px solid var(--atencao-linha);
+  background: var(--atencao-suave);
 }
 
 .diagrama-invalido .diagrama-cabecalho {
@@ -2607,17 +2983,17 @@ h3 {
 }
 
 .diagrama-invalido .diagrama-tipo {
-  color: var(--amber);
+  color: var(--atencao);
 }
 
 .diagrama-fonte {
   margin: 14px 24px 10px;
   padding: 12px 14px;
   overflow-x: auto;
-  border: 1px solid #f0dcc2;
-  border-radius: 10px;
-  background: rgb(255 255 255 / 70%);
-  font-family: "Cascadia Code", Consolas, monospace;
+  border: 1px solid var(--atencao-linha);
+  border-radius: var(--r-md);
+  background: var(--surface-vidro);
+  font-family: var(--fonte-mono);
   font-size: 0.72rem;
   line-height: 1.55;
   white-space: pre-wrap;
@@ -2625,7 +3001,7 @@ h3 {
 
 .diagrama-erro {
   margin: 0 24px 18px;
-  color: var(--amber);
+  color: var(--atencao);
   font-size: 0.75rem;
   font-weight: 650;
 }
@@ -2662,7 +3038,7 @@ h3 {
 @media (max-width: 760px) {
   .diagrama {
     margin-inline: -4px;
-    border-radius: 14px;
+    border-radius: var(--r-lg);
   }
 
   .diagrama-cabecalho {
@@ -2741,23 +3117,23 @@ h3 {
 
 @media (hover: hover) and (pointer: fine) {
   .botao-primario:hover {
-    background: var(--violet-dark);
-    box-shadow: 0 8px 22px rgb(101 65 220 / 28%);
+    background: var(--acento-forte);
+    box-shadow: var(--sombra-acento-alta);
   }
 
   .botao-secundario:hover:not(:disabled) {
-    border-color: #bdb7d3;
-    background: #faf9ff;
+    border-color: var(--line-strong);
+    background: var(--surface-soft);
   }
 
   .trilha-recolher:hover,
   .trilha-cabecalho:hover .trilha-recolher {
-    border-color: #c9c3e2;
-    background: var(--violet-soft);
+    border-color: var(--acento-linha);
+    background: var(--acento-suave);
   }
 
   .trilha-cabecalho:hover .trilha-titulo {
-    color: var(--violet-dark);
+    color: var(--acento-forte);
   }
 
   .copiar-codigo {
@@ -2771,24 +3147,24 @@ h3 {
   }
 
   .copiar-codigo:hover {
-    border-color: rgb(255 255 255 / 32%);
-    color: #fff;
+    border-color: color-mix(in oklab, var(--codigo-tinta) 34%, transparent);
+    color: var(--codigo-tinta);
   }
 
   .trilha-aderir:hover {
-    border-color: #aaa0d5;
-    background: #ece7ff;
+    border-color: var(--acento-linha);
+    background: var(--acento-suave);
   }
 
   .cenario > a:hover .cenario-seta {
-    border-color: #ddd8f0;
-    color: var(--violet);
-    background: var(--violet-soft);
+    border-color: var(--acento-linha);
+    color: var(--acento);
+    background: var(--acento-suave);
     transform: translateX(3px);
   }
 
   .cenario > a:hover .cenario-corpo > strong {
-    color: var(--violet-dark);
+    color: var(--acento-forte);
   }
 
   .filtros button:hover {
@@ -2796,23 +3172,23 @@ h3 {
   }
 
   .sumario button:hover {
-    color: var(--violet);
+    color: var(--acento);
   }
 
   .voltar:hover {
-    color: var(--violet);
+    color: var(--acento);
   }
 
   .trilha-restaurar:hover {
-    border-color: #8bd9b6;
-    color: #0c5e46;
-    background: #d3f0e2;
+    border-color: var(--ok-linha);
+    color: var(--ok-tinta);
+    background: var(--ok-suave);
   }
 
   .trilha-arquivar:hover {
-    color: var(--red);
-    border-color: #e8c4c9;
-    background: var(--red-soft);
+    color: var(--perigo);
+    border-color: var(--perigo-linha);
+    background: var(--perigo-suave);
   }
 }
 
@@ -2826,10 +3202,10 @@ h3 {
   }
 
   .hero-texto h1 {
-    font-size: clamp(2.7rem, 6vw, 3.8rem);
+    font-size: clamp(2.1rem, 5vw, 3rem);
   }
 
-  .hero-visual img {
+  .hero-ilustracao {
     right: -22px;
   }
 
@@ -2887,7 +3263,7 @@ h3 {
   }
 
   .hero-texto h1 {
-    font-size: clamp(2.45rem, 12vw, 3.6rem);
+    font-size: clamp(2rem, 9vw, 2.7rem);
   }
 
   .hero-visual {
@@ -2895,7 +3271,7 @@ h3 {
     border-top: 1px solid var(--line);
   }
 
-  .hero-visual img {
+  .hero-ilustracao {
     top: 50%;
     right: auto;
     left: 50%;
@@ -3019,7 +3395,7 @@ h3 {
   }
 
   .cabecalho-aula h1 {
-    font-size: clamp(2.25rem, 12vw, 3.4rem);
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
   }
 
   .conteudo-aula {
