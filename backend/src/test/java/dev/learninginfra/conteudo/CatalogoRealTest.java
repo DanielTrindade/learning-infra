@@ -34,7 +34,7 @@ class CatalogoRealTest {
                 .filter(cenario -> cenario.id().startsWith("linux/"))
                 .toList();
 
-        assertThat(cenarios).hasSize(73);
+        assertThat(cenarios).hasSize(74);
         assertThat(kubernetes).hasSize(14);
         assertThat(kubernetes).allMatch(Cenario::usaKubernetes);
         assertThat(kubernetes.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
@@ -59,10 +59,10 @@ class CatalogoRealTest {
                 .hasSize(5);
         assertThat(iac).filteredOn(cenario -> cenario.dificuldade() == Dificuldade.MESTRE)
                 .hasSize(1);
-        assertThat(linux).hasSize(12);
+        assertThat(linux).hasSize(13);
         assertThat(linux).allMatch(Cenario::usaLinux);
         assertThat(linux.stream().mapToInt(cenario -> cenario.asercoes().size()).sum())
-                .isEqualTo(28);
+                .isEqualTo(31);
     }
 
     @Test
