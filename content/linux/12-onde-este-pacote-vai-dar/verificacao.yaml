@@ -1,0 +1,10 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: o catálogo escuta na 8042 e você sabe qual processo é o dono
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "ss -tlnp | grep ':8042 ' | grep -q 'users:' && echo porta-com-dono || echo porta-sem-dono"]
+    contem: porta-com-dono
+
+  - tipo: http_responde
+    url: http://localhost:8042
+    status: 200
