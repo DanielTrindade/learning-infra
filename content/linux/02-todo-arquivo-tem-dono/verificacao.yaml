@@ -1,0 +1,18 @@
+asercoes:
+  - tipo: arquivo_linux
+    caminho: /srv/editorial
+    modo: "2770"
+    dono: root
+    grupo: editorial
+    descricao: o diretório do editorial é do grupo editorial, fechado para os outros e com setgid
+
+  - tipo: arquivo_linux
+    caminho: /srv/editorial/pauta.md
+    grupo: editorial
+    descricao: o arquivo criado dentro herdou o grupo do diretório, que é o que o setgid faz
+
+  - tipo: comando_produz
+    descricao: os dois usuários do editorial estão no grupo
+    comando: ["docker", "exec", "learning-infra-linux",
+              "sh", "-c", "id -nG ana; id -nG bruno"]
+    contem: editorial
