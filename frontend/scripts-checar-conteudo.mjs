@@ -27,6 +27,9 @@ const visuaisValidos = new Set([
   'ciclo-iac',
   'triangulo-state',
   'grafo-dependencias',
+  'fronteiras-kernel',
+  'arvore-de-processos',
+  'permissao-octal',
 ])
 
 function textoObrigatorio(valor, campo) {

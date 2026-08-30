@@ -14,6 +14,9 @@ export const visuaisDosDiagramas = [
   'ciclo-iac',
   'triangulo-state',
   'grafo-dependencias',
+  'fronteiras-kernel',
+  'arvore-de-processos',
+  'permissao-octal',
 ] as const
 
 export type VisualDoDiagrama = (typeof visuaisDosDiagramas)[number]
