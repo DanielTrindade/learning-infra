@@ -216,9 +216,9 @@ Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
 
 A quinta Trilha, **Linux**, abre o catálogo — é a primeira da ordem recomendada de estudo.
-Fundamentos publicados e os **Atos I e II completos** — os Cenários 01 a 08 estão no
-catálogo. Os Atos III e IV, isto é, os Cenários 09 a 14, estão em construção. O desenho
-completo — Fundamentos e 14 Cenários em quatro atos — está em
+Fundamentos publicados e os **Atos I, II e III completos** — os Cenários 01 a 11 estão no
+catálogo. O Ato IV, isto é, os Cenários 12 a 14, está em construção. O desenho completo —
+Fundamentos e 14 Cenários em quatro atos — está em
 [`docs/superpowers/specs/2026-08-21-trilha-linux-design.md`](docs/superpowers/specs/2026-08-21-trilha-linux-design.md).
 
 ## O que a plataforma mexe na sua máquina
@@ -265,9 +265,9 @@ A partir do Cenário 10 a Trilha IaC **reusa** o bloco 8070–8079: 8070 no 10, 
 publica o cluster pelo **NodePort 30070** — alcançado no navegador pela mesma 30070, via
 `kubectl port-forward`. Como só existe um Cenário Ativo por vez, dois Cenários podem
 declarar a mesma porta sem colidir.
-A Trilha Linux usa o bloco **8040–8049**, começando pela **8040** no Cenário 08. Os
-Cenários 01 a 07 não servem nada e não publicam porta nenhuma — o `compose.yaml` deles
-não tem bloco `ports:`.
+A Trilha Linux usa o bloco **8040–8049**: a **8040** no Cenário 08 e a **8041** no
+Cenário 09. Os demais não servem nada e não publicam porta nenhuma — o `compose.yaml`
+deles não tem bloco `ports:`.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está
