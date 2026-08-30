@@ -121,6 +121,13 @@ explica cada pedaço dela. O container da Trilha Linux sobe o systemd com `cgrou
 no Compose: é o mesmo alcance da VM do Docker Desktop que a plataforma já usa no
 MiniStack, e estritamente menos poder que montar o socket do Docker.
 
+Dois Cenários fogem do padrão, e vale saber antes de rodá-los. O **Cenário 06 exige rede**
+no momento em que roda, porque faz `apt-get update` — cerca de 26 MB; é o único da Trilha
+com essa dependência. E o **Cenário 07 monta `/var/log/aurora` como um tmpfs de 8 MB**,
+sendo o único cujo `compose.yaml` difere dos demais: é o que permite ensinar disco cheio
+sem `--privileged` e sem encostar no disco de quem estuda, já que o `/` do container é o
+disco da VM do Docker Desktop.
+
 ## Rodando
 
 Dois processos, em dois terminais. Nenhum dos dois é o terminal onde você vai fazer os
@@ -209,9 +216,9 @@ Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
 
 A quinta Trilha, **Linux**, abre o catálogo — é a primeira da ordem recomendada de estudo.
-Fundamentos publicados e o **Ato I completo** — os Cenários 01 a 03 estão no catálogo, mais
-o Cenário 08, que saiu antes como prova da plataforma. Os Atos II a IV estão em construção.
-O desenho completo — Fundamentos e 14 Cenários em quatro atos — está em
+Fundamentos publicados e os **Atos I e II completos** — os Cenários 01 a 08 estão no
+catálogo. Os Atos III e IV, isto é, os Cenários 09 a 14, estão em construção. O desenho
+completo — Fundamentos e 14 Cenários em quatro atos — está em
 [`docs/superpowers/specs/2026-08-21-trilha-linux-design.md`](docs/superpowers/specs/2026-08-21-trilha-linux-design.md).
 
 ## O que a plataforma mexe na sua máquina
@@ -259,7 +266,7 @@ publica o cluster pelo **NodePort 30070** — alcançado no navegador pela mesma
 `kubectl port-forward`. Como só existe um Cenário Ativo por vez, dois Cenários podem
 declarar a mesma porta sem colidir.
 A Trilha Linux usa o bloco **8040–8049**, começando pela **8040** no Cenário 08. Os
-Cenários 01 a 03 não servem nada e não publicam porta nenhuma — o `compose.yaml` deles
+Cenários 01 a 07 não servem nada e não publicam porta nenhuma — o `compose.yaml` deles
 não tem bloco `ports:`.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
