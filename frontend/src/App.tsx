@@ -1,4 +1,6 @@
+import { BotaoDeTema } from './BotaoDeTema'
 import { Catalogo } from './Catalogo'
+import { MarcaDaPlataforma } from './MarcaDaPlataforma'
 import { PaginaDoCenario } from './PaginaDoCenario'
 import { PaginaDeFundamentos } from './PaginaDeFundamentos'
 import { useRota } from './useRota'
@@ -13,21 +15,30 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <a className="pular-para-conteudo" href="#conteudo-principal">Pular para o conteúdo</a>
+
       <header className="barra-superior">
         <a className="marca" href="#/" aria-label="Learning Infra — início">
-          <img className="marca-simbolo" src="/favicon.svg" alt="" />
+          <MarcaDaPlataforma />
           <span>
             <strong>Learning Infra</strong>
-            <small>Cenários locais</small>
+            <small>laboratórios locais</small>
           </span>
         </a>
-        <span className="contexto-local">
-          <span aria-hidden="true" />
-          ambiente local
-        </span>
+        <div className="barra-acoes">
+          <span className="contexto-local" title="Os Cenários rodam na sua máquina">
+            <span aria-hidden="true" />
+            ambiente local
+          </span>
+          <BotaoDeTema />
+        </div>
       </header>
 
-      <main className={emConteudo ? 'app-main app-main-aula' : 'app-main'}>
+      {/* Progresso de leitura: só nas páginas longas, e sem uma linha de JS.
+          Onde o browser não implementa scroll timelines, a barra fica em 0 e some. */}
+      {emConteudo && <div className="progresso-leitura" aria-hidden="true"><span /></div>}
+
+      <main id="conteudo-principal" className={emConteudo ? 'app-main app-main-aula' : 'app-main'}>
         {idDoCenario
           ? <PaginaDoCenario id={idDoCenario} />
           : idDaTrilha

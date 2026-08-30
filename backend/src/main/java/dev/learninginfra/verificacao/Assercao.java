@@ -169,4 +169,37 @@ public sealed interface Assercao {
      */
     record TerraformPlanoLimpo(String diretorio, String descricao) implements Assercao {
     }
+
+    /**
+     * Um serviço systemd está ativo e habilitado dentro do container Linux do Cenário.
+     * Compara códigos de saída — 0 é o único positivo — porque `is-active` de uma unit
+     * parada imprime `inactive`, e uma checagem por substring aprovaria o serviço parado.
+     */
+    record ServicoSystemd(
+            String container,
+            String nome,
+            Boolean ativo,
+            Boolean habilitado,
+            String descricao) implements Assercao {
+
+        public ServicoSystemd {
+            if (ativo == null && habilitado == null) {
+                throw new IllegalArgumentException(
+                        "ativo ou habilitado deve ser informado em servico_systemd");
+            }
+        }
+    }
+
+    /**
+     * Um arquivo ou diretório dentro do container Linux tem o modo, o dono e o grupo
+     * esperados. Campos nulos não são verificados. A descrição vem do Cenário.
+     */
+    record ArquivoLinux(
+            String container,
+            String caminho,
+            String modo,
+            String dono,
+            String grupo,
+            String descricao) implements Assercao {
+    }
 }

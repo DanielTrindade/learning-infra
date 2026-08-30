@@ -1,5 +1,6 @@
 id: aws
 titulo: AWS
+ordem: 6
 fundamentos:
   titulo: Fundamentos da AWS
   artigo: fundamentos.md

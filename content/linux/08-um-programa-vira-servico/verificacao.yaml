@@ -1,0 +1,13 @@
+asercoes:
+  - tipo: servico_systemd
+    nome: catalogo.service
+    ativo: true
+    habilitado: true
+    descricao: o catálogo é um serviço ativo e habilitado
+  - tipo: http_responde
+    url: http://localhost:8040
+    status: 200
+  - tipo: arquivo_linux
+    caminho: /srv/catalogo/index.html
+    dono: root
+    descricao: o conteúdo do catálogo existe e pertence ao root

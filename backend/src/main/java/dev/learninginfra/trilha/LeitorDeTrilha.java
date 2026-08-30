@@ -29,6 +29,7 @@ public class LeitorDeTrilha {
             return new MetadadosDaTrilha(
                     id,
                     exigirTexto(dados, "titulo", arquivo),
+                    exigirInteiro(dados, "ordem", arquivo),
                     lerFundamentos(dados, arquivo));
         } catch (IOException e) {
             throw new UncheckedIOException("não consegui ler " + arquivo, e);
@@ -173,6 +174,6 @@ public class LeitorDeTrilha {
         return valor.toString();
     }
 
-    public record MetadadosDaTrilha(String id, String titulo, Fundamentos fundamentos) {
+    public record MetadadosDaTrilha(String id, String titulo, int ordem, Fundamentos fundamentos) {
     }
 }

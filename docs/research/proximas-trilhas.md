@@ -400,6 +400,20 @@ permissão, processo, pacote e log não precisam de porta. As poucas que precisa
 Ato de rede e serviço: 8040 para o serviço gerenciado por systemd, 8041 para o segundo
 serviço da comparação, 8042 para o proxy.
 
+### Pinagem medida em 2026-08-25
+
+A imagem base é `ubuntu:26.04` pinada por digest, mas a base **não traz systemd** — só
+`libsystemd0` — e não tem `/sbin/init`. O `Dockerfile` precisa instalar o systemd e
+apontar o processo 1 para `/usr/lib/systemd/systemd`:
+
+| Peça | Valor medido |
+|---|---|
+| Digest amd64 de `ubuntu:26.04` | `sha256:889d056d5c6c0bfb55789ff3710681d68e50713cb562d2196dc07110599c7a6f` |
+| Pacotes instalados | `systemd procps iproute2 sudo curl python3` |
+| Processo 1 | `/usr/lib/systemd/systemd` (não existe `/sbin/init`) |
+| `is-system-running` | `running`, nenhuma unit falha |
+| Primeiro `up --build` a frio | ~124 s; seguintes com cache, ~7 s |
+
 ### Riscos
 
 - **Kernel compartilhado.** O container não tem kernel próprio: `sysctl`, módulo,

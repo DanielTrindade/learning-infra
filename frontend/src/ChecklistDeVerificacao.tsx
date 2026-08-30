@@ -1,11 +1,28 @@
+import { useEffect, useRef } from 'react'
 import type { ResultadoDaVerificacao } from './api'
 
 export function ChecklistDeVerificacao({ resultado }: { resultado: ResultadoDaVerificacao }) {
+  const referencia = useRef<HTMLElement>(null)
   const aprovadas = resultado.asercoes.filter((asercao) => asercao.passou).length
   const percentual = Math.round((aprovadas / resultado.asercoes.length) * 100)
+  const primeiraFalha = resultado.asercoes.find((asercao) => !asercao.passou)
+
+  // O resultado é a resposta a um clique: leva o foco e a rolagem até ele, em
+  // vez de contar que a pessoa perceba um painel aparecendo fora da vista.
+  useEffect(() => {
+    const painel = referencia.current
+    if (!painel) return
+    painel.focus({ preventScroll: true })
+    painel.scrollIntoView({
+      block: 'nearest',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    })
+  }, [resultado])
 
   return (
     <section
+      ref={referencia}
+      tabIndex={-1}
       className={`checklist ${resultado.concluido ? 'checklist-concluido' : 'checklist-pendente'}`}
       aria-live="polite"
     >
@@ -14,8 +31,11 @@ export function ChecklistDeVerificacao({ resultado }: { resultado: ResultadoDaVe
           {resultado.concluido ? '✓' : '↻'}
         </span>
         <div>
-          <p>{resultado.concluido ? 'Cenário concluído' : 'Continue tentando'}</p>
-          <span>{aprovadas} de {resultado.asercoes.length} verificações passaram</span>
+          <p>{resultado.concluido ? 'Cenário concluído' : 'Ainda falta ajustar'}</p>
+          <span>
+            {aprovadas} de {resultado.asercoes.length} verificações passaram
+            {!resultado.concluido && primeiraFalha ? '. Comece pela primeira em vermelho.' : ''}
+          </span>
         </div>
       </header>
 

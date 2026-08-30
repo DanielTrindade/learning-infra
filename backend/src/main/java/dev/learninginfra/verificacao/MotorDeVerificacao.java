@@ -90,6 +90,8 @@ public class MotorDeVerificacao {
             case Assercao.AwsConsulta a -> avaliarConsultaAws(a);
             case Assercao.TerraformEstado a -> avaliarEstadoTerraform(a);
             case Assercao.TerraformPlanoLimpo a -> avaliarPlanoTerraform(a);
+            case Assercao.ServicoSystemd a -> avaliarServicoSystemd(a);
+            case Assercao.ArquivoLinux a -> avaliarArquivoLinux(a);
         };
     }
 
@@ -144,6 +146,90 @@ public class MotorDeVerificacao {
                     "não consegui planejar — confirme que você rodou `terraform init` neste "
                     + "diretório: " + ultimoDetalhe(saida));
         };
+    }
+
+    /**
+     * Compara códigos de saída, e não a saída em si: `systemctl is-active` de uma unit
+     * parada imprime `inactive`, e `"inactive".contains("active")` aprovaria um serviço
+     * morto. `0` é o único positivo; o código do "não" é específico de cada consulta.
+     */
+    private ResultadoDeAsercao avaliarServicoSystemd(Assercao.ServicoSystemd a) {
+        if (a.ativo() != null) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "exec", a.container(),
+                    "systemctl", "is-active", "--quiet", a.nome()));
+            ResultadoDeAsercao resultado = conferirEstado(a, saida, a.ativo(), "ativo", 3);
+            if (resultado != null) {
+                return resultado;
+            }
+        }
+        if (a.habilitado() != null) {
+            SaidaDeComando saida = executor.executar(List.of(
+                    "docker", "exec", a.container(),
+                    "systemctl", "is-enabled", "--quiet", a.nome()));
+            ResultadoDeAsercao resultado = conferirEstado(a, saida, a.habilitado(), "habilitado", 1);
+            if (resultado != null) {
+                return resultado;
+            }
+        }
+        return ResultadoDeAsercao.aprovada(a);
+    }
+
+    /**
+     * `0` é o único código positivo; o código do "não" é específico (3 para is-active,
+     * 1 para is-enabled). Qualquer outro desfecho — 4 para unit inexistente, ou a falha
+     * do `docker exec` quando o container não está no ar — reprova, para um serviço
+     * ausente nunca aprovar como "parado".
+     */
+    private ResultadoDeAsercao conferirEstado(
+            Assercao.ServicoSystemd a, SaidaDeComando saida, boolean esperado,
+            String adjetivo, int codigoDoNao) {
+        if (!saida.stderr().isBlank()) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "não consegui consultar o serviço `" + a.nome()
+                    + "` — confirme que o container `" + a.container()
+                    + "` está no ar: " + ultimaLinha(saida.stderr()));
+        }
+        int codigo = saida.codigoDeSaida();
+        if (codigo == 0) {
+            return esperado
+                    ? null
+                    : ResultadoDeAsercao.reprovada(a,
+                            "o serviço `" + a.nome() + "` está " + adjetivo + " e não deveria");
+        }
+        if (codigo == codigoDoNao) {
+            return esperado
+                    ? ResultadoDeAsercao.reprovada(a,
+                            "o serviço `" + a.nome() + "` não está " + adjetivo)
+                    : null;
+        }
+        return ResultadoDeAsercao.reprovada(a,
+                "a unit `" + a.nome() + "` não existe no container `" + a.container() + "`");
+    }
+
+    private ResultadoDeAsercao avaliarArquivoLinux(Assercao.ArquivoLinux a) {
+        SaidaDeComando saida = executor.executar(List.of(
+                "docker", "exec", a.container(),
+                "stat", "-c", "%a %U %G", a.caminho()));
+        if (!saida.sucesso()) {
+            return ResultadoDeAsercao.reprovada(a,
+                    "o caminho `" + a.caminho() + "` não existe no container `"
+                    + a.container() + "`");
+        }
+        String[] campos = saida.stdout().strip().split("\\s+");
+        if (campos.length < 3) {
+            return ResultadoDeAsercao.reprovada(a, "não consegui ler o `stat` de `" + a.caminho() + "`");
+        }
+        if (a.modo() != null && !campos[0].equals(a.modo())) {
+            return ResultadoDeAsercao.reprovada(a, "o modo de `" + a.caminho() + "` é `" + campos[0] + "`");
+        }
+        if (a.dono() != null && !campos[1].equals(a.dono())) {
+            return ResultadoDeAsercao.reprovada(a, "o dono de `" + a.caminho() + "` é `" + campos[1] + "`");
+        }
+        if (a.grupo() != null && !campos[2].equals(a.grupo())) {
+            return ResultadoDeAsercao.reprovada(a, "o grupo de `" + a.caminho() + "` é `" + campos[2] + "`");
+        }
+        return ResultadoDeAsercao.aprovada(a);
     }
 
     /**

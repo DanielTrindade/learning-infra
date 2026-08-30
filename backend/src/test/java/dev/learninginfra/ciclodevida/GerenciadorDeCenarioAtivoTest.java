@@ -78,7 +78,7 @@ class GerenciadorDeCenarioAtivoTest {
         Files.createDirectories(diretorio.resolve("workspace"));
         return new Cenario(id, "titulo", Dificuldade.GUIADO, List.of(), "# corpo",
                 diretorio, List.of(), null, List.of(), "docker-desktop", namespace,
-                null, false, false, null, true, ".");
+                null, false, false, null, true, ".", null);
     }
 
     private Cenario cenarioAws(String id, boolean infraestruturaReal, boolean comInit) throws Exception {

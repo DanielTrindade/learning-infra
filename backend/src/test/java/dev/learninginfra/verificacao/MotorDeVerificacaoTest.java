@@ -475,6 +475,122 @@ class MotorDeVerificacaoTest {
     }
 
     @Test
+    void servicoSystemdPassaQuandoAtivoEHabilitado() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "", "");
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", true, true,
+                        "o catálogo vira serviço")));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("docker", "exec", "learning-infra-linux",
+                "systemctl", "is-active", "--quiet", "catalogo.service"), comandos.get(0));
+        assertEquals(List.of("docker", "exec", "learning-infra-linux",
+                "systemctl", "is-enabled", "--quiet", "catalogo.service"), comandos.get(1));
+    }
+
+    @Test
+    void servicoSystemdReprovaServicoParado() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(3, "inactive", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", true, null,
+                        "o catálogo vira serviço")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não está ativo"));
+    }
+
+    @Test
+    void servicoSystemdNaoDeveEstarAtivoQuandoExigidoFalse() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "active", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", false, null,
+                        "o serviço não pode subir sozinho")));
+
+        assertFalse(resultado.concluido());
+    }
+
+    @Test
+    void servicoSystemdReprovaUnitInexistente() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(4, "", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", true, null,
+                        "o catálogo vira serviço")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não existe"));
+    }
+
+    @Test
+    void servicoSystemdNaoAprovaParadoQuandoAConsultaFalha() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(
+                1, "", "Error response from daemon: ... not running");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ServicoSystemd(
+                        "learning-infra-linux", "catalogo.service", false, null,
+                        "o serviço não pode subir sozinho")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não consegui consultar"));
+    }
+
+    @Test
+    void arquivoLinuxPassaQuandoOsCamposConferem() {
+        List<List<String>> comandos = new java.util.ArrayList<>();
+        ExecutorDeComando executor = comando -> {
+            comandos.add(comando);
+            return new SaidaDeComando(0, "2770 root ana\n", "");
+        };
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ArquivoLinux(
+                        "learning-infra-linux", "/srv/dados", "2770", "root", "ana",
+                        "o diretório tem o dono e o modo certos")));
+
+        assertTrue(resultado.concluido());
+        assertEquals(List.of("docker", "exec", "learning-infra-linux",
+                "stat", "-c", "%a %U %G", "/srv/dados"), comandos.getFirst());
+    }
+
+    @Test
+    void arquivoLinuxReprovaModoErradoDizendoOObservado() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(0, "755 root ana\n", "");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ArquivoLinux(
+                        "learning-infra-linux", "/srv/dados", "2770", null, null,
+                        "o diretório tem o modo certo")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("755"));
+    }
+
+    @Test
+    void arquivoLinuxReprovaCaminhoInexistente() {
+        ExecutorDeComando executor = comando -> new SaidaDeComando(1, "", "No such file");
+
+        var resultado = new MotorDeVerificacao(executor).verificar(List.of(
+                new Assercao.ArquivoLinux(
+                        "learning-infra-linux", "/nao/existe", "440", null, null,
+                        "o arquivo existe")));
+
+        assertFalse(resultado.concluido());
+        assertTrue(resultado.asercoes().getFirst().detalhe().contains("não existe"));
+    }
+
+    @Test
     void terraformEstadoFalhaDizendoOValorObservado() {
         var resultado = motorComTrabalho(ESTADO_DO_CONTAINER, 0, "../work")
                 .verificar(List.of(new Assercao.TerraformEstado(

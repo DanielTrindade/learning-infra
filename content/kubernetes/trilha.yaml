@@ -1,5 +1,6 @@
 id: kubernetes
 titulo: Kubernetes
+ordem: 3
 fundamentos:
   titulo: Fundamentos do Kubernetes
   artigo: fundamentos.md

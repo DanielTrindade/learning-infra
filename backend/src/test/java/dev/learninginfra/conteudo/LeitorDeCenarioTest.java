@@ -367,6 +367,26 @@ class LeitorDeCenarioTest {
     }
 
     @Test
+    void leOContainerLinuxDeclarado() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                projetoCompose: linux-08
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+
+        Cenario cenario = new LeitorDeCenario().ler(diretorio);
+
+        assertEquals("learning-infra-linux", cenario.containerLinux());
+        assertTrue(cenario.usaLinux());
+    }
+
+    @Test
     void cenarioSemTerraformNaoDeclaraDiretorio() throws Exception {
         escreverCenarioCompleto();
 
@@ -537,5 +557,130 @@ class LeitorDeCenarioTest {
                 ---
                 # Primeiro apply
                 """);
+    }
+
+    @Test
+    void montaAsercaoDeServicoSystemdComOContainerDoFrontmatter() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    ativo: true
+                    habilitado: true
+                    descricao: o catálogo vira serviço
+                """);
+
+        var asercao = (Assercao.ServicoSystemd) new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals("learning-infra-linux", asercao.container());
+        assertEquals("catalogo.service", asercao.nome());
+        assertTrue(asercao.ativo());
+        assertTrue(asercao.habilitado());
+    }
+
+    @Test
+    void asercaoDeServicoSystemdExigeContainerLinux() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    ativo: true
+                    descricao: o catálogo vira serviço
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("containerLinux"));
+    }
+
+    @Test
+    void servicoSystemdRejeitaAtivoNaoBooleano() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    ativo: "true"
+                    descricao: o catálogo vira serviço
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("booleano"));
+    }
+
+    @Test
+    void servicoSystemdSemAtivoNemHabilitadoEhRejeitado() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/08-um-programa-vira-servico
+                titulo: Um programa vira serviço
+                dificuldade: guiado
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: servico_systemd
+                    nome: catalogo.service
+                    descricao: o catálogo vira serviço
+                """);
+
+        var erro = assertThrows(
+                IllegalArgumentException.class, () -> new LeitorDeCenario().ler(diretorio));
+
+        assertTrue(erro.getMessage().contains("ativo ou habilitado"));
+    }
+
+    @Test
+    void montaAsercaoDeArquivoLinuxComCamposNulosNaoVerificados() throws Exception {
+        escreverCenarioCompleto();
+        Files.writeString(diretorio.resolve("cenario.md"), """
+                ---
+                id: linux/13-acesso-minimo
+                titulo: Acesso mínimo
+                dificuldade: autonomo
+                containerLinux: learning-infra-linux
+                ---
+                # corpo
+                """);
+        Files.writeString(diretorio.resolve("verificacao.yaml"), """
+                asercoes:
+                  - tipo: arquivo_linux
+                    caminho: /etc/sudoers.d/plantao
+                    modo: "440"
+                    dono: root
+                    descricao: a regra de sudo não é editável por quem ela beneficia
+                """);
+
+        var asercao = (Assercao.ArquivoLinux) new LeitorDeCenario().ler(diretorio).asercoes().getFirst();
+
+        assertEquals("440", asercao.modo());
+        assertEquals("root", asercao.dono());
+        assertNull(asercao.grupo());
     }
 }

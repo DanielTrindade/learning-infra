@@ -22,7 +22,8 @@ public record Cenario(
         boolean infraestruturaRealAws,
         String inicializacaoAws,
         boolean terraform,
-        String diretorioTerraform) {
+        String diretorioTerraform,
+        String containerLinux) {
 
     /** Cenário sem projeto Compose e sem volumes — a maioria. */
     public Cenario(String id, String titulo, Dificuldade dificuldade, List<String> containers,
@@ -64,7 +65,7 @@ public record Cenario(
                    String inicializacaoAws) {
         this(id, titulo, dificuldade, containers, markdown, diretorio, asercoes, projetoCompose,
                 volumes, contextoKubernetes, namespaceKubernetes, manifestosIniciais,
-                ministack, infraestruturaRealAws, inicializacaoAws, false, null);
+                ministack, infraestruturaRealAws, inicializacaoAws, false, null, null);
     }
 
     public boolean usaCompose() {
@@ -86,6 +87,10 @@ public record Cenario(
 
     public boolean usaAws() {
         return ministack;
+    }
+
+    public boolean usaLinux() {
+        return containerLinux != null && !containerLinux.isBlank();
     }
 
     public boolean temInicializacaoAws() {
