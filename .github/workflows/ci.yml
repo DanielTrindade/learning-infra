@@ -53,6 +53,7 @@ jobs:
 
       - name: Checar conteúdo (diagramas e questionários)
         run: |
+          node scripts-checar-conteudo.mjs linux
           node scripts-checar-conteudo.mjs docker
           node scripts-checar-conteudo.mjs kubernetes
           node scripts-checar-conteudo.mjs aws

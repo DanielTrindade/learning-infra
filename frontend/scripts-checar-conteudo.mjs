@@ -27,6 +27,9 @@ const visuaisValidos = new Set([
   'ciclo-iac',
   'triangulo-state',
   'grafo-dependencias',
+  'fronteiras-kernel',
+  'arvore-de-processos',
+  'permissao-octal',
 ])
 
 function textoObrigatorio(valor, campo) {
@@ -83,7 +86,9 @@ function validarDiagrama(dados) {
   })
 }
 
-const blocos = [...md.matchAll(/```diagrama\n([\s\S]*?)```/g)]
+// `\r?\n` porque o checkout no Windows entrega o conteúdo em CRLF: exigir `\n`
+// fazia o checador achar zero bloco e imprimir "tudo certo" sem validar nenhum.
+const blocos = [...md.matchAll(/```diagrama\r?\n([\s\S]*?)```/g)]
 console.log(`blocos diagrama: ${blocos.length}`)
 blocos.forEach((bloco, indice) => {
   try {

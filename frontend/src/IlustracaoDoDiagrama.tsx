@@ -191,6 +191,49 @@ const desenhos: Record<VisualDoDiagrama, ReactNode> = {
       <path className="ilustracao-linha-fantasma" d="M28 60h24M108 60h24" />
     </>
   ),
+  'fronteiras-kernel': (
+    <>
+      <rect className="ilustracao-plano" x="8" y="8" width="144" height="28" rx="4" />
+      <circle className="ilustracao-no" cx="30" cy="22" r="7" />
+      <rect className="ilustracao-no" x="52" y="15" width="26" height="14" rx="3" />
+      <path className="ilustracao-linha-fantasma" d="M58 19h14M58 24h9" />
+      <rect className="ilustracao-plano ilustracao-plano-alerta" x="8" y="42" width="144" height="12" rx="3" />
+      <path className="ilustracao-linha-fantasma" d="M16 48h128" />
+      <rect className="ilustracao-plano" x="8" y="60" width="144" height="28" rx="4" />
+      <rect className="ilustracao-no-destaque" x="74" y="67" width="28" height="14" rx="3" />
+      <circle className="ilustracao-ponto" cx="30" cy="74" r="4" />
+      <circle className="ilustracao-ponto" cx="52" cy="74" r="4" />
+      <path className="ilustracao-linha-fantasma" d="M80 71h16M120 71h12" />
+    </>
+  ),
+  'arvore-de-processos': (
+    <>
+      <rect className="ilustracao-no-destaque" x="66" y="8" width="28" height="16" rx="3" />
+      <path className="ilustracao-linha" d="M80 24v12M40 36h80M40 36v12M80 36v12M120 36v12" />
+      <rect className="ilustracao-no" x="26" y="48" width="28" height="16" rx="3" />
+      <rect className="ilustracao-no" x="66" y="48" width="28" height="16" rx="3" />
+      <rect className="ilustracao-no" x="106" y="48" width="28" height="16" rx="3" />
+      <path className="ilustracao-linha" d="M40 64v8M54 64v8M80 64v8M120 64v8M134 64v8" />
+      <rect className="ilustracao-no-sucesso" x="28" y="72" width="24" height="14" rx="3" />
+      <rect className="ilustracao-no" x="96" y="72" width="24" height="14" rx="3" />
+      <path className="ilustracao-linha-fantasma" d="M72 12h16M32 52h16M72 52h16M112 52h16M34 75h12M102 75h12" />
+    </>
+  ),
+  'permissao-octal': (
+    <>
+      <rect className="ilustracao-plano ilustracao-plano-destaque" x="8" y="16" width="40" height="64" rx="4" />
+      <rect className="ilustracao-plano" x="60" y="16" width="40" height="64" rx="4" />
+      <rect className="ilustracao-plano" x="112" y="16" width="40" height="64" rx="4" />
+      <circle className="ilustracao-no-destaque" cx="28" cy="36" r="6" />
+      <path className="ilustracao-linha" d="M14 52h28M14 60h28M14 68h28" />
+      <circle className="ilustracao-no" cx="80" cy="36" r="6" />
+      <path className="ilustracao-linha" d="M66 52h28M66 60h28" />
+      <path className="ilustracao-linha-fantasma" d="M66 68h28" />
+      <circle className="ilustracao-no" cx="132" cy="36" r="6" />
+      <path className="ilustracao-linha" d="M118 52h28" />
+      <path className="ilustracao-linha-fantasma" d="M118 60h28M118 68h28" />
+    </>
+  ),
 }
 
 export function IlustracaoDoDiagrama({ visual }: { visual: VisualDoDiagrama }) {
