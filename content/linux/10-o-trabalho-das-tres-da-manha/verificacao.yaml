@@ -1,0 +1,11 @@
+asercoes:
+  - tipo: servico_systemd
+    nome: relatorio.timer
+    ativo: true
+    habilitado: true
+    descricao: o timer do relatório está armado e sobe sozinho no boot
+
+  - tipo: arquivo_linux
+    caminho: /srv/relatorio-noturno/ultimo.txt
+    dono: root
+    descricao: o timer disparou de verdade e o relatório saiu
