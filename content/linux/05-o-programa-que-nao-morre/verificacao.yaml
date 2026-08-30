@@ -1,0 +1,12 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: o vigia sobreviveu ao pai e foi adotado pelo PID 1
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "P=$(ps -eo ppid=,comm=,args= | awk '$2 == \"python3\" && /vigia/ {print $1; exit}'); if [ \"$P\" = \"1\" ]; then echo adotado-pelo-pid-1; else echo tem-pai-vivo; fi"]
+    contem: adotado-pelo-pid-1
+
+  - tipo: comando_produz
+    descricao: nenhum zumbi ficou para trás
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "if ps -eo stat= | grep -q '^Z'; then echo tem-zumbi; else echo sem-zumbi; fi"]
+    contem: sem-zumbi
