@@ -1,0 +1,18 @@
+asercoes:
+  - tipo: arquivo_linux
+    caminho: /etc/sudoers.d/aurora-svc
+    modo: "440"
+    dono: root
+    grupo: root
+    descricao: a regra de sudo existe e não é gravável por ninguém além do root
+
+  - tipo: comando_produz
+    descricao: o catálogo é servido por um processo que não é root
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "P=$(systemctl show -p MainPID --value catalogo.service); if [ \"$P\" = \"0\" ]; then echo servico-parado; else stat -c %U /proc/$P; fi"]
+    contem: aurora-svc
+
+  - tipo: comando_produz
+    descricao: o binário marcado carrega exatamente a capability concedida
+    comando: ["docker", "exec", "learning-infra-linux", "getcap", "/usr/local/bin/py-rede"]
+    contem: cap_net_raw

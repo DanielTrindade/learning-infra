@@ -1,0 +1,11 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: o jq está instalado pelo gerenciador de pacotes, não largado no disco
+    comando: ["docker", "exec", "learning-infra-linux",
+              "dpkg-query", "-W", "-f=${Status}", "jq"]
+    contem: install ok installed
+
+  - tipo: comando_produz
+    descricao: o jq responde na linha de comando
+    comando: ["docker", "exec", "learning-infra-linux", "jq", "--version"]
+    contem: jq-1.

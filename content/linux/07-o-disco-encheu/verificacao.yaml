@@ -1,0 +1,17 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: a partição de log saiu do vermelho
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "P=$(df --output=pcent /var/log/aurora | tail -1 | tr -d ' %'); if [ \"$P\" -lt 50 ]; then echo espaco-liberado; else echo ainda-cheio; fi"]
+    contem: espaco-liberado
+
+  - tipo: comando_produz
+    descricao: nenhum processo continua segurando um arquivo apagado
+    comando: ["docker", "exec", "learning-infra-linux", "sh", "-c",
+              "if lsof +L1 2>/dev/null | grep -q /var/log/aurora; then echo descritor-preso; else echo sem-descritor-preso; fi"]
+    contem: sem-descritor-preso
+
+  - tipo: arquivo_linux
+    caminho: /var/log/aurora/pedidos.log
+    dono: root
+    descricao: o registro de pedidos voltou a ser gravado

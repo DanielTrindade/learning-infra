@@ -121,6 +121,12 @@ explica cada pedaço dela. O container da Trilha Linux sobe o systemd com `cgrou
 no Compose: é o mesmo alcance da VM do Docker Desktop que a plataforma já usa no
 MiniStack, e estritamente menos poder que montar o socket do Docker.
 
+Dois Cenários fogem do padrão, e vale saber antes de rodá-los. O **Cenário 06 exige rede**
+no momento em que roda, porque faz `apt-get update` — cerca de 26 MB; é o único da Trilha
+com essa dependência. E os **Cenários 07 e 14 montam `/var/log/aurora` como um tmpfs de
+8 MB**: é o que permite ensinar disco cheio sem `--privileged` e sem encostar no disco de
+quem estuda, já que o `/` do container é o disco da VM do Docker Desktop.
+
 ## Rodando
 
 Dois processos, em dois terminais. Nenhum dos dois é o terminal onde você vai fazer os
@@ -209,9 +215,8 @@ Fundamentos e 18 Cenários em quatro atos — em
 [`docs/superpowers/specs/2026-08-09-trilha-iac-design.md`](docs/superpowers/specs/2026-08-09-trilha-iac-design.md).
 
 A quinta Trilha, **Linux**, abre o catálogo — é a primeira da ordem recomendada de estudo.
-Fundamentos publicados e o **Ato I completo** — os Cenários 01 a 03 estão no catálogo, mais
-o Cenário 08, que saiu antes como prova da plataforma. Os Atos II a IV estão em construção.
-O desenho completo — Fundamentos e 14 Cenários em quatro atos — está em
+**Trilha completa**: Fundamentos e os 14 Cenários nos quatro atos, do primeiro acesso ao
+servidor até um plantão resolvido sozinho. O desenho completo está em
 [`docs/superpowers/specs/2026-08-21-trilha-linux-design.md`](docs/superpowers/specs/2026-08-21-trilha-linux-design.md).
 
 ## O que a plataforma mexe na sua máquina
@@ -258,9 +263,9 @@ A partir do Cenário 10 a Trilha IaC **reusa** o bloco 8070–8079: 8070 no 10, 
 publica o cluster pelo **NodePort 30070** — alcançado no navegador pela mesma 30070, via
 `kubectl port-forward`. Como só existe um Cenário Ativo por vez, dois Cenários podem
 declarar a mesma porta sem colidir.
-A Trilha Linux usa o bloco **8040–8049**, começando pela **8040** no Cenário 08. Os
-Cenários 01 a 03 não servem nada e não publicam porta nenhuma — o `compose.yaml` deles
-não tem bloco `ports:`.
+A Trilha Linux usa o bloco **8040–8049**, e hoje ocupa de **8040 a 8044**: 8040 no
+Cenário 08, 8041 no 09, 8042 no 12, 8043 no 13 e 8044 no 14. Os demais não servem nada e
+não publicam porta nenhuma — o `compose.yaml` deles não tem bloco `ports:`.
 
 Se for escrever um Cenário novo, escolha a porta conferindo o que já roda na sua
 máquina. A 8080 parece a escolha óbvia e é justamente a mais arriscada — quando ela está

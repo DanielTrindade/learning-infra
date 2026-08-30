@@ -1,0 +1,11 @@
+asercoes:
+  - tipo: comando_produz
+    descricao: o journal registrou o erro da Aurora com prioridade de erro
+    comando: ["docker", "exec", "learning-infra-linux",
+              "journalctl", "-t", "aurora", "-p", "err", "--no-pager"]
+    contem: falha ao gravar pedido 9001
+
+  - tipo: arquivo_linux
+    caminho: /srv/plantao-madrugada.txt
+    dono: root
+    descricao: a consulta ao journal virou um registro que a próxima pessoa vai ler
