@@ -82,7 +82,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
 
   return (
     <div className="pagina-aula pagina-fundamentos">
-      <a className="voltar" href="#/aprender"><span aria-hidden="true">←</span> Todas as Trilhas</a>
+      <a className="voltar" href="#/aprender"><span aria-hidden="true">‹</span> Todas as Trilhas</a>
 
       <header className="cabecalho-aula cabecalho-fundamentos">
         <p className="terminal-label">
@@ -93,7 +93,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
         <h1>{fundamentos.titulo}</h1>
         <p className="introducao-fundamentos">
           Entenda as decisões por trás da ferramenta, confirme o modelo mental e leve-o
-          para os Cenários práticos — sem bloqueio rígido.
+          para os Cenários práticos, sem bloqueio rígido.
         </p>
         <div className="metadados-aula">
           <span className={`status status-${estadoVisual}`}><i aria-hidden="true" />{rotulosDeEstado[fundamentos.estado]}</span>
@@ -114,7 +114,7 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
             </div>
             <div className="acoes">
               <button className="botao botao-primario" type="button" onClick={() => rolarAteSecao('inicio-questionario')}>
-                Ir ao Questionário <span aria-hidden="true">↓</span>
+                Ir ao Questionário
               </button>
               {primeiroCenario && (
                 <a className="botao botao-secundario" href={`#/cenarios/${primeiroCenario}`}>

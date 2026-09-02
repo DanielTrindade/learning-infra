@@ -25,7 +25,7 @@ export function estadoDoCenario(cenario: { concluido: boolean; ativo: boolean })
 
 export function numeroDoCenario(id: string): string {
   const slug = id.split('/').at(-1) ?? id
-  return slug.match(/^\d+/)?.[0] ?? '—'
+  return slug.match(/^\d+/)?.[0] ?? 's/n'
 }
 
 export function nomeDaTrilha(id: string): string {

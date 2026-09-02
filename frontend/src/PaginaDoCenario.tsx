@@ -120,7 +120,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
 
   return (
     <div className="pagina-aula">
-      <a className="voltar" href="#/aprender"><span aria-hidden="true">←</span> Todos os Cenários</a>
+      <a className="voltar" href="#/aprender"><span aria-hidden="true">‹</span> Todos os Cenários</a>
 
       <header className="cabecalho-aula">
         <p className="terminal-label">
