@@ -213,14 +213,13 @@ function ListaDeCenarios({
                 <span className={`estado-texto estado-${estadoDosFundamentos(fundamentos)}`}>
                   {rotulosEstado[estadoDosFundamentos(fundamentos)]}
                 </span>
-                <span aria-hidden="true">·</span>
                 <span>artigo + Questionário</span>
                 {fundamentos.tentativas > 0 && (
-                  <><span aria-hidden="true">·</span><span>melhor resultado {fundamentos.melhorPercentual}%</span></>
+                  <span>melhor resultado {fundamentos.melhorPercentual}%</span>
                 )}
               </span>
             </span>
-            <span className="cenario-seta" aria-hidden="true">→</span>
+            <span className="cenario-seta" aria-hidden="true">›</span>
           </a>
         </li>
       )}
@@ -233,18 +232,14 @@ function ListaDeCenarios({
               <strong>{cenario.titulo}</strong>
               <span className="cenario-meta">
                 <span className={`estado-texto estado-${estado}`}>{rotulosEstado[estado]}</span>
-                <span aria-hidden="true">·</span>
                 <span>{rotulosDificuldade[cenario.dificuldade]}</span>
-                <span aria-hidden="true">·</span>
                 <span>
                   {cenario.quantidadeDeAsercoes} {cenario.quantidadeDeAsercoes === 1 ? 'verificação' : 'verificações'}
                 </span>
-                {!podeIniciar && (
-                  <><span aria-hidden="true">·</span><span>adira para iniciar</span></>
-                )}
+                {!podeIniciar && <span>adira para iniciar</span>}
               </span>
             </span>
-            <span className="cenario-seta" aria-hidden="true">{podeIniciar ? '→' : '·'}</span>
+            <span className="cenario-seta" aria-hidden="true">{podeIniciar ? '›' : ''}</span>
           </>
         )
 

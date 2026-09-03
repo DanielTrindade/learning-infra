@@ -56,7 +56,7 @@ export function ChecklistDeVerificacao({ resultado }: { resultado: ResultadoDaVe
       </ul>
 
       {resultado.concluido && (
-        <a className="proxima-aula" href="#/aprender">Ver próximos Cenários <span aria-hidden="true">→</span></a>
+        <a className="proxima-aula" href="#/aprender">Ver próximos Cenários <span aria-hidden="true">›</span></a>
       )}
     </section>
   )

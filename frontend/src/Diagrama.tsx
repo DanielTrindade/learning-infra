@@ -143,7 +143,7 @@ function interpretar(fonte: string): Interpretacao {
   try {
     bruto = parse(fonte)
   } catch (e) {
-    return falha(`YAML inválido — ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`)
+    return falha(`YAML inválido: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`)
   }
   if (typeof bruto !== 'object' || bruto === null) {
     return falha('o bloco precisa ser um objeto YAML')

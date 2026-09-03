@@ -68,7 +68,7 @@ export function ResultadoDoQuestionario({
         </button>
         {primeiroCenario && (
           <a className="botao botao-primario" href={`#/cenarios/${primeiroCenario}`}>
-            Ir para o primeiro Cenário <span aria-hidden="true">→</span>
+            Ir para o primeiro Cenário <span aria-hidden="true">›</span>
           </a>
         )}
       </div>

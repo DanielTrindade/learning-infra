@@ -48,7 +48,7 @@ function PreviaDasTrilhas({ estado }: { estado: EstadoDasTrilhas }) {
             <strong>{trilha.titulo}</strong>
             <span>{trilha.total} {trilha.total === 1 ? 'etapa' : 'etapas'} entre teoria e prática</span>
           </div>
-          <a href="#/aprender" aria-label={`Estudar ${trilha.titulo}`}>Estudar trilha</a>
+          <a href="#/aprender" aria-label={`Estudar trilha ${trilha.titulo}`}>Estudar trilha</a>
         </li>
       ))}
     </ol>
@@ -88,9 +88,9 @@ export function LandingPage() {
         </div>
         <figure className="landing-hero-midia">
           <img
-            src="/learning-infra-lab-hero.jpg"
-            width="1152"
-            height="1536"
+            src="/learning-infra-lab-hero.webp"
+            width="1122"
+            height="1402"
             fetchPriority="high"
             alt="Pequeno laboratório local com mini servidor, cabos, notebook e caderno"
           />
@@ -125,9 +125,9 @@ export function LandingPage() {
       <section className="landing-pratica" aria-labelledby="pratica-titulo">
         <figure>
           <img
-            src="/learning-infra-cable-lab.jpg"
-            width="1536"
-            height="864"
+            src="/learning-infra-cable-lab.webp"
+            width="1672"
+            height="941"
             loading="lazy"
             alt="Pessoa conectando um cabo de rede a um mini servidor em uma bancada"
           />
