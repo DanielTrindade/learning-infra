@@ -1,57 +1,57 @@
-import type { QuestaoDoQuestionario, ResultadoDoQuestionario } from './api'
+import type { Question, QuestionnaireResult } from './api'
 
 type Props = {
-  resultado: ResultadoDoQuestionario
-  questoes: QuestaoDoQuestionario[]
+  result: QuestionnaireResult
+  questions: Question[]
   primeiroCenario: string | null
   aoRevisar: (id: string) => void
   aoTentarNovamente: () => void
 }
 
-export function ResultadoDoQuestionario({
-  resultado,
-  questoes,
+export function QuestionnaireResult({
+  result,
+  questions,
   primeiroCenario,
   aoRevisar,
   aoTentarNovamente,
 }: Props) {
   return (
     <section
-      className={`resultado-questionario ${resultado.aprovado ? 'resultado-aprovado' : 'resultado-revisar'}`}
+      className={`resultado-questionario ${result.passed ? 'resultado-aprovado' : 'resultado-revisar'}`}
       aria-labelledby="titulo-resultado-questionario"
       aria-live="polite"
     >
       <header>
-        <span className="resultado-nota" aria-hidden="true">{resultado.percentual}%</span>
+        <span className="resultado-nota" aria-hidden="true">{result.score}%</span>
         <div>
-          <p className="eyebrow">Tentativa {resultado.tentativas}</p>
+          <p className="eyebrow">Tentativa {result.attempts}</p>
           <h3 id="titulo-resultado-questionario">
-            {resultado.aprovado ? 'Fundamentos concluídos' : 'Vale revisar alguns conceitos'}
+            {result.passed ? 'Fundamentos concluídos' : 'Vale revisar alguns conceitos'}
           </h3>
           <p>
-            {resultado.aprovado
-              ? `Você atingiu o aproveitamento. Seu melhor resultado é ${resultado.melhorPercentual}%.`
-              : `Seu melhor resultado é ${resultado.melhorPercentual}%. Revise os pontos abaixo e tente novamente.`}
+            {result.passed
+              ? `Você atingiu o aproveitamento. Seu melhor resultado é ${result.bestScore}%.`
+              : `Seu melhor resultado é ${result.bestScore}%. Revise os pontos abaixo e tente novamente.`}
           </p>
         </div>
       </header>
 
       <ol className="feedback-questionario">
-        {resultado.feedback.map((feedback, indice) => {
-          const questao = questoes.find((item) => item.id === feedback.questaoId)
-          const alternativa = questao?.alternativas.find(
-            (item) => item.id === feedback.alternativaCorreta,
+        {result.feedback.map((feedback, indice) => {
+          const questao = questions.find((item) => item.id === feedback.questionId)
+          const alternativa = questao?.options.find(
+            (item) => item.id === feedback.correctOption,
           )
           return (
-            <li key={feedback.questaoId} className={feedback.acertou ? 'feedback-acertou' : 'feedback-errou'}>
-              <span className="feedback-icone" aria-hidden="true">{feedback.acertou ? '✓' : '!'}</span>
+            <li key={feedback.questionId} className={feedback.correct ? 'feedback-acertou' : 'feedback-errou'}>
+              <span className="feedback-icone" aria-hidden="true">{feedback.correct ? '✓' : '!'}</span>
               <div>
-                <strong>{indice + 1}. {questao?.enunciado}</strong>
-                <p>{feedback.explicacao}</p>
-                {!feedback.acertou && (
+                <strong>{indice + 1}. {questao?.statement}</strong>
+                <p>{feedback.explanation}</p>
+                {!feedback.correct && (
                   <>
-                    <small>Resposta correta: {alternativa?.texto ?? feedback.alternativaCorreta}</small>
-                    <button type="button" onClick={() => aoRevisar(feedback.revisar)}>
+                    <small>Resposta correta: {alternativa?.text ?? feedback.correctOption}</small>
+                    <button type="button" onClick={() => aoRevisar(feedback.review)}>
                       Revisar esta seção ↑
                     </button>
                   </>

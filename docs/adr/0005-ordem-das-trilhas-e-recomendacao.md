@@ -1,7 +1,7 @@
 # A ordem das Trilhas é recomendação, não pré-requisito
 
 O catálogo cresceu para além do ponto em que a ordem podia ser acidente. Hoje
-`CatalogoDeTrilhas` ordena por `Comparator.comparing(Trilha::id)`, e o resultado é
+`TrackCatalog` ordena por `Comparator.comparing(Track::id)`, e o resultado é
 alfabético: `aws, docker, iac, kubernetes`. A Trilha AWS abre o catálogo e a IaC, que é
 a última do desenho e depende do cluster e do MiniStack das outras, aparece em terceiro.
 Com a Trilha Linux o erro fica evidente, porque `linux` é o último id em ordem
@@ -29,7 +29,7 @@ Trilha é bloqueada, escondida ou marcada como indisponível por causa de outra.
 
 ## Consequências
 
-- `Trilha` ganha o campo, `LeitorDeTrilha` passa a exigi-lo, e o comparator vira
+- `Track` ganha o campo, `TrackReader` passa a exigi-lo, e o comparator vira
   `Comparator.comparingInt(Trilha::ordem).thenComparing(Trilha::id)`. O desempate por id
   mantém o catálogo determinístico se duas Trilhas declararem o mesmo número, em vez de
   deixar a ordem depender do sistema de arquivos.

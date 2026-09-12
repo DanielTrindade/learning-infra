@@ -1,51 +1,51 @@
 import { useEffect, useState } from 'react'
 import {
-  buscarCenario,
-  iniciarCenario,
-  verificarCenario,
-  type CenarioDetalhado,
-  type ResultadoDaVerificacao,
+  getScenario,
+  startScenario,
+  verifyScenario,
+  type ScenarioDetail,
+  type VerificationResult,
 } from './api'
 import { IconeCheck, IconeCopiar } from './BlocoDeCodigo'
 import { ChecklistDeVerificacao } from './ChecklistDeVerificacao'
 import { ConteudoMarkdown } from './ConteudoMarkdown'
 import {
-  estadoDoCenario,
-  idDaTrilha,
-  nomeDaTrilha,
-  numeroDoCenario,
-  rotulosDificuldade,
-  rotulosEstado,
-  salvarTrilhaAtual,
+  scenarioState,
+  trackId,
+  trackName,
+  scenarioNumber,
+  difficultyLabels,
+  stateLabels,
+  saveCurrentTrack,
 } from './progresso'
 import { SumarioDaAula } from './SumarioDaAula'
 import { secoesDoMarkdown } from './secoesDaAula'
 
 export function PaginaDoCenario({ id }: { id: string }) {
-  const [cenario, setCenario] = useState<CenarioDetalhado | null>(null)
-  const [erro, setErro] = useState<string | null>(null)
+  const [scenario, setCenario] = useState<ScenarioDetail | null>(null)
+  const [error, setErro] = useState<string | null>(null)
   const [diretorio, setDiretorio] = useState<string | null>(null)
-  const [resultado, setResultado] = useState<ResultadoDaVerificacao | null>(null)
+  const [result, setResultado] = useState<VerificationResult | null>(null)
   const [ocupado, setOcupado] = useState<'iniciando' | 'verificando' | null>(null)
   const [diretorioCopiado, setDiretorioCopiado] = useState(false)
 
   useEffect(() => {
-    let ativo = true
+    let active = true
     setCenario(null)
     setErro(null)
     setDiretorio(null)
     setResultado(null)
 
-    buscarCenario(id)
+    getScenario(id)
       .then((dados) => {
-        if (ativo) setCenario(dados)
+        if (active) setCenario(dados)
       })
       .catch((e) => {
-        if (ativo) setErro(String(e))
+        if (active) setErro(String(e))
       })
 
     return () => {
-      ativo = false
+      active = false
     }
   }, [id])
 
@@ -54,10 +54,10 @@ export function PaginaDoCenario({ id }: { id: string }) {
     setErro(null)
     setResultado(null)
     try {
-      const { diretorioDeTrabalho } = await iniciarCenario(id)
-      salvarTrilhaAtual(idDaTrilha(id))
-      setDiretorio(diretorioDeTrabalho)
-      setCenario((atual) => atual ? { ...atual, ativo: true } : atual)
+      const { workingDirectory } = await startScenario(id)
+      saveCurrentTrack(trackId(id))
+      setDiretorio(workingDirectory)
+      setCenario((atual) => atual ? { ...atual, active: true } : atual)
     } catch (e) {
       setErro(String(e))
     } finally {
@@ -69,10 +69,10 @@ export function PaginaDoCenario({ id }: { id: string }) {
     setOcupado('verificando')
     setErro(null)
     try {
-      const novoResultado = await verificarCenario(id)
-      setResultado(novoResultado)
-      if (novoResultado.concluido) {
-        setCenario((atual) => atual ? { ...atual, concluido: true } : atual)
+      const newResult = await verifyScenario(id)
+      setResultado(newResult)
+      if (newResult.completed) {
+        setCenario((atual) => atual ? { ...atual, completed: true } : atual)
       }
     } catch (e) {
       setErro(String(e))
@@ -88,19 +88,19 @@ export function PaginaDoCenario({ id }: { id: string }) {
     window.setTimeout(() => setDiretorioCopiado(false), 1800)
   }
 
-  if (erro && !cenario) {
+  if (error && !scenario) {
     return (
       <div className="estado-pagina estado-erro" role="alert">
         <span className="estado-icone" aria-hidden="true">!</span>
         <strong>Não foi possível abrir esta aula.</strong>
         <span>Volte ao catálogo ou confira se o backend está rodando.</span>
-        <code>{erro}</code>
+        <code>{error}</code>
         <a href="#/aprender">Voltar aos Cenários</a>
       </div>
     )
   }
 
-  if (!cenario) {
+  if (!scenario) {
     return (
       <div className="estado-pagina" role="status">
         <span className="spinner" aria-hidden="true" />
@@ -109,12 +109,12 @@ export function PaginaDoCenario({ id }: { id: string }) {
     )
   }
 
-  const estado = estadoDoCenario(cenario)
-  const secoes = secoesDoMarkdown(cenario.markdown)
-  const podeVerificar = Boolean(diretorio || cenario.ativo)
-  const textoStatus = estado === 'concluido'
+  const state = scenarioState(scenario)
+  const secoes = secoesDoMarkdown(scenario.markdown)
+  const podeVerificar = Boolean(diretorio || scenario.active)
+  const statusText = state === 'completed'
     ? 'Todas as verificações já passaram. Você pode revisar ou refazer este laboratório.'
-    : estado === 'andamento'
+    : state === 'in-progress'
       ? 'O ambiente está ativo. Siga a aula no seu terminal e verifique quando quiser.'
       : 'Inicie o ambiente para preparar o diretório de trabalho desta aula.'
 
@@ -124,15 +124,15 @@ export function PaginaDoCenario({ id }: { id: string }) {
 
       <header className="cabecalho-aula">
         <p className="terminal-label">
-          <span>Cenário {numeroDoCenario(cenario.id)}</span>
+          <span>Cenário {scenarioNumber(scenario.id)}</span>
           <i aria-hidden="true">/</i>
-          <span>{nomeDaTrilha(cenario.id)}</span>
+          <span>{trackName(scenario.id)}</span>
         </p>
-        <h1>{cenario.titulo}</h1>
+        <h1>{scenario.title}</h1>
         <div className="metadados-aula">
-          <span className={`status status-${estado}`}><i aria-hidden="true" />{rotulosEstado[estado]}</span>
-          <span>{rotulosDificuldade[cenario.dificuldade]}</span>
-          <span>{cenario.asercoes.length} {cenario.asercoes.length === 1 ? 'verificação' : 'verificações'}</span>
+          <span className={`status status-${state}`}><i aria-hidden="true" />{stateLabels[state]}</span>
+          <span>{difficultyLabels[scenario.difficulty]}</span>
+          <span>{scenario.assertions.length} {scenario.assertions.length === 1 ? 'verificação' : 'verificações'}</span>
         </div>
       </header>
 
@@ -140,9 +140,9 @@ export function PaginaDoCenario({ id }: { id: string }) {
         <aside className="lateral-aula" aria-label="Controles e navegação do Cenário">
           <section className="painel-execucao">
             <div className="painel-status">
-              <span className={`status status-${estado}`}><i aria-hidden="true" />{rotulosEstado[estado]}</span>
-              <h2>{estado === 'concluido' ? 'Laboratório aprovado' : estado === 'andamento' ? 'Ambiente preparado' : 'Pronto para começar?'}</h2>
-              <p>{textoStatus}</p>
+              <span className={`status status-${state}`}><i aria-hidden="true" />{stateLabels[state]}</span>
+              <h2>{state === 'completed' ? 'Laboratório aprovado' : state === 'in-progress' ? 'Ambiente preparado' : 'Pronto para começar?'}</h2>
+              <p>{statusText}</p>
             </div>
 
             <div className="acoes">
@@ -150,9 +150,9 @@ export function PaginaDoCenario({ id }: { id: string }) {
                 {ocupado === 'iniciando' && <span className="spinner spinner-botao" aria-hidden="true" />}
                 {ocupado === 'iniciando'
                   ? 'Preparando…'
-                  : cenario.ativo
+                  : scenario.active
                     ? 'Reiniciar ambiente'
-                    : cenario.concluido
+                    : scenario.completed
                       ? 'Refazer laboratório'
                       : 'Iniciar ambiente'}
               </button>
@@ -166,7 +166,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
               <p className="acao-ajuda">A verificação será liberada depois que o ambiente iniciar.</p>
             )}
 
-            {cenario.ativo && !diretorio && (
+            {scenario.active && !diretorio && (
               <p className="acao-ajuda">Este ambiente já estava ativo. Reinicie apenas se precisar recriar <code>work/</code>.</p>
             )}
 
@@ -188,10 +188,10 @@ export function PaginaDoCenario({ id }: { id: string }) {
               </div>
             )}
 
-            {erro && <p className="erro" role="alert">{erro}</p>}
+            {error && <p className="erro" role="alert">{error}</p>}
           </section>
 
-          {resultado && <ChecklistDeVerificacao resultado={resultado} />}
+          {result && <ChecklistDeVerificacao result={result} />}
 
           <SumarioDaAula secoes={secoes} rotulo="Neste Cenário" />
         </aside>
@@ -202,7 +202,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
             <p><strong>Os comandos rodam no seu terminal.</strong> Esta página explica o exercício e verifica o resultado na sua máquina.</p>
           </div>
 
-          <ConteudoMarkdown markdown={cenario.markdown} />
+          <ConteudoMarkdown markdown={scenario.markdown} />
         </article>
       </div>
     </div>

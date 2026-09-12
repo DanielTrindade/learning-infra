@@ -1,36 +1,36 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import {
-  listarTrilhas,
-  type CenarioResumo,
-  type FundamentosResumo,
-  type TrilhaResumo,
+  listTracks,
+  type ScenarioSummary,
+  type FundamentalsSummary,
+  type TrackSummary,
 } from './api'
 import { glifoDaTrilha } from './identidadeDaTrilha'
 import {
-  carregarTrilhaAtual,
-  estadoDoCenario,
-  limparTrilhaAtual,
-  numeroDoCenario,
-  rotulosDificuldade,
-  rotulosEstado,
-  salvarTrilhaAtual,
-  type EstadoDoCenario,
+  loadCurrentTrack,
+  scenarioState,
+  clearCurrentTrack,
+  scenarioNumber,
+  difficultyLabels,
+  stateLabels,
+  saveCurrentTrack,
+  type ScenarioState,
 } from './progresso'
 
-type Filtro = 'todos' | EstadoDoCenario
+type Filtro = 'todos' | ScenarioState
 
-type ResumoDaTrilha = {
+type TrackSummaryView = {
   id: string
-  nome: string
-  aulas: CenarioResumo[]
-  fundamentos: FundamentosResumo | null
-  concluidas: number
-  emAndamento: number
-  naoIniciadas: number
+  name: string
+  aulas: ScenarioSummary[]
+  fundamentals: FundamentalsSummary | null
+  completedCount: number
+  inProgress: number
+  notStarted: number
   total: number
-  percentual: number
-  concluida: boolean
-  temProgresso: boolean
+  score: number
+  allCompleted: boolean
+  hasProgress: boolean
 }
 
 const CHAVE_TRILHAS_ABERTAS = 'learning-infra:trilhas-abertas:v2'
@@ -38,9 +38,9 @@ const CHAVE_TRILHAS_RESTAURADAS = 'learning-infra:trilhas-restauradas:v1'
 
 const filtros: { id: Filtro; rotulo: string }[] = [
   { id: 'todos', rotulo: 'Todos' },
-  { id: 'andamento', rotulo: 'Em andamento' },
-  { id: 'concluido', rotulo: 'Concluídos' },
-  { id: 'nao-iniciado', rotulo: 'Não iniciados' },
+  { id: 'in-progress', rotulo: 'Em andamento' },
+  { id: 'completed', rotulo: 'Concluídos' },
+  { id: 'not-started', rotulo: 'Não iniciados' },
 ]
 
 function carregarTrilhasAbertas(): Set<string> | null {
@@ -48,18 +48,18 @@ function carregarTrilhasAbertas(): Set<string> | null {
     const valor = localStorage.getItem(CHAVE_TRILHAS_ABERTAS)
     if (valor === null) return null
 
-    const trilhas = JSON.parse(valor)
-    return Array.isArray(trilhas) && trilhas.every((trilha) => typeof trilha === 'string')
-      ? new Set(trilhas)
+    const tracks = JSON.parse(valor)
+    return Array.isArray(tracks) && tracks.every((track) => typeof track === 'string')
+      ? new Set(tracks)
       : null
   } catch {
     return null
   }
 }
 
-function salvarTrilhasAbertas(trilhas: Set<string>) {
+function salvarTrilhasAbertas(tracks: Set<string>) {
   try {
-    localStorage.setItem(CHAVE_TRILHAS_ABERTAS, JSON.stringify([...trilhas]))
+    localStorage.setItem(CHAVE_TRILHAS_ABERTAS, JSON.stringify([...tracks]))
   } catch {
     // A navegação continua funcionando quando o browser bloqueia armazenamento local.
   }
@@ -70,55 +70,55 @@ function carregarTrilhasRestauradas(): Set<string> | null {
     const valor = localStorage.getItem(CHAVE_TRILHAS_RESTAURADAS)
     if (valor === null) return null
 
-    const trilhas = JSON.parse(valor)
-    return Array.isArray(trilhas) && trilhas.every((trilha) => typeof trilha === 'string')
-      ? new Set(trilhas)
+    const tracks = JSON.parse(valor)
+    return Array.isArray(tracks) && tracks.every((track) => typeof track === 'string')
+      ? new Set(tracks)
       : null
   } catch {
     return null
   }
 }
 
-function salvarTrilhasRestauradas(trilhas: Set<string>) {
+function salvarTrilhasRestauradas(tracks: Set<string>) {
   try {
-    localStorage.setItem(CHAVE_TRILHAS_RESTAURADAS, JSON.stringify([...trilhas]))
+    localStorage.setItem(CHAVE_TRILHAS_RESTAURADAS, JSON.stringify([...tracks]))
   } catch {
     // A navegação continua funcionando quando o browser bloqueia armazenamento local.
   }
 }
 
-function estadoDosFundamentos(fundamentos: FundamentosResumo): EstadoDoCenario {
-  if (fundamentos.estado === 'CONCLUIDO') return 'concluido'
-  if (fundamentos.estado === 'EM_ANDAMENTO') return 'andamento'
-  return 'nao-iniciado'
+function fundamentalsState(fundamentals: FundamentalsSummary): ScenarioState {
+  if (fundamentals.state === 'COMPLETED') return 'completed'
+  if (fundamentals.state === 'IN_PROGRESS') return 'in-progress'
+  return 'not-started'
 }
 
-function resumirTrilha(trilha: TrilhaResumo): ResumoDaTrilha {
-  const emAndamentoNosCenarios = trilha.cenarios
-    .filter((cenario) => estadoDoCenario(cenario) === 'andamento').length
-  const fundamentosEmAndamento = trilha.fundamentos?.estado === 'EM_ANDAMENTO' ? 1 : 0
-  const emAndamento = emAndamentoNosCenarios + fundamentosEmAndamento
-  const naoIniciadas = trilha.total - trilha.concluidos - emAndamento
+function summarizeTrack(track: TrackSummary): TrackSummaryView {
+  const emAndamentoNosCenarios = track.scenarios
+    .filter((scenario) => scenarioState(scenario) === 'in-progress').length
+  const fundamentosEmAndamento = track.fundamentals?.state === 'IN_PROGRESS' ? 1 : 0
+  const inProgress = emAndamentoNosCenarios + fundamentosEmAndamento
+  const notStarted = track.total - track.completed - inProgress
 
   return {
-    id: trilha.id,
-    nome: trilha.titulo,
-    aulas: trilha.cenarios,
-    fundamentos: trilha.fundamentos,
-    concluidas: trilha.concluidos,
-    emAndamento,
-    naoIniciadas,
-    total: trilha.total,
-    percentual: trilha.percentual,
-    concluida: trilha.concluida,
-    temProgresso: trilha.concluidos > 0 || emAndamento > 0,
+    id: track.id,
+    name: track.title,
+    aulas: track.scenarios,
+    fundamentals: track.fundamentals,
+    completedCount: track.completed,
+    inProgress,
+    notStarted,
+    total: track.total,
+    score: track.progress,
+    allCompleted: track.allCompleted,
+    hasProgress: track.completed > 0 || inProgress > 0,
   }
 }
 
-function MarcadorDeEstado({ estado }: { estado: EstadoDoCenario }) {
+function MarcadorDeEstado({ state }: { state: ScenarioState }) {
   return (
-    <span className={`marcador-estado marcador-${estado}`} aria-hidden="true">
-      {estado === 'concluido' ? '✓' : estado === 'andamento' ? '●' : ''}
+    <span className={`marcador-estado marcador-${state}`} aria-hidden="true">
+      {state === 'completed' ? '✓' : state === 'in-progress' ? '●' : ''}
     </span>
   )
 }
@@ -134,19 +134,19 @@ function EstadoDeCarregamento() {
 }
 
 function BarraDeProgressoLinear({
-  percentual,
-  emAndamento,
+  score,
+  inProgress,
   total,
   rotulo,
   grande,
 }: {
-  percentual: number
-  emAndamento: number
+  score: number
+  inProgress: number
   total: number
   rotulo: string
   grande?: boolean
 }) {
-  const percentualComAndamento = Math.min(100, percentual + (emAndamento / Math.max(total, 1)) * 100)
+  const percentualComAndamento = Math.min(100, score + (inProgress / Math.max(total, 1)) * 100)
   return (
     <div className={grande ? 'barra-linear barra-linear-grande' : 'barra-linear'} role="img" aria-label={rotulo}>
       <span
@@ -155,29 +155,29 @@ function BarraDeProgressoLinear({
       />
       <span
         className="barra-linear-concluido"
-        style={{ '--fator': percentual / 100 } as CSSProperties}
+        style={{ '--fator': score / 100 } as CSSProperties}
       />
     </div>
   )
 }
 
-function ResumoVisualDaTrilha({ resumo }: { resumo: ResumoDaTrilha }) {
+function ResumoVisualDaTrilha({ resumo }: { resumo: TrackSummaryView }) {
   return (
     <div className="trilha-progresso">
       <div className="trilha-progresso-topo">
-        <strong>{resumo.percentual}%</strong>
-        <span>{resumo.concluidas} de {resumo.total} concluídos</span>
+        <strong>{resumo.score}%</strong>
+        <span>{resumo.completedCount} de {resumo.total} concluídos</span>
       </div>
       <BarraDeProgressoLinear
-        percentual={resumo.percentual}
-        emAndamento={resumo.emAndamento}
+        score={resumo.score}
+        inProgress={resumo.inProgress}
         total={resumo.total}
-        rotulo={`${resumo.percentual}% da trilha concluída`}
+        rotulo={`${resumo.score}% da trilha concluída`}
       />
       <div className="trilha-estados" aria-hidden="true">
-        <span className="trilha-estado-concluido"><b>{resumo.concluidas}</b> concluídos</span>
-        <span className="trilha-estado-andamento"><b>{resumo.emAndamento}</b> em andamento</span>
-        <span className="trilha-estado-nao-iniciado"><b>{resumo.naoIniciadas}</b> a iniciar</span>
+        <span className="trilha-estado-concluido"><b>{resumo.completedCount}</b> concluídos</span>
+        <span className="trilha-estado-andamento"><b>{resumo.inProgress}</b> em andamento</span>
+        <span className="trilha-estado-nao-iniciado"><b>{resumo.notStarted}</b> a iniciar</span>
       </div>
     </div>
   )
@@ -185,37 +185,37 @@ function ResumoVisualDaTrilha({ resumo }: { resumo: ResumoDaTrilha }) {
 
 function ListaDeCenarios({
   aulas,
-  fundamentos,
+  fundamentals,
   aberta,
   id,
-  idDaTrilha,
+  trackId,
   podeIniciar,
 }: {
-  aulas: CenarioResumo[]
-  fundamentos: FundamentosResumo | null
+  aulas: ScenarioSummary[]
+  fundamentals: FundamentalsSummary | null
   aberta: boolean
   id: string
-  idDaTrilha: string
+  trackId: string
   podeIniciar: boolean
 }) {
   return (
     <div className={aberta ? 'cenarios-envelope' : 'cenarios-envelope cenarios-envelope-fechado'}>
       <ol className="cenarios" id={id}>
-      {fundamentos && (
-        <li className={`cenario fundamentos-item cenario-${estadoDosFundamentos(fundamentos)}`}>
+      {fundamentals && (
+        <li className={`cenario fundamentos-item cenario-${fundamentalsState(fundamentals)}`}>
           <span className="linha-progresso" aria-hidden="true" />
-          <MarcadorDeEstado estado={estadoDosFundamentos(fundamentos)} />
-          <a href={`#/trilhas/${idDaTrilha}/fundamentos`}>
+          <MarcadorDeEstado state={fundamentalsState(fundamentals)} />
+          <a href={`#/trilhas/${trackId}/fundamentos`}>
             <span className="cenario-numero">Fundamentos</span>
             <span className="cenario-corpo">
-              <strong>{fundamentos.titulo}</strong>
+              <strong>{fundamentals.title}</strong>
               <span className="cenario-meta">
-                <span className={`estado-texto estado-${estadoDosFundamentos(fundamentos)}`}>
-                  {rotulosEstado[estadoDosFundamentos(fundamentos)]}
+                <span className={`estado-texto estado-${fundamentalsState(fundamentals)}`}>
+                  {stateLabels[fundamentalsState(fundamentals)]}
                 </span>
                 <span>artigo + Questionário</span>
-                {fundamentos.tentativas > 0 && (
-                  <span>melhor resultado {fundamentos.melhorPercentual}%</span>
+                {fundamentals.attempts > 0 && (
+                  <span>melhor result {fundamentals.bestScore}%</span>
                 )}
               </span>
             </span>
@@ -223,18 +223,18 @@ function ListaDeCenarios({
           </a>
         </li>
       )}
-      {aulas.map((cenario) => {
-        const estado = estadoDoCenario(cenario)
+      {aulas.map((scenario) => {
+        const state = scenarioState(scenario)
         const conteudo = (
           <>
-            <span className="cenario-numero">Cenário {numeroDoCenario(cenario.id)}</span>
+            <span className="cenario-numero">Cenário {scenarioNumber(scenario.id)}</span>
             <span className="cenario-corpo">
-              <strong>{cenario.titulo}</strong>
+              <strong>{scenario.title}</strong>
               <span className="cenario-meta">
-                <span className={`estado-texto estado-${estado}`}>{rotulosEstado[estado]}</span>
-                <span>{rotulosDificuldade[cenario.dificuldade]}</span>
+                <span className={`estado-texto estado-${state}`}>{stateLabels[state]}</span>
+                <span>{difficultyLabels[scenario.difficulty]}</span>
                 <span>
-                  {cenario.quantidadeDeAsercoes} {cenario.quantidadeDeAsercoes === 1 ? 'verificação' : 'verificações'}
+                  {scenario.assertionCount} {scenario.assertionCount === 1 ? 'verificação' : 'verificações'}
                 </span>
                 {!podeIniciar && <span>adira para iniciar</span>}
               </span>
@@ -244,11 +244,11 @@ function ListaDeCenarios({
         )
 
         return (
-          <li key={cenario.id} className={`cenario cenario-${estado}`}>
+          <li key={scenario.id} className={`cenario cenario-${state}`}>
             <span className="linha-progresso" aria-hidden="true" />
-            <MarcadorDeEstado estado={estado} />
+            <MarcadorDeEstado state={state} />
             {podeIniciar
-              ? <a href={`#/cenarios/${cenario.id}`}>{conteudo}</a>
+              ? <a href={`#/cenarios/${scenario.id}`}>{conteudo}</a>
               : <div className="cenario-preview">{conteudo}</div>}
           </li>
         )
@@ -261,7 +261,7 @@ function ListaDeCenarios({
 function CartaoDeTrilha({
   resumo,
   aulas,
-  fundamentos,
+  fundamentals,
   aberta,
   ehAtual,
   podeIniciar,
@@ -269,9 +269,9 @@ function CartaoDeTrilha({
   acoes,
   onAlternar,
 }: {
-  resumo: ResumoDaTrilha
-  aulas: CenarioResumo[]
-  fundamentos: FundamentosResumo | null
+  resumo: TrackSummaryView
+  aulas: ScenarioSummary[]
+  fundamentals: FundamentalsSummary | null
   aberta: boolean
   ehAtual: boolean
   podeIniciar: boolean
@@ -297,7 +297,7 @@ function CartaoDeTrilha({
         <div className="trilha-identidade">
           <span className="trilha-icone" aria-hidden="true">{glifoDaTrilha(resumo.id)}</span>
           <div>
-            <h3 className="trilha-titulo" id={idDoTitulo}>{resumo.nome}</h3>
+            <h3 className="trilha-titulo" id={idDoTitulo}>{resumo.name}</h3>
             <span className="trilha-legenda">{legenda}</span>
           </div>
         </div>
@@ -311,7 +311,7 @@ function CartaoDeTrilha({
             className="trilha-recolher"
             aria-expanded={aberta}
             aria-controls={idDosCenarios}
-            aria-label={`${aberta ? 'Recolher' : 'Mostrar'} aulas da trilha ${resumo.nome}`}
+            aria-label={`${aberta ? 'Recolher' : 'Mostrar'} aulas da trilha ${resumo.name}`}
             title={aberta ? 'Recolher aulas' : 'Mostrar aulas'}
             onClick={onAlternar}
           >
@@ -335,10 +335,10 @@ function CartaoDeTrilha({
 
       <ListaDeCenarios
         aulas={aulas}
-        fundamentos={fundamentos}
+        fundamentals={fundamentals}
         aberta={aberta}
         id={idDosCenarios}
-        idDaTrilha={resumo.id}
+        trackId={resumo.id}
         podeIniciar={podeIniciar}
       />
     </section>
@@ -346,10 +346,10 @@ function CartaoDeTrilha({
 }
 
 export function Catalogo() {
-  const [trilhas, setTrilhas] = useState<TrilhaResumo[] | null>(null)
-  const [erro, setErro] = useState<string | null>(null)
+  const [tracks, setTrilhas] = useState<TrackSummary[] | null>(null)
+  const [error, setErro] = useState<string | null>(null)
   const [filtro, setFiltro] = useState<Filtro>('todos')
-  const [trilhaAtual, setTrilhaAtual] = useState<string | null>(carregarTrilhaAtual)
+  const [trilhaAtual, setTrilhaAtual] = useState<string | null>(loadCurrentTrack)
   const [trilhasAbertas, setTrilhasAbertas] = useState<Set<string> | null>(carregarTrilhasAbertas)
   const [trilhasRestauradas, setTrilhasRestauradas] = useState<Set<string> | null>(
     carregarTrilhasRestauradas,
@@ -359,23 +359,23 @@ export function Catalogo() {
   )
 
   useEffect(() => {
-    listarTrilhas().then(setTrilhas).catch((e) => setErro(String(e)))
+    listTracks().then(setTrilhas).catch((e) => setErro(String(e)))
   }, [])
 
-  if (erro) {
+  if (error) {
     return (
       <div className="estado-pagina estado-erro" role="alert">
         <span className="estado-icone" aria-hidden="true">!</span>
         <strong>Não foi possível carregar o catálogo.</strong>
         <span>Confira se o backend está rodando na porta 8099 e atualize a página.</span>
-        <code>{erro}</code>
+        <code>{error}</code>
       </div>
     )
   }
 
-  if (!trilhas) return <EstadoDeCarregamento />
+  if (!tracks) return <EstadoDeCarregamento />
 
-  if (trilhas.length === 0) {
+  if (tracks.length === 0) {
     return (
       <div className="estado-pagina">
         <span className="estado-icone" aria-hidden="true">＋</span>
@@ -385,103 +385,103 @@ export function Catalogo() {
     )
   }
 
-  const resumos = trilhas.map(resumirTrilha)
+  const resumos = tracks.map(summarizeTrack)
   const trilhasRestauradasEfetivas = trilhasRestauradas ?? new Set<string>()
   const trilhasConcluidas = resumos.filter(
-    (resumo) => resumo.concluida && !trilhasRestauradasEfetivas.has(resumo.id),
+    (resumo) => resumo.allCompleted && !trilhasRestauradasEfetivas.has(resumo.id),
   )
   const trilhasDisponiveis = resumos.filter(
-    (resumo) => !resumo.concluida || trilhasRestauradasEfetivas.has(resumo.id),
+    (resumo) => !resumo.allCompleted || trilhasRestauradasEfetivas.has(resumo.id),
   )
   const trilhaDoAmbienteAtivo = trilhasDisponiveis.find((resumo) =>
-    resumo.aulas.some((cenario) => cenario.ativo),
+    resumo.aulas.some((scenario) => scenario.active),
   )
-  const resumoDaTrilhaAtual = trilhasDisponiveis.find((resumo) => resumo.id === trilhaAtual)
+  const currentTrackView = trilhasDisponiveis.find((resumo) => resumo.id === trilhaAtual)
     ?? trilhaDoAmbienteAtivo
     ?? null
-  const idDaTrilhaAtual = resumoDaTrilhaAtual?.id ?? null
+  const currentTrackId = currentTrackView?.id ?? null
   const trilhasAbertasEfetivas = trilhasAbertas
-    ?? new Set(idDaTrilhaAtual ? [idDaTrilhaAtual] : [])
+    ?? new Set(currentTrackId ? [currentTrackId] : [])
 
   const aulasDisponiveis = trilhasDisponiveis.flatMap((resumo) => resumo.aulas)
   const cenariosVisiveis = aulasDisponiveis.filter(
-    (cenario) => filtro === 'todos' || estadoDoCenario(cenario) === filtro,
+    (scenario) => filtro === 'todos' || scenarioState(scenario) === filtro,
   )
   const contagens: Record<Filtro, number> = {
     todos: aulasDisponiveis.length,
-    concluido: aulasDisponiveis.filter((cenario) => estadoDoCenario(cenario) === 'concluido').length,
-    andamento: aulasDisponiveis.filter((cenario) => estadoDoCenario(cenario) === 'andamento').length,
-    'nao-iniciado': aulasDisponiveis.filter((cenario) => estadoDoCenario(cenario) === 'nao-iniciado').length,
+    completed: aulasDisponiveis.filter((scenario) => scenarioState(scenario) === 'completed').length,
+    'in-progress': aulasDisponiveis.filter((scenario) => scenarioState(scenario) === 'in-progress').length,
+    'not-started': aulasDisponiveis.filter((scenario) => scenarioState(scenario) === 'not-started').length,
   }
 
-  const focoDaTrilhaAtual = resumoDaTrilhaAtual?.aulas.find(
-    (cenario) => estadoDoCenario(cenario) === 'andamento',
-  ) ?? resumoDaTrilhaAtual?.aulas.find(
-    (cenario) => estadoDoCenario(cenario) === 'nao-iniciado',
-  ) ?? resumoDaTrilhaAtual?.aulas[0]
-  const fundamentosPendentes = resumoDaTrilhaAtual?.fundamentos
-    && resumoDaTrilhaAtual.fundamentos.estado !== 'CONCLUIDO'
+  const focoDaTrilhaAtual = currentTrackView?.aulas.find(
+    (scenario) => scenarioState(scenario) === 'in-progress',
+  ) ?? currentTrackView?.aulas.find(
+    (scenario) => scenarioState(scenario) === 'not-started',
+  ) ?? currentTrackView?.aulas[0]
+  const fundamentosPendentes = currentTrackView?.fundamentals
+    && currentTrackView.fundamentals.state !== 'COMPLETED'
   const hrefDoFoco = fundamentosPendentes
-    ? `#/trilhas/${resumoDaTrilhaAtual?.id}/fundamentos`
+    ? `#/trilhas/${currentTrackView?.id}/fundamentos`
     : focoDaTrilhaAtual
       ? `#/cenarios/${focoDaTrilhaAtual.id}`
       : null
 
   function alterarTrilhasAbertas(transformar: (atuais: Set<string>) => Set<string>) {
     setTrilhasAbertas((atuais) => {
-      const base = atuais ?? new Set(idDaTrilhaAtual ? [idDaTrilhaAtual] : [])
+      const base = atuais ?? new Set(currentTrackId ? [currentTrackId] : [])
       const proximas = transformar(new Set(base))
       salvarTrilhasAbertas(proximas)
       return proximas
     })
   }
 
-  function aderirATrilha(trilha: string) {
-    setTrilhaAtual(trilha)
-    salvarTrilhaAtual(trilha)
+  function aderirATrilha(track: string) {
+    setTrilhaAtual(track)
+    saveCurrentTrack(track)
     setFiltro('todos')
     setTrilhasRecolhidasNoFiltro(new Set())
-    alterarTrilhasAbertas(() => new Set([trilha]))
+    alterarTrilhasAbertas(() => new Set([track]))
   }
 
-  function restaurarTrilha(trilha: string) {
+  function restaurarTrilha(track: string) {
     setTrilhasRestauradas((atuais) => {
       const proximas = new Set(atuais ?? [])
-      proximas.add(trilha)
+      proximas.add(track)
       salvarTrilhasRestauradas(proximas)
       return proximas
     })
-    aderirATrilha(trilha)
-    window.requestAnimationFrame(() => rolarAte(`titulo-trilha-${trilha}`))
+    aderirATrilha(track)
+    window.requestAnimationFrame(() => rolarAte(`titulo-trilha-${track}`))
   }
 
-  function arquivarTrilha(trilha: string) {
+  function arquivarTrilha(track: string) {
     setTrilhasRestauradas((atuais) => {
       const proximas = new Set(atuais ?? [])
-      proximas.delete(trilha)
+      proximas.delete(track)
       salvarTrilhasRestauradas(proximas)
       return proximas
     })
-    if (trilhaAtual === trilha) {
+    if (trilhaAtual === track) {
       setTrilhaAtual(null)
-      limparTrilhaAtual()
+      clearCurrentTrack()
     }
   }
 
-  function alternarTrilha(trilha: string) {
+  function alternarTrilha(track: string) {
     if (filtro !== 'todos') {
       setTrilhasRecolhidasNoFiltro((atuais) => {
         const proximas = new Set(atuais)
-        if (proximas.has(trilha)) proximas.delete(trilha)
-        else proximas.add(trilha)
+        if (proximas.has(track)) proximas.delete(track)
+        else proximas.add(track)
         return proximas
       })
       return
     }
 
     alterarTrilhasAbertas((abertas) => {
-      if (abertas.has(trilha)) abertas.delete(trilha)
-      else abertas.add(trilha)
+      if (abertas.has(track)) abertas.delete(track)
+      else abertas.add(track)
       return abertas
     })
   }
@@ -491,10 +491,10 @@ export function Catalogo() {
     setTrilhasRecolhidasNoFiltro(new Set())
   }
 
-  function alternarAberturaArquivada(trilha: string) {
+  function alternarAberturaArquivada(track: string) {
     alterarTrilhasAbertas((abertas) => {
-      if (abertas.has(trilha)) abertas.delete(trilha)
-      else abertas.add(trilha)
+      if (abertas.has(track)) abertas.delete(track)
+      else abertas.add(track)
       return abertas
     })
   }
@@ -515,24 +515,24 @@ export function Catalogo() {
         <span>{resumos.length} {resumos.length === 1 ? 'trilha disponível' : 'trilhas disponíveis'}</span>
       </header>
 
-      {resumoDaTrilhaAtual ? (
+      {currentTrackView ? (
         <section className="painel-progresso painel-progresso-atual" aria-labelledby="titulo-progresso">
           <div className="progresso-cabecalho">
             <div>
               <p className="eyebrow">Em foco</p>
-              <h2 id="titulo-progresso">{resumoDaTrilhaAtual.nome}</h2>
+              <h2 id="titulo-progresso">{currentTrackView.name}</h2>
               <p className="progresso-proximo-passo">
                 {fundamentosPendentes
                   ? 'Comece pelos Fundamentos para preparar o modelo mental da trilha.'
-                  : focoDaTrilhaAtual && estadoDoCenario(focoDaTrilhaAtual) === 'andamento'
+                  : focoDaTrilhaAtual && scenarioState(focoDaTrilhaAtual) === 'in-progress'
                     ? 'Retome o Cenário que já está em andamento.'
                     : 'Seu próximo Cenário está pronto para começar.'}
               </p>
             </div>
             <div className="progresso-acoes">
               <p className="progresso-resumo">
-                <strong>{resumoDaTrilhaAtual.percentual}%</strong>
-                <span>{resumoDaTrilhaAtual.concluidas} de {resumoDaTrilhaAtual.total} concluídos</span>
+                <strong>{currentTrackView.score}%</strong>
+                <span>{currentTrackView.completedCount} de {currentTrackView.total} concluídos</span>
               </p>
               {hrefDoFoco && (
                 <a className="botao botao-primario" href={hrefDoFoco}>
@@ -545,24 +545,24 @@ export function Catalogo() {
 
           <BarraDeProgressoLinear
             grande
-            percentual={resumoDaTrilhaAtual.percentual}
-            emAndamento={resumoDaTrilhaAtual.emAndamento}
-            total={resumoDaTrilhaAtual.total}
-            rotulo={`${resumoDaTrilhaAtual.percentual}% da trilha ${resumoDaTrilhaAtual.nome} concluída`}
+            score={currentTrackView.score}
+            inProgress={currentTrackView.inProgress}
+            total={currentTrackView.total}
+            rotulo={`${currentTrackView.score}% da trilha ${currentTrackView.name} concluída`}
           />
 
           <dl className="resumo-estados">
             <div className="resumo-concluido">
               <dt>Concluídos</dt>
-              <dd>{resumoDaTrilhaAtual.concluidas}</dd>
+              <dd>{currentTrackView.completedCount}</dd>
             </div>
             <div className="resumo-andamento">
               <dt>Em andamento</dt>
-              <dd>{resumoDaTrilhaAtual.emAndamento}</dd>
+              <dd>{currentTrackView.inProgress}</dd>
             </div>
             <div className="resumo-nao-iniciado">
               <dt>Não iniciados</dt>
-              <dd>{resumoDaTrilhaAtual.naoIniciadas}</dd>
+              <dd>{currentTrackView.notStarted}</dd>
             </div>
           </dl>
         </section>
@@ -610,23 +610,23 @@ export function Catalogo() {
             </div>
           ) : (
             trilhasDisponiveis.map((resumo) => {
-              const aulas = resumo.aulas.filter((cenario) =>
-                cenariosVisiveis.some((visivel) => visivel.id === cenario.id),
+              const aulas = resumo.aulas.filter((scenario) =>
+                cenariosVisiveis.some((visivel) => visivel.id === scenario.id),
               )
               if (aulas.length === 0) return null
 
-              const ehAtual = resumo.id === idDaTrilhaAtual
+              const ehAtual = resumo.id === currentTrackId
               const aberta = filtro === 'todos'
                 ? trilhasAbertasEfetivas.has(resumo.id)
                 : !trilhasRecolhidasNoFiltro.has(resumo.id)
-              const restaurada = resumo.concluida && trilhasRestauradasEfetivas.has(resumo.id)
+              const restaurada = resumo.allCompleted && trilhasRestauradasEfetivas.has(resumo.id)
 
               return (
                 <CartaoDeTrilha
                   key={resumo.id}
                   resumo={resumo}
                   aulas={aulas}
-                  fundamentos={filtro === 'todos' ? resumo.fundamentos : null}
+                  fundamentals={filtro === 'todos' ? resumo.fundamentals : null}
                   aberta={aberta}
                   ehAtual={ehAtual}
                   podeIniciar={ehAtual}
@@ -646,7 +646,7 @@ export function Catalogo() {
                           className="botao trilha-aderir"
                           onClick={() => aderirATrilha(resumo.id)}
                         >
-                          {resumo.temProgresso ? 'Retomar trilha' : 'Aderir à trilha'}
+                          {resumo.hasProgress ? 'Retomar trilha' : 'Aderir à trilha'}
                         </button>
                       )}
                       {restaurada && (
@@ -682,7 +682,7 @@ export function Catalogo() {
                 key={resumo.id}
                 resumo={resumo}
                 aulas={resumo.aulas}
-                fundamentos={resumo.fundamentos}
+                fundamentals={resumo.fundamentals}
                 aberta={trilhasAbertasEfetivas.has(resumo.id)}
                 ehAtual={false}
                 podeIniciar
@@ -694,7 +694,7 @@ export function Catalogo() {
                     className="botao trilha-restaurar"
                     onClick={() => restaurarTrilha(resumo.id)}
                   >
-                    Restaurar trilha
+                    Restaurar track
                   </button>
                 }
               />

@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
-import type { ResultadoDaVerificacao } from './api'
+import type { VerificationResult } from './api'
 
-export function ChecklistDeVerificacao({ resultado }: { resultado: ResultadoDaVerificacao }) {
+export function ChecklistDeVerificacao({ result }: { result: VerificationResult }) {
   const referencia = useRef<HTMLElement>(null)
-  const aprovadas = resultado.asercoes.filter((asercao) => asercao.passou).length
-  const percentual = Math.round((aprovadas / resultado.asercoes.length) * 100)
-  const primeiraFalha = resultado.asercoes.find((asercao) => !asercao.passou)
+  const aprovadas = result.assertions.filter((assertion) => assertion.passed).length
+  const score = Math.round((aprovadas / result.assertions.length) * 100)
+  const firstFailure = result.assertions.find((assertion) => !assertion.passed)
 
   // O resultado é a resposta a um clique: leva o foco e a rolagem até ele, em
   // vez de contar que a pessoa perceba um painel aparecendo fora da vista.
@@ -17,45 +17,45 @@ export function ChecklistDeVerificacao({ resultado }: { resultado: ResultadoDaVe
       block: 'nearest',
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     })
-  }, [resultado])
+  }, [result])
 
   return (
     <section
       ref={referencia}
       tabIndex={-1}
-      className={`checklist ${resultado.concluido ? 'checklist-concluido' : 'checklist-pendente'}`}
+      className={`checklist ${result.completed ? 'checklist-concluido' : 'checklist-pendente'}`}
       aria-live="polite"
     >
       <header>
         <span className="checklist-icone" aria-hidden="true">
-          {resultado.concluido ? '✓' : '↻'}
+          {result.completed ? '✓' : '↻'}
         </span>
         <div>
-          <p>{resultado.concluido ? 'Cenário concluído' : 'Ainda falta ajustar'}</p>
+          <p>{result.completed ? 'Cenário concluído' : 'Ainda falta ajustar'}</p>
           <span>
-            {aprovadas} de {resultado.asercoes.length} verificações passaram
-            {!resultado.concluido && primeiraFalha ? '. Comece pela primeira em vermelho.' : ''}
+            {aprovadas} de {result.assertions.length} verificações passaram
+            {!result.completed && firstFailure ? '. Comece pela primeira em vermelho.' : ''}
           </span>
         </div>
       </header>
 
       <div className="checklist-barra" aria-hidden="true">
-        <span style={{ transform: `scaleX(${percentual / 100})` }} />
+        <span style={{ transform: `scaleX(${score / 100})` }} />
       </div>
 
       <ul>
-        {resultado.asercoes.map((asercao) => (
-          <li key={asercao.descricao} className={asercao.passou ? 'passou' : 'falhou'}>
-            <span className="check-asserção" aria-hidden="true">{asercao.passou ? '✓' : '×'}</span>
+        {result.assertions.map((assertion) => (
+          <li key={assertion.description} className={assertion.passed ? 'passou' : 'falhou'}>
+            <span className="check-asserção" aria-hidden="true">{assertion.passed ? '✓' : '×'}</span>
             <span>
-              <strong>{asercao.descricao}</strong>
-              {!asercao.passou && asercao.detalhe && <small>{asercao.detalhe}</small>}
+              <strong>{assertion.description}</strong>
+              {!assertion.passed && assertion.detail && <small>{assertion.detail}</small>}
             </span>
           </li>
         ))}
       </ul>
 
-      {resultado.concluido && (
+      {result.completed && (
         <a className="proxima-aula" href="#/aprender">Ver próximos Cenários <span aria-hidden="true">›</span></a>
       )}
     </section>

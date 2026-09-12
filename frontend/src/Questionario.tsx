@@ -1,16 +1,16 @@
 import { useState, type FormEvent } from 'react'
 import {
-  responderQuestionario,
-  type QuestaoDoQuestionario,
-  type ResultadoDoQuestionario,
+  submitQuestionnaire,
+  type Question,
+  type QuestionnaireResult,
 } from './api'
-import { ResultadoDoQuestionario as Resultado } from './ResultadoDoQuestionario'
+import { QuestionnaireResult as Resultado } from './ResultadoDoQuestionario'
 
 type Props = {
-  idDaTrilha: string
-  questoes: QuestaoDoQuestionario[]
+  trackId: string
+  questions: Question[]
   primeiroCenario: string | null
-  aoResultado: (resultado: ResultadoDoQuestionario) => void
+  aoResultado: (result: QuestionnaireResult) => void
   aoRevisar: (id: string) => void
 }
 
@@ -25,29 +25,29 @@ function embaralhar<T>(itens: T[]): T[] {
   return copia
 }
 
-function prepararQuestoes(questoes: QuestaoDoQuestionario[]) {
-  return embaralhar(questoes).map((questao) => ({
+function prepararQuestoes(questions: Question[]) {
+  return embaralhar(questions).map((questao) => ({
     ...questao,
-    alternativas: embaralhar(questao.alternativas),
+    options: embaralhar(questao.options),
   }))
 }
 
 export function Questionario({
-  idDaTrilha,
-  questoes,
+  trackId,
+  questions,
   primeiroCenario,
   aoResultado,
   aoRevisar,
 }: Props) {
-  const [respostas, setRespostas] = useState<Record<string, string>>({})
-  const [questoesOrdenadas, setQuestoesOrdenadas] = useState(() => prepararQuestoes(questoes))
-  const [resultado, setResultado] = useState<ResultadoDoQuestionario | null>(null)
-  const [erro, setErro] = useState<string | null>(null)
+  const [answers, setRespostas] = useState<Record<string, string>>({})
+  const [questoesOrdenadas, setQuestoesOrdenadas] = useState(() => prepararQuestoes(questions))
+  const [result, setResultado] = useState<QuestionnaireResult | null>(null)
+  const [error, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
-    const primeiraSemResposta = questoesOrdenadas.find((questao) => !respostas[questao.id])
+    const primeiraSemResposta = questoesOrdenadas.find((questao) => !answers[questao.id])
     if (primeiraSemResposta) {
       setErro('Responda todas as questões antes de conferir o resultado.')
       document.getElementById(`questao-${primeiraSemResposta.id}`)?.focus()
@@ -57,9 +57,9 @@ export function Questionario({
     setEnviando(true)
     setErro(null)
     try {
-      const novoResultado = await responderQuestionario(idDaTrilha, respostas)
-      setResultado(novoResultado)
-      aoResultado(novoResultado)
+      const newResult = await submitQuestionnaire(trackId, answers)
+      setResultado(newResult)
+      aoResultado(newResult)
     } catch (e) {
       setErro(String(e))
     } finally {
@@ -70,16 +70,16 @@ export function Questionario({
   function tentarNovamente() {
     setRespostas({})
     setResultado(null)
-    setQuestoesOrdenadas(prepararQuestoes(questoes))
+    setQuestoesOrdenadas(prepararQuestoes(questions))
     setErro(null)
     document.getElementById('inicio-questionario')?.scrollIntoView({ behavior: 'auto' })
   }
 
-  if (resultado) {
+  if (result) {
     return (
       <Resultado
-        resultado={resultado}
-        questoes={questoes}
+        result={result}
+        questions={questions}
         primeiroCenario={primeiroCenario}
         aoRevisar={aoRevisar}
         aoTentarNovamente={tentarNovamente}
@@ -93,30 +93,30 @@ export function Questionario({
         <fieldset key={questao.id} id={`questao-${questao.id}`} tabIndex={-1}>
           <legend>
             <span>{String(indice + 1).padStart(2, '0')}</span>
-            {questao.enunciado}
+            {questao.statement}
           </legend>
           <div className="alternativas">
-            {questao.alternativas.map((alternativa) => (
+            {questao.options.map((alternativa) => (
               <label key={alternativa.id}>
                 <input
                   type="radio"
                   name={questao.id}
                   value={alternativa.id}
-                  checked={respostas[questao.id] === alternativa.id}
+                  checked={answers[questao.id] === alternativa.id}
                   onChange={() => setRespostas((atuais) => ({
                     ...atuais,
                     [questao.id]: alternativa.id,
                   }))}
                 />
                 <span aria-hidden="true" />
-                {alternativa.texto}
+                {alternativa.text}
               </label>
             ))}
           </div>
         </fieldset>
       ))}
 
-      {erro && <p className="erro-questionario" role="alert">{erro}</p>}
+      {error && <p className="erro-questionario" role="alert">{error}</p>}
       <button className="botao botao-primario" type="submit" disabled={enviando}>
         {enviando && <span className="spinner spinner-botao" aria-hidden="true" />}
         {enviando ? 'Corrigindo…' : 'Conferir respostas'}

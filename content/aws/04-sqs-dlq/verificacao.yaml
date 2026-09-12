@@ -5,6 +5,7 @@ asercoes:
     argumentos: ["--queue-name", "learning-infra-processamento"]
     consulta: QueueUrl
     esperado: learning-infra-processamento
+    comparacao: contem
     descricao: a fila principal existe
   - tipo: aws_consulta
     servico: sqs
@@ -19,5 +20,6 @@ asercoes:
     argumentos: ["--queue-url", "http://127.0.0.1:4566/000000000000/learning-infra-processamento", "--attribute-names", "RedrivePolicy"]
     consulta: Attributes.RedrivePolicy
     esperado: learning-infra-processamento-dlq
+    comparacao: contem
     descricao: mensagens reincidentes são encaminhadas para a DLQ
 

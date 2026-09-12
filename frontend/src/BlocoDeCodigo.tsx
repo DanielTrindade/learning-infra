@@ -47,9 +47,9 @@ export function BlocoDeCodigo({ children }: { children?: ReactNode }) {
   useEffect(() => () => window.clearTimeout(temporizador.current), [])
 
   async function copiar() {
-    const texto = referenciaDoPre.current?.textContent?.replace(/\n$/, '') ?? ''
+    const text = referenciaDoPre.current?.textContent?.replace(/\n$/, '') ?? ''
     try {
-      await navigator.clipboard.writeText(texto)
+      await navigator.clipboard.writeText(text)
     } catch {
       return
     }

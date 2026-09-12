@@ -1,70 +1,70 @@
 import { useEffect, useState } from 'react'
 import {
-  buscarFundamentos,
-  listarTrilhas,
-  type FundamentosDetalhados,
-  type ResultadoDoQuestionario,
+  getFundamentals,
+  listTracks,
+  type FundamentalsDetail,
+  type QuestionnaireResult,
 } from './api'
 import { ConteudoMarkdown } from './ConteudoMarkdown'
 import { Questionario } from './Questionario'
-import { salvarTrilhaAtual } from './progresso'
+import { saveCurrentTrack } from './progresso'
 import { SumarioDaAula } from './SumarioDaAula'
 import { rolarAteSecao, secoesDoMarkdown } from './secoesDaAula'
 
-const rotulosDeEstado = {
-  NAO_INICIADO: 'Não iniciado',
-  EM_ANDAMENTO: 'Em andamento',
-  CONCLUIDO: 'Concluído',
+const stateLabels = {
+  NOT_STARTED: 'Não iniciado',
+  IN_PROGRESS: 'Em andamento',
+  COMPLETED: 'Concluído',
 } as const
 
-export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
-  const [fundamentos, setFundamentos] = useState<FundamentosDetalhados | null>(null)
+export function PaginaDeFundamentos({ trackId }: { trackId: string }) {
+  const [fundamentals, setFundamentos] = useState<FundamentalsDetail | null>(null)
   const [primeiroCenario, setPrimeiroCenario] = useState<string | null>(null)
-  const [erro, setErro] = useState<string | null>(null)
+  const [error, setErro] = useState<string | null>(null)
 
   useEffect(() => {
-    let ativo = true
+    let active = true
     setFundamentos(null)
     setErro(null)
-    Promise.all([buscarFundamentos(idDaTrilha), listarTrilhas()])
-      .then(([dados, trilhas]) => {
-        if (!ativo) return
+    Promise.all([getFundamentals(trackId), listTracks()])
+      .then(([dados, tracks]) => {
+        if (!active) return
         setFundamentos(dados)
         setPrimeiroCenario(
-          trilhas.find((trilha) => trilha.id === idDaTrilha)?.cenarios[0]?.id ?? null,
+          tracks.find((track) => track.id === trackId)?.scenarios[0]?.id ?? null,
         )
-        salvarTrilhaAtual(idDaTrilha)
+        saveCurrentTrack(trackId)
       })
       .catch((e) => {
-        if (ativo) setErro(String(e))
+        if (active) setErro(String(e))
       })
     return () => {
-      ativo = false
+      active = false
     }
-  }, [idDaTrilha])
+  }, [trackId])
 
-  function atualizarResultado(resultado: ResultadoDoQuestionario) {
+  function atualizarResultado(result: QuestionnaireResult) {
     setFundamentos((atual) => atual ? {
       ...atual,
-      estado: resultado.aprovado ? 'CONCLUIDO' : 'EM_ANDAMENTO',
-      melhorPercentual: resultado.melhorPercentual,
-      tentativas: resultado.tentativas,
+      state: result.passed ? 'COMPLETED' : 'IN_PROGRESS',
+      bestScore: result.bestScore,
+      attempts: result.attempts,
     } : atual)
   }
 
-  if (erro) {
+  if (error) {
     return (
       <div className="estado-pagina estado-erro" role="alert">
         <span className="estado-icone" aria-hidden="true">!</span>
         <strong>Não foi possível abrir os Fundamentos.</strong>
         <span>Volte ao catálogo ou confira se o backend está rodando.</span>
-        <code>{erro}</code>
+        <code>{error}</code>
         <a href="#/aprender">Voltar às Trilhas</a>
       </div>
     )
   }
 
-  if (!fundamentos) {
+  if (!fundamentals) {
     return (
       <div className="estado-pagina" role="status">
         <span className="spinner" aria-hidden="true" />
@@ -73,12 +73,12 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
     )
   }
 
-  const secoes = secoesDoMarkdown(fundamentos.markdown)
-  const estadoVisual = fundamentos.estado === 'CONCLUIDO'
-    ? 'concluido'
-    : fundamentos.estado === 'EM_ANDAMENTO'
-      ? 'andamento'
-      : 'nao-iniciado'
+  const secoes = secoesDoMarkdown(fundamentals.markdown)
+  const visualState = fundamentals.state === 'COMPLETED'
+    ? 'completed'
+    : fundamentals.state === 'IN_PROGRESS'
+      ? 'in-progress'
+      : 'not-started'
 
   return (
     <div className="pagina-aula pagina-fundamentos">
@@ -88,18 +88,18 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
         <p className="terminal-label">
           <span>Fundamentos</span>
           <i aria-hidden="true">/</i>
-          <span>{idDaTrilha}</span>
+          <span>{trackId}</span>
         </p>
-        <h1>{fundamentos.titulo}</h1>
+        <h1>{fundamentals.title}</h1>
         <p className="introducao-fundamentos">
           Entenda as decisões por trás da ferramenta, confirme o modelo mental e leve-o
           para os Cenários práticos, sem bloqueio rígido.
         </p>
         <div className="metadados-aula">
-          <span className={`status status-${estadoVisual}`}><i aria-hidden="true" />{rotulosDeEstado[fundamentos.estado]}</span>
-          <span>Aproveitamento recomendado: {fundamentos.aproveitamentoMinimo}%</span>
-          <span>{fundamentos.tentativas} {fundamentos.tentativas === 1 ? 'tentativa' : 'tentativas'}</span>
-          {fundamentos.tentativas > 0 && <span>Melhor resultado: {fundamentos.melhorPercentual}%</span>}
+          <span className={`status status-${visualState}`}><i aria-hidden="true" />{stateLabels[fundamentals.state]}</span>
+          <span>Aproveitamento recomendado: {fundamentals.minimumScore}%</span>
+          <span>{fundamentals.attempts} {fundamentals.attempts === 1 ? 'tentativa' : 'tentativas'}</span>
+          {fundamentals.attempts > 0 && <span>Melhor result: {fundamentals.bestScore}%</span>}
         </div>
       </header>
 
@@ -129,20 +129,20 @@ export function PaginaDeFundamentos({ idDaTrilha }: { idDaTrilha: string }) {
 
         <div className="coluna-fundamentos">
           <article className="conteudo-aula conteudo-fundamentos">
-            <ConteudoMarkdown markdown={fundamentos.markdown} />
+            <ConteudoMarkdown markdown={fundamentals.markdown} />
           </article>
 
           <section className="bloco-questionario" id="inicio-questionario" aria-labelledby="titulo-questionario">
             <header className="cabecalho-questionario">
               <h2 id="titulo-questionario">Teste seu modelo mental</h2>
               <p>
-                Responda as {fundamentos.questoes.length} situações sem consultar o texto.
-                O feedback indicará exatamente o que revisar.
+                Responda as {fundamentals.questions.length} situações sem consultar o text.
+                O feedback indicará exatamente o que review.
               </p>
             </header>
             <Questionario
-              idDaTrilha={idDaTrilha}
-              questoes={fundamentos.questoes}
+              trackId={trackId}
+              questions={fundamentals.questions}
               primeiroCenario={primeiroCenario}
               aoResultado={atualizarResultado}
               aoRevisar={rolarAteSecao}

@@ -3,7 +3,7 @@ server:
   # 8080 é deliberadamente evitada: é a porta que os Cenários de Docker usam.
   port: 8099
 
-learninginfra:
-  diretorio-de-conteudo: ../content
-  diretorio-de-trabalho: ../work
-  arquivo-de-progresso: ../data/progresso.json
+learning-infra:
+  content-directory: ../content
+  working-directory: ../work
+  progress-file: ../data/progress.json
