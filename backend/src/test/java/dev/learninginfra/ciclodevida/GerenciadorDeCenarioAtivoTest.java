@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -105,7 +106,7 @@ class GerenciadorDeCenarioAtivoTest {
                         "--request-timeout=5s"),
                 List.of("kubectl", "--context", "docker-desktop", "delete", "namespace",
                         "learning-infra-k8s-06", "--ignore-not-found=true", "--wait=true",
-                        "--timeout=20s"),
+                        "--timeout=60s"),
                 List.of("kubectl", "--context", "docker-desktop", "create", "namespace",
                         "learning-infra-k8s-06"),
                 List.of("kubectl", "--context", "docker-desktop", "--namespace",
@@ -145,7 +146,97 @@ class GerenciadorDeCenarioAtivoTest {
         assertEquals(List.of(List.of(
                 "kubectl", "--context", "docker-desktop", "delete", "namespace",
                 "learning-infra-k8s-01", "--ignore-not-found=true", "--wait=true",
-                "--timeout=20s")), comandosExecutados);
+                "--timeout=60s")), comandosExecutados);
+    }
+
+    @Test
+    void namespacePresoEmTerminatingNaoBloqueiaAEsperaQueConclui() throws Exception {
+        Cenario primeiro = cenarioKubernetes("kubernetes/01", "learning-infra-k8s-01", false);
+        Cenario segundo = cenario("docker/01", List.of());
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+        Mockito.when(repositorio.buscar("kubernetes/01")).thenReturn(Optional.of(primeiro));
+        ExecutorDeComando executorComNamespaceTerminando = comando -> {
+            if (comando.contains("delete") && comando.contains("namespace")) {
+                return new SaidaDeComando(1, "",
+                        "error: timed out waiting for the condition on namespaces/learning-infra-k8s-01");
+            }
+            if (comando.contains("get") && comando.contains("namespace")) {
+                return new SaidaDeComando(0, "Terminating", "");
+            }
+            return new SaidaDeComando(0, "", "");
+        };
+        var gerenciador = new GerenciadorDeCenarioAtivo(
+                raiz.resolve("work").toString(), executorComNamespaceTerminando,
+                new RepositorioDeProgresso(raiz.resolve("data/progresso.json").toString()),
+                repositorio);
+        gerenciador.iniciar(primeiro);
+        comandosExecutados.clear();
+
+        assertDoesNotThrow(() -> gerenciador.iniciar(segundo));
+    }
+
+    @Test
+    void namespaceJaRemovidoAposTimeoutNaoBloqueiaOIniciar() throws Exception {
+        Cenario primeiro = cenarioKubernetes("kubernetes/01", "learning-infra-k8s-01", false);
+        Cenario segundo = cenario("docker/01", List.of());
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+        Mockito.when(repositorio.buscar("kubernetes/01")).thenReturn(Optional.of(primeiro));
+        ExecutorDeComando executorComNamespaceSumido = comando -> {
+            if (comando.contains("delete") && comando.contains("namespace")) {
+                return new SaidaDeComando(1, "",
+                        "error: timed out waiting for the condition on namespaces/learning-infra-k8s-01");
+            }
+            if (comando.contains("get") && comando.contains("namespace")) {
+                return new SaidaDeComando(1, "",
+                        "Error from server (NotFound): namespaces \"learning-infra-k8s-01\" not found");
+            }
+            return new SaidaDeComando(0, "", "");
+        };
+        var gerenciador = new GerenciadorDeCenarioAtivo(
+                raiz.resolve("work").toString(), executorComNamespaceSumido,
+                new RepositorioDeProgresso(raiz.resolve("data/progresso.json").toString()),
+                repositorio);
+        gerenciador.iniciar(primeiro);
+        comandosExecutados.clear();
+
+        assertDoesNotThrow(() -> gerenciador.iniciar(segundo));
+    }
+
+    @Test
+    void namespacePresoEmTerminatingAposEsperaFalhaComInstrucaoDeFinalizers() throws Exception {
+        Cenario primeiro = cenarioKubernetes("kubernetes/01", "learning-infra-k8s-01", false);
+        Cenario segundo = cenario("docker/01", List.of());
+        var repositorio = Mockito.mock(RepositorioDeCenarios.class);
+        Mockito.when(repositorio.buscar("kubernetes/01")).thenReturn(Optional.of(primeiro));
+        var deletes = new AtomicInteger();
+        ExecutorDeComando executorComNamespacePreso = comando -> {
+            if (comando.contains("delete") && comando.contains("namespace")) {
+                if (deletes.getAndIncrement() == 0) {
+                    return new SaidaDeComando(0, "", ""); // prepara o primeiro, deixa subir
+                }
+                return new SaidaDeComando(1, "",
+                        "error: timed out waiting for the condition on namespaces/learning-infra-k8s-01");
+            }
+            if (comando.contains("wait") && comando.contains("namespace")) {
+                return new SaidaDeComando(1, "",
+                        "error: timed out waiting for the condition on namespaces/learning-infra-k8s-01");
+            }
+            if (comando.contains("get") && comando.contains("namespace")) {
+                return new SaidaDeComando(0, "Terminating", "");
+            }
+            return new SaidaDeComando(0, "", "");
+        };
+        var gerenciador = new GerenciadorDeCenarioAtivo(
+                raiz.resolve("work").toString(), executorComNamespacePreso,
+                new RepositorioDeProgresso(raiz.resolve("data/progresso.json").toString()),
+                repositorio);
+        gerenciador.iniciar(primeiro);
+        comandosExecutados.clear();
+
+        var erro = assertThrows(IllegalStateException.class, () -> gerenciador.iniciar(segundo));
+
+        assertTrue(erro.getMessage().contains("learning-infra-k8s-01"));
+        assertTrue(erro.getMessage().contains("finalizers"));
     }
 
     @Test
@@ -160,7 +251,7 @@ class GerenciadorDeCenarioAtivoTest {
                         "--request-timeout=5s"),
                 List.of("kubectl", "--context", "docker-desktop", "delete", "namespace",
                         "learning-infra-iac-13", "--ignore-not-found=true", "--wait=true",
-                        "--timeout=20s")), comandosExecutados);
+                        "--timeout=60s")), comandosExecutados);
     }
 
     @Test

@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -287,18 +288,52 @@ public class GerenciadorDeCenarioAtivo {
         }
     }
 
+    /**
+     * Um namespace com workloads em encerramento gracioso pode ficar em `Terminating`
+     * por mais de vinte segundos (o padrão de graceful termination de um Pod é 30s).
+     * O timeout curto fazia um início de Cenário falhar por um namespace que estava
+     * apenas terminando. O comando recebe um teto próprio do executor, maior que o
+     * timeout do próprio kubectl.
+     */
+    private static final Duration LIMITE_REMOCAO_NAMESPACE = Duration.ofSeconds(90);
+
     private void removerNamespace(Cenario cenario, String acao) {
         SaidaDeComando saida = executor.executar(List.of(
                 "kubectl", "--context", cenario.contextoKubernetes(),
                 "delete", "namespace", cenario.namespaceKubernetes(),
-                "--ignore-not-found=true", "--wait=true", "--timeout=20s"));
-        if (!saida.sucesso()) {
-            throw new IllegalStateException(
-                    "não consegui remover o namespace `" + cenario.namespaceKubernetes()
-                    + "` para " + acao + ": " + ultimoDetalhe(saida)
-                    + " — resolva isso antes de continuar para a próxima Verificação não "
-                    + "passar por sobra de ambiente");
+                "--ignore-not-found=true", "--wait=true", "--timeout=60s"),
+                LIMITE_REMOCAO_NAMESPACE);
+        if (saida.sucesso()) {
+            return;
         }
+
+        // O `delete --wait` pode estourar o tempo com o namespace ainda terminando em
+        // segundo plano. Antes de decretar falha, confere o estado real do recurso.
+        SaidaDeComando verificacao = executor.executar(List.of(
+                "kubectl", "--context", cenario.contextoKubernetes(),
+                "get", "namespace", cenario.namespaceKubernetes(),
+                "-o", "jsonpath={.status.phase}", "--request-timeout=10s"));
+        if (pareceInexistente(verificacao)) {
+            return; // já sumiu; a remoção terminou enquanto o delete esperava
+        }
+        if (verificacao.sucesso() && verificacao.stdout().contains("Terminating")) {
+            SaidaDeComando espera = executor.executar(List.of(
+                    "kubectl", "--context", cenario.contextoKubernetes(),
+                    "wait", "--for=delete", "namespace", cenario.namespaceKubernetes(),
+                    "--timeout=60s"), LIMITE_REMOCAO_NAMESPACE);
+            if (espera.sucesso()) {
+                return;
+            }
+        }
+
+        throw new IllegalStateException(
+                "não consegui remover o namespace `" + cenario.namespaceKubernetes()
+                + "` para " + acao + ": " + ultimoDetalhe(saida)
+                + " — o namespace ainda existe; confira os finalizers com `kubectl --context "
+                + cenario.contextoKubernetes() + " get namespace "
+                + cenario.namespaceKubernetes() + " -o yaml` e remova o que sobrar "
+                + "antes de continuar, para a próxima Verificação não passar por sobra "
+                + "de ambiente");
     }
 
     private String ultimoDetalhe(SaidaDeComando saida) {
