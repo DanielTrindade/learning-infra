@@ -1,124 +1,134 @@
-export type Dificuldade = 'GUIADO' | 'ASSISTIDO' | 'AUTONOMO' | 'MESTRE'
+export type Difficulty = 'GUIDED' | 'ASSISTED' | 'AUTONOMOUS' | 'MASTER'
 
-export type CenarioDetalhado = {
+export type ScenarioDetail = {
   id: string
-  titulo: string
-  dificuldade: Dificuldade
+  title: string
+  difficulty: Difficulty
   markdown: string
-  asercoes: string[]
+  assertions: string[]
   containers: string[]
-  ativo: boolean
-  concluido: boolean
+  active: boolean
+  completed: boolean
 }
 
-export type CenarioResumo = {
+export type ScenarioSummary = {
   id: string
-  titulo: string
-  dificuldade: Dificuldade
-  quantidadeDeAsercoes: number
-  ativo: boolean
-  concluido: boolean
+  title: string
+  difficulty: Difficulty
+  assertionCount: number
+  active: boolean
+  completed: boolean
 }
 
-export type EstadoDosFundamentos = 'NAO_INICIADO' | 'EM_ANDAMENTO' | 'CONCLUIDO'
+export type FundamentalsState = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'
 
-export type FundamentosResumo = {
-  titulo: string
-  estado: EstadoDosFundamentos
-  melhorPercentual: number
-  tentativas: number
+export type FundamentalsSummary = {
+  title: string
+  state: FundamentalsState
+  bestScore: number
+  attempts: number
 }
 
-export type TrilhaResumo = {
+export type TrackSummary = {
   id: string
-  titulo: string
-  fundamentos: FundamentosResumo | null
-  cenarios: CenarioResumo[]
-  concluidos: number
+  title: string
+  fundamentals: FundamentalsSummary | null
+  scenarios: ScenarioSummary[]
+  completed: number
   total: number
-  percentual: number
-  concluida: boolean
+  progress: number
+  allCompleted: boolean
 }
 
-export type AlternativaDoQuestionario = {
+export type QuestionOption = {
   id: string
-  texto: string
+  text: string
 }
 
-export type QuestaoDoQuestionario = {
+export type Question = {
   id: string
-  enunciado: string
-  alternativas: AlternativaDoQuestionario[]
+  statement: string
+  options: QuestionOption[]
 }
 
-export type FundamentosDetalhados = {
-  idDaTrilha: string
-  titulo: string
+export type FundamentalsDetail = {
+  trackId: string
+  title: string
   markdown: string
-  aproveitamentoMinimo: number
-  estado: EstadoDosFundamentos
-  melhorPercentual: number
-  tentativas: number
-  questoes: QuestaoDoQuestionario[]
+  minimumScore: number
+  state: FundamentalsState
+  bestScore: number
+  attempts: number
+  questions: Question[]
 }
 
-export type FeedbackDoQuestionario = {
-  questaoId: string
-  acertou: boolean
-  alternativaCorreta: string
-  explicacao: string
-  revisar: string
+export type QuestionFeedback = {
+  questionId: string
+  correct: boolean
+  correctOption: string
+  explanation: string
+  review: string
 }
 
-export type ResultadoDoQuestionario = {
-  percentual: number
-  aprovado: boolean
-  melhorPercentual: number
-  tentativas: number
-  feedback: FeedbackDoQuestionario[]
+export type QuestionnaireResult = {
+  score: number
+  passed: boolean
+  bestScore: number
+  attempts: number
+  feedback: QuestionFeedback[]
 }
 
-export type ResultadoDeAsercao = {
-  descricao: string
-  passou: boolean
-  detalhe: string
+export type AssertionResult = {
+  description: string
+  passed: boolean
+  detail: string
 }
 
-export type ResultadoDaVerificacao = {
-  concluido: boolean
-  asercoes: ResultadoDeAsercao[]
+export type VerificationResult = {
+  completed: boolean
+  assertions: AssertionResult[]
 }
 
-async function pedir<T>(url: string, metodo: 'GET' | 'POST' = 'GET', corpo?: unknown): Promise<T> {
-  const resposta = await fetch(url, {
-    method: metodo,
-    headers: corpo === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: corpo === undefined ? undefined : JSON.stringify(corpo),
+async function request<T>(url: string, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
   })
-  if (!resposta.ok) {
-    throw new Error(`${metodo} ${url} devolveu ${resposta.status}`)
+  if (!response.ok) {
+    const detail = await extractDetail(response)
+    throw new Error(detail ?? `${method} ${url} devolveu ${response.status}`)
   }
-  return resposta.json() as Promise<T>
+  return response.json() as Promise<T>
 }
 
-export const listarCenarios = () => pedir<CenarioDetalhado[]>('/api/cenarios')
+/**
+ * O backend responde RFC 7807 quando algo falha; `detail` é a mensagem que explica o
+ * problema — sem ele, o leitor só veria o código HTTP.
+ */
+async function extractDetail(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as { detail?: string; message?: string }
+    return body.detail ?? body.message ?? null
+  } catch {
+    return null
+  }
+}
 
-export const listarTrilhas = () => pedir<TrilhaResumo[]>('/api/trilhas')
+export const listScenarios = () => request<ScenarioDetail[]>('/api/scenarios')
 
-export const buscarFundamentos = (idDaTrilha: string) =>
-  pedir<FundamentosDetalhados>(`/api/trilhas/${idDaTrilha}/fundamentos`)
+export const listTracks = () => request<TrackSummary[]>('/api/tracks')
 
-export const responderQuestionario = (idDaTrilha: string, respostas: Record<string, string>) =>
-  pedir<ResultadoDoQuestionario>(
-    `/api/trilhas/${idDaTrilha}/questionario`,
-    'POST',
-    { respostas },
-  )
+export const getFundamentals = (trackId: string) =>
+  request<FundamentalsDetail>(`/api/tracks/${trackId}/fundamentals`)
 
-export const buscarCenario = (id: string) => pedir<CenarioDetalhado>(`/api/cenarios/${id}`)
+export const submitQuestionnaire = (trackId: string, answers: Record<string, string>) =>
+  request<QuestionnaireResult>(`/api/tracks/${trackId}/questionnaire`, 'POST', { answers })
 
-export const iniciarCenario = (id: string) =>
-  pedir<{ diretorioDeTrabalho: string }>(`/api/cenarios/${id}/iniciar`, 'POST')
+export const getScenario = (id: string) => request<ScenarioDetail>(`/api/scenarios/${id}`)
 
-export const verificarCenario = (id: string) =>
-  pedir<ResultadoDaVerificacao>(`/api/cenarios/${id}/verificar`, 'POST')
+export const startScenario = (id: string) =>
+  request<{ workingDirectory: string }>(`/api/scenarios/${id}/start`, 'POST')
+
+export const verifyScenario = (id: string) =>
+  request<VerificationResult>(`/api/scenarios/${id}/verify`, 'POST')

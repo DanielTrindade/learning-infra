@@ -5,6 +5,7 @@ asercoes:
     argumentos: ["--stack-name", "learning-infra-dados"]
     consulta: "Stacks[0].StackStatus"
     esperado: COMPLETE
+    comparacao: contem
     descricao: o stack declarativo convergiu sem rollback
   - tipo: aws_consulta
     servico: cloudformation

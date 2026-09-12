@@ -1,61 +1,61 @@
-import type { Dificuldade } from './api'
+import type { Difficulty } from './api'
 
-export type EstadoDoCenario = 'concluido' | 'andamento' | 'nao-iniciado'
+export type ScenarioState = 'completed' | 'in-progress' | 'not-started'
 
-const CHAVE_TRILHA_ATUAL = 'learning-infra:trilha-atual:v1'
+const CURRENT_TRACK_KEY = 'learning-infra:trilha-atual:v1'
 
-export const rotulosDificuldade: Record<Dificuldade, string> = {
-  GUIADO: 'Guiado',
-  ASSISTIDO: 'Assistido',
-  AUTONOMO: 'Autônomo',
-  MESTRE: 'Mestre',
+export const difficultyLabels: Record<Difficulty, string> = {
+  GUIDED: 'Guiado',
+  ASSISTED: 'Assistido',
+  AUTONOMOUS: 'Autônomo',
+  MASTER: 'Mestre',
 }
 
-export const rotulosEstado: Record<EstadoDoCenario, string> = {
-  concluido: 'Concluído',
-  andamento: 'Em andamento',
-  'nao-iniciado': 'Não iniciado',
+export const stateLabels: Record<ScenarioState, string> = {
+  completed: 'Concluído',
+  'in-progress': 'Em andamento',
+  'not-started': 'Não iniciado',
 }
 
-export function estadoDoCenario(cenario: { concluido: boolean; ativo: boolean }): EstadoDoCenario {
-  if (cenario.concluido) return 'concluido'
-  if (cenario.ativo) return 'andamento'
-  return 'nao-iniciado'
+export function scenarioState(scenario: { completed: boolean; active: boolean }): ScenarioState {
+  if (scenario.completed) return 'completed'
+  if (scenario.active) return 'in-progress'
+  return 'not-started'
 }
 
-export function numeroDoCenario(id: string): string {
+export function scenarioNumber(id: string): string {
   const slug = id.split('/').at(-1) ?? id
   return slug.match(/^\d+/)?.[0] ?? 's/n'
 }
 
-export function nomeDaTrilha(id: string): string {
-  const nome = id.split('/')[0] ?? id
-  return nome.charAt(0).toLocaleUpperCase('pt-BR') + nome.slice(1)
+export function trackName(id: string): string {
+  const name = id.split('/')[0] ?? id
+  return name.charAt(0).toLocaleUpperCase('pt-BR') + name.slice(1)
 }
 
-export function idDaTrilha(idDoCenario: string): string {
-  return idDoCenario.split('/')[0] ?? idDoCenario
+export function trackId(scenarioId: string): string {
+  return scenarioId.split('/')[0] ?? scenarioId
 }
 
-export function carregarTrilhaAtual(): string | null {
+export function loadCurrentTrack(): string | null {
   try {
-    return localStorage.getItem(CHAVE_TRILHA_ATUAL)
+    return localStorage.getItem(CURRENT_TRACK_KEY)
   } catch {
     return null
   }
 }
 
-export function salvarTrilhaAtual(trilha: string) {
+export function saveCurrentTrack(track: string) {
   try {
-    localStorage.setItem(CHAVE_TRILHA_ATUAL, trilha)
+    localStorage.setItem(CURRENT_TRACK_KEY, track)
   } catch {
     // O laboratório continua utilizável quando o browser bloqueia armazenamento local.
   }
 }
 
-export function limparTrilhaAtual() {
+export function clearCurrentTrack() {
   try {
-    localStorage.removeItem(CHAVE_TRILHA_ATUAL)
+    localStorage.removeItem(CURRENT_TRACK_KEY)
   } catch {
     // O laboratório continua utilizável quando o browser bloqueia armazenamento local.
   }

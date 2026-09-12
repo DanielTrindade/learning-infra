@@ -62,7 +62,7 @@ export function SumarioDaAula({
               onClick={() => rolarAteSecao(secao.id)}
             >
               <span>{String(indice + 1).padStart(2, '0')}</span>
-              {secao.titulo}
+              {secao.title}
             </button>
           </li>
         ))}

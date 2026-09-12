@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { listarTrilhas, type TrilhaResumo } from './api'
+import { listTracks, type TrackSummary } from './api'
 
 type EstadoDasTrilhas =
   | { tipo: 'carregando' }
-  | { tipo: 'pronto'; trilhas: TrilhaResumo[] }
+  | { tipo: 'pronto'; tracks: TrackSummary[] }
   | { tipo: 'erro' }
 
 function rolarAteAsTrilhas() {
@@ -12,8 +12,8 @@ function rolarAteAsTrilhas() {
   })
 }
 
-function PreviaDasTrilhas({ estado }: { estado: EstadoDasTrilhas }) {
-  if (estado.tipo === 'carregando') {
+function PreviaDasTrilhas({ state }: { state: EstadoDasTrilhas }) {
+  if (state.tipo === 'carregando') {
     return (
       <div className="landing-trilhas-skeleton" role="status" aria-label="Carregando trilhas">
         {[0, 1, 2, 3].map((item) => <span key={item} />)}
@@ -21,7 +21,7 @@ function PreviaDasTrilhas({ estado }: { estado: EstadoDasTrilhas }) {
     )
   }
 
-  if (estado.tipo === 'erro') {
+  if (state.tipo === 'erro') {
     return (
       <div className="landing-trilhas-estado" role="alert">
         <strong>O catálogo não respondeu agora.</strong>
@@ -31,7 +31,7 @@ function PreviaDasTrilhas({ estado }: { estado: EstadoDasTrilhas }) {
     )
   }
 
-  if (estado.trilhas.length === 0) {
+  if (state.tracks.length === 0) {
     return (
       <div className="landing-trilhas-estado">
         <strong>Novas trilhas estão sendo preparadas.</strong>
@@ -42,13 +42,13 @@ function PreviaDasTrilhas({ estado }: { estado: EstadoDasTrilhas }) {
 
   return (
     <ol className="landing-trilhas-lista">
-      {estado.trilhas.slice(0, 4).map((trilha) => (
-        <li key={trilha.id}>
+      {state.tracks.slice(0, 4).map((track) => (
+        <li key={track.id}>
           <div>
-            <strong>{trilha.titulo}</strong>
-            <span>{trilha.total} {trilha.total === 1 ? 'etapa' : 'etapas'} entre teoria e prática</span>
+            <strong>{track.title}</strong>
+            <span>{track.total} {track.total === 1 ? 'etapa' : 'etapas'} entre teoria e prática</span>
           </div>
-          <a href="#/aprender" aria-label={`Estudar trilha ${trilha.titulo}`}>Estudar trilha</a>
+          <a href="#/aprender" aria-label={`Estudar trilha ${track.title}`}>Estudar trilha</a>
         </li>
       ))}
     </ol>
@@ -59,17 +59,17 @@ export function LandingPage() {
   const [estadoDasTrilhas, setEstadoDasTrilhas] = useState<EstadoDasTrilhas>({ tipo: 'carregando' })
 
   useEffect(() => {
-    let ativo = true
-    listarTrilhas()
-      .then((trilhas) => {
-        if (ativo) setEstadoDasTrilhas({ tipo: 'pronto', trilhas })
+    let active = true
+    listTracks()
+      .then((tracks) => {
+        if (active) setEstadoDasTrilhas({ tipo: 'pronto', tracks })
       })
       .catch(() => {
-        if (ativo) setEstadoDasTrilhas({ tipo: 'erro' })
+        if (active) setEstadoDasTrilhas({ tipo: 'erro' })
       })
 
     return () => {
-      ativo = false
+      active = false
     }
   }, [])
 
@@ -82,7 +82,7 @@ export function LandingPage() {
           <div className="landing-hero-acoes">
             <a className="botao botao-primario" href="#/aprender">Começar agora</a>
             <button className="botao botao-texto" type="button" onClick={rolarAteAsTrilhas}>
-              Conhecer trilhas
+              Conhecer tracks
             </button>
           </div>
         </div>
@@ -157,7 +157,7 @@ export function LandingPage() {
           <h2 id="trilhas-titulo">Escolha sua próxima trilha.</h2>
           <p>Comece por uma base conhecida ou avance para o tema que já aparece no seu trabalho.</p>
         </div>
-        <PreviaDasTrilhas estado={estadoDasTrilhas} />
+        <PreviaDasTrilhas state={estadoDasTrilhas} />
       </section>
 
       <section className="landing-cta" aria-labelledby="cta-titulo">

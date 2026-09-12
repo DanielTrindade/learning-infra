@@ -23,14 +23,14 @@ import { visuaisDosDiagramas, type VisualDoDiagrama } from './visuaisDoDiagrama'
 type Tom = 'neutro' | 'destaque' | 'sucesso' | 'alerta' | 'perigo'
 
 interface NoDeFluxo {
-  titulo: string
-  detalhe?: string
+  title: string
+  detail?: string
   tom: Tom
-  lateral?: { titulo: string; detalhe?: string; tom: Tom }
+  lateral?: { title: string; detail?: string; tom: Tom }
 }
 
 interface EspecificacaoBase {
-  titulo?: string
+  title?: string
   legenda?: string
   visual?: VisualDoDiagrama
 }
@@ -42,17 +42,17 @@ interface EspecificacaoFluxo extends EspecificacaoBase {
 
 interface EspecificacaoCamadas extends EspecificacaoBase {
   tipo: 'camadas'
-  camadas: Array<{ titulo: string; detalhe?: string; tom: Tom }>
+  camadas: Array<{ title: string; detail?: string; tom: Tom }>
 }
 
 interface EspecificacaoComparacao extends EspecificacaoBase {
   tipo: 'comparacao'
-  colunas: Array<{ titulo: string; tom: Tom; itens: string[] }>
+  colunas: Array<{ title: string; tom: Tom; itens: string[] }>
 }
 
 interface EspecificacaoCiclo extends EspecificacaoBase {
   tipo: 'ciclo'
-  passos: Array<{ titulo: string; detalhe?: string; tom: Tom }>
+  passos: Array<{ title: string; detail?: string; tom: Tom }>
   retorno?: string
 }
 
@@ -64,7 +64,7 @@ type Especificacao =
 
 type Interpretacao =
   | { ok: true; especificacao: Especificacao }
-  | { ok: false; erro: string }
+  | { ok: false; error: string }
 
 const rotulosDoTipo: Record<Especificacao['tipo'], string> = {
   fluxo: 'sequência',
@@ -77,7 +77,7 @@ const tonsValidos = new Set<Tom>(['neutro', 'destaque', 'sucesso', 'alerta', 'pe
 const visuaisValidos = new Set<string>(visuaisDosDiagramas)
 
 function falha(motivo: string): Interpretacao {
-  return { ok: false, erro: motivo }
+  return { ok: false, error: motivo }
 }
 
 function textoOpcional(valor: unknown, campo: string): string | undefined {
@@ -89,9 +89,9 @@ function textoOpcional(valor: unknown, campo: string): string | undefined {
 }
 
 function textoObrigatorio(valor: unknown, campo: string): string {
-  const texto = textoOpcional(valor, campo)
-  if (texto === undefined) throw new Error(`o campo "${campo}" é obrigatório`)
-  return texto
+  const text = textoOpcional(valor, campo)
+  if (text === undefined) throw new Error(`o campo "${campo}" é obrigatório`)
+  return text
 }
 
 function tomDe(valor: unknown, campo: string): Tom {
@@ -122,17 +122,17 @@ function comoLista(valor: unknown, campo: string): Array<Record<string, unknown>
   })
 }
 
-function lerNo(item: Record<string, unknown>, campo: string): { titulo: string; detalhe?: string; tom: Tom } {
+function lerNo(item: Record<string, unknown>, campo: string): { title: string; detail?: string; tom: Tom } {
   return {
-    titulo: textoObrigatorio(item.titulo, `${campo}.titulo`),
-    detalhe: textoOpcional(item.detalhe, `${campo}.detalhe`),
+    title: textoObrigatorio(item.titulo, `${campo}.titulo`),
+    detail: textoOpcional(item.detalhe, `${campo}.detalhe`),
     tom: tomDe(item.tom, `${campo}.tom`),
   }
 }
 
 function lerBase(dados: Record<string, unknown>): EspecificacaoBase {
   return {
-    titulo: textoOpcional(dados.titulo, 'titulo'),
+    title: textoOpcional(dados.titulo, 'titulo'),
     legenda: textoOpcional(dados.legenda, 'legenda'),
     visual: visualDe(dados.visual),
   }
@@ -194,10 +194,10 @@ function interpretar(fonte: string): Interpretacao {
                 )
               }
               return {
-                titulo: textoObrigatorio(item.titulo, `colunas[${indice}].titulo`),
+                title: textoObrigatorio(item.titulo, `colunas[${indice}].titulo`),
                 tom: tomDe(item.tom, `colunas[${indice}].tom`),
-                itens: item.itens.map((texto, indiceDoItem) =>
-                  textoObrigatorio(texto, `colunas[${indice}].itens[${indiceDoItem}]`),
+                itens: item.itens.map((text, indiceDoItem) =>
+                  textoObrigatorio(text, `colunas[${indice}].itens[${indiceDoItem}]`),
                 ),
               }
             }),
@@ -261,16 +261,16 @@ function atraso(indice: number): CSSProperties {
   return { '--i': indice } as CSSProperties
 }
 
-function No({ titulo, detalhe, tom, classe = '' }: {
-  titulo: string
-  detalhe?: string
+function No({ title, detail, tom, classe = '' }: {
+  title: string
+  detail?: string
   tom: Tom
   classe?: string
 }) {
   return (
     <div className={`no diagrama-tom-${tom} ${classe}`.trim()}>
-      <strong>{titulo}</strong>
-      {detalhe && <span>{detalhe}</span>}
+      <strong>{title}</strong>
+      {detail && <span>{detail}</span>}
     </div>
   )
 }
@@ -284,14 +284,14 @@ function DiagramaDeFluxo({ passos }: EspecificacaoFluxo) {
             {String(indice + 1).padStart(2, '0')}
           </span>
           <div className={passo.lateral ? 'fluxo-grade com-lateral' : 'fluxo-grade'}>
-            <No titulo={passo.titulo} detalhe={passo.detalhe} tom={passo.tom} />
+            <No title={passo.title} detail={passo.detail} tom={passo.tom} />
             {passo.lateral && (
               <>
                 <span className="fluxo-derivacao" aria-hidden="true" />
                 <No
                   classe="no-lateral"
-                  titulo={passo.lateral.titulo}
-                  detalhe={passo.lateral.detalhe}
+                  title={passo.lateral.title}
+                  detail={passo.lateral.detail}
                   tom={passo.lateral.tom}
                 />
               </>
@@ -308,7 +308,7 @@ function DiagramaDeCamadas({ camadas }: EspecificacaoCamadas) {
     <ul className="camadas">
       {camadas.map((camada, indice) => (
         <li key={indice} className="camada" style={atraso(indice)}>
-          <No titulo={camada.titulo} detalhe={camada.detalhe} tom={camada.tom} />
+          <No title={camada.title} detail={camada.detail} tom={camada.tom} />
         </li>
       ))}
     </ul>
@@ -327,7 +327,7 @@ function DiagramaDeComparacao({ colunas }: EspecificacaoComparacao) {
           className={`comparacao-coluna diagrama-tom-${coluna.tom}`}
           style={atraso(indice)}
         >
-          <h3>{coluna.titulo}</h3>
+          <h3>{coluna.title}</h3>
           <ul>
             {coluna.itens.map((item, indiceDoItem) => (
               <li key={indiceDoItem}>{item}</li>
@@ -345,7 +345,7 @@ function DiagramaDeCiclo({ passos, retorno }: EspecificacaoCiclo) {
       <ol className="ciclo-cadeia">
         {passos.map((passo, indice) => (
           <li className="ciclo-item" key={indice} style={atraso(indice)}>
-            <No titulo={passo.titulo} detalhe={passo.detalhe} tom={passo.tom} />
+            <No title={passo.title} detail={passo.detail} tom={passo.tom} />
             {indice < passos.length - 1 && <span className="ciclo-seta" aria-hidden="true" />}
           </li>
         ))}
@@ -372,7 +372,7 @@ export function Diagrama({ fonte }: { fonte: string }) {
         </figcaption>
         <pre className="diagrama-fonte">{fonte.trim()}</pre>
         <p className="diagrama-erro" role="alert">
-          Este bloco não virou um diagrama: {interpretacao.erro}.
+          Este bloco não virou um diagrama: {interpretacao.error}.
         </p>
       </figure>
     )
@@ -390,7 +390,7 @@ export function Diagrama({ fonte }: { fonte: string }) {
       <figcaption className="diagrama-cabecalho">
         <span className="diagrama-identificacao">
           <span className="diagrama-tipo">{rotulosDoTipo[especificacao.tipo]}</span>
-          {especificacao.titulo && <span className="diagrama-titulo">{especificacao.titulo}</span>}
+          {especificacao.title && <span className="diagrama-titulo">{especificacao.title}</span>}
         </span>
         {especificacao.visual && <IlustracaoDoDiagrama visual={especificacao.visual} />}
       </figcaption>

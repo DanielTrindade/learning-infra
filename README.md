@@ -172,6 +172,10 @@ Abra **<http://localhost:5180>**.
 7. Clique em **Verificar**. O checklist mostra cada Asserção separadamente, com o motivo
    ao lado das que falharam.
 
+O **Verificar** só aceita o Cenário que está ativo. Se você tentar verificar outro, o
+backend responde `409` e pede para iniciá-lo antes — é o que impede que uma Verificação
+aprove por sobra do ambiente anterior.
+
 ## Fundamentos e evolução das Trilhas
 
 As cinco Trilhas publicadas oferecem **Fundamentos** e um Questionário com 12 situações,
@@ -224,7 +228,7 @@ servidor até um plantão resolvido sozinho. O desenho completo está em
 | Caminho | O que é |
 |---|---|
 | `work/` | Diretório de trabalho. **Apagado e recriado a cada Iniciar** — não guarde nada seu aqui. |
-| `data/progresso.json` | Qual Cenário está ativo, conclusões práticas e tentativas dos Fundamentos. |
+| `data/progress.json` | Qual Cenário está ativo, conclusões práticas e tentativas dos Fundamentos. |
 | `content/` | Manifestos das Trilhas, Fundamentos, Questionários e Cenários. |
 | namespace `learning-infra-k8s-*` | Ambiente descartável de um Cenário Kubernetes. |
 | container `learning-infra-ministack` | Endpoint AWS local e efêmero do Cenário ativo. |
@@ -464,8 +468,8 @@ Uma consulta tipada ao estado local fica em `verificacao.yaml`:
 Não há cadastro em banco nem passo de build: criar o diretório basta, e o catálogo o
 encontra na próxima chamada.
 
-Para acrescentar um tipo de Asserção, comece pelo record em `Assercao.java`. O `switch`
-do `MotorDeVerificacao` é exaustivo e **vai quebrar a compilação** até você tratar o caso
+Para acrescentar um tipo de Asserção, comece pelo record em `Assertion.java`. O `switch`
+do `VerificationEngine` é exaustivo e **vai quebrar a compilação** até você tratar o caso
 novo. Esse erro é proposital; não o resolva com um `default`.
 
 ## Testes

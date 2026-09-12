@@ -5,6 +5,7 @@ asercoes:
     argumentos: ["--bucket", "learning-infra-entrada"]
     consulta: "QueueConfigurations[0].Events[0]"
     esperado: s3:ObjectCreated
+    comparacao: contem
     descricao: o bucket publica eventos de criação na fila
   - tipo: aws_consulta
     servico: sqs

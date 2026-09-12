@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
-export function slugificar(texto: string): string {
-  return texto
+export function slugificar(text: string): string {
+  return text
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLocaleLowerCase('pt-BR')
