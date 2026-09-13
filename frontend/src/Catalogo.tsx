@@ -6,6 +6,7 @@ import {
   type TrackSummary,
 } from './api'
 import { glifoDaTrilha } from './identidadeDaTrilha'
+import { ConfirmacaoDeReset } from './ConfirmacaoDeReset'
 import {
   loadCurrentTrack,
   scenarioState,
@@ -109,7 +110,7 @@ function summarizeTrack(track: TrackSummary): TrackSummaryView {
     inProgress,
     notStarted,
     total: track.total,
-    score: track.progress,
+    score: track.score,
     allCompleted: track.allCompleted,
     hasProgress: track.completed > 0 || inProgress > 0,
   }
@@ -268,6 +269,7 @@ function CartaoDeTrilha({
   legenda,
   acoes,
   onAlternar,
+  onReset,
 }: {
   resumo: TrackSummaryView
   aulas: ScenarioSummary[]
@@ -278,6 +280,7 @@ function CartaoDeTrilha({
   legenda: string
   acoes: ReactNode
   onAlternar: () => void
+  onReset: () => void
 }) {
   const idDosCenarios = `cenarios-trilha-${resumo.id}`
   const idDoTitulo = `titulo-trilha-${resumo.id}`
@@ -341,11 +344,21 @@ function CartaoDeTrilha({
         trackId={resumo.id}
         podeIniciar={podeIniciar}
       />
+      {resumo.hasProgress && (
+        <footer className="trilha-rodape">
+          <button type="button" className="botao trilha-reset" onClick={onReset}
+            aria-label={`Resetar progresso de ${resumo.name}`}>
+            Resetar progresso
+          </button>
+        </footer>
+      )}
     </section>
   )
 }
 
 export function Catalogo() {
+  const [trilhaParaReset, setTrilhaParaReset] = useState<TrackSummaryView | null>(null)
+  const [aviso, setAviso] = useState('')
   const [tracks, setTrilhas] = useState<TrackSummary[] | null>(null)
   const [error, setErro] = useState<string | null>(null)
   const [filtro, setFiltro] = useState<Filtro>('todos')
@@ -507,6 +520,28 @@ export function Catalogo() {
 
   return (
     <>
+      {trilhaParaReset && (
+        <ConfirmacaoDeReset
+          trilha={trilhaParaReset}
+          onCancelar={() => setTrilhaParaReset(null)}
+          onReset={(atualizada) => {
+            setTrilhas((atuais) => atuais?.map((track) => track.id === atualizada.id ? atualizada : track) ?? null)
+            setTrilhaParaReset(null)
+            setTrilhasRestauradas((atuais) => {
+              const proximas = new Set(atuais ?? [])
+              proximas.delete(atualizada.id)
+              salvarTrilhasRestauradas(proximas)
+              return proximas
+            })
+            setFiltro('todos')
+            setTrilhasRecolhidasNoFiltro(new Set())
+            alterarTrilhasAbertas((abertas) => abertas.add(atualizada.id))
+            setAviso(`Progresso de ${atualizada.title} resetado.`)
+            window.requestAnimationFrame(() => document.getElementById('aviso-reset')?.focus())
+          }}
+        />
+      )}
+      <div id="aviso-reset" className={aviso ? 'reset-sucesso' : undefined} role="status" tabIndex={-1}>{aviso}</div>
       <header className="area-aprendizado-cabecalho">
         <div>
           <h1>Minha aprendizagem</h1>
@@ -636,6 +671,7 @@ export function Catalogo() {
                       : `${aulas.length} ${aulas.length === 1 ? 'resultado' : 'resultados'} neste filtro`
                   }
                   onAlternar={() => alternarTrilha(resumo.id)}
+                  onReset={() => { setAviso(''); setTrilhaParaReset(resumo) }}
                   acoes={
                     <>
                       {ehAtual ? (
@@ -688,6 +724,7 @@ export function Catalogo() {
                 podeIniciar
                 legenda={`${resumo.total} ${resumo.total === 1 ? 'etapa' : 'etapas'} concluídas`}
                 onAlternar={() => alternarAberturaArquivada(resumo.id)}
+                onReset={() => { setAviso(''); setTrilhaParaReset(resumo) }}
                 acoes={
                   <button
                     type="button"

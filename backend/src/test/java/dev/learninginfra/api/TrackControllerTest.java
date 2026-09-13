@@ -1,5 +1,8 @@
 package dev.learninginfra.api;
 
+import dev.learninginfra.progress.FundamentalsProgress;
+import dev.learninginfra.progress.Progress;
+import dev.learninginfra.progress.ProgressRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,6 +32,68 @@ class TrackControllerTest {
 
     @Autowired
     WebApplicationContext context;
+
+    @Autowired
+    ProgressRepository progressRepository;
+
+    @Test
+    void resetaSomenteOProgressoDaTrilhaEPersisteSemPerderOAmbienteAtivo() throws Exception {
+        String scenario = "docker/01-servir-html-nginx";
+        var fundamentos = new FundamentalsProgress(2, 100, "2026-09-12T12:00:00Z");
+        var original = Progress.empty()
+                .withActiveScenario(scenario)
+                .withCompleted(scenario, "hoje")
+                .withCompleted("docker/cenario-removido", "ontem")
+                .withCompleted("docker-extra/01", "ontem")
+                .withCompleted("kubernetes/01", "ontem")
+                .withFundamentals("docker", fundamentos)
+                .withFundamentals("kubernetes", fundamentos);
+        progressRepository.save(original);
+
+        mvc().perform(post("/api/tracks/docker/reset-progress"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").value(0))
+                .andExpect(jsonPath("$.score").value(0))
+                .andExpect(jsonPath("$.allCompleted").value(false))
+                .andExpect(jsonPath("$.fundamentals.state").value("NOT_STARTED"))
+                .andExpect(jsonPath("$.fundamentals.attempts").value(0))
+                .andExpect(jsonPath("$.fundamentals.bestScore").value(0))
+                .andExpect(jsonPath("$.scenarios[0].completed").value(false))
+                .andExpect(jsonPath("$.scenarios[0].active").value(true));
+
+        var saved = progressRepository.load();
+        assertThat(saved.activeScenario()).isEqualTo(scenario);
+        assertThat(saved.completed()).containsOnlyKeys("kubernetes/01", "docker-extra/01");
+        assertThat(saved.fundamentals()).containsOnlyKeys("kubernetes");
+        assertThat(saved.fundamentals().get("kubernetes")).isEqualTo(fundamentos);
+        mvc().perform(get("/api/tracks/docker/fundamentals"))
+                .andExpect(jsonPath("$.state").value("NOT_STARTED"));
+
+        mvc().perform(post("/api/tracks/docker/reset-progress"))
+                .andExpect(status().isOk());
+        assertThat(progressRepository.load()).isEqualTo(saved);
+    }
+
+    @Test
+    void resetDeTrilhaInexistenteNaoAlteraProgresso() throws Exception {
+        var original = Progress.empty().withCompleted("docker/01", "hoje");
+        progressRepository.save(original);
+        mvc().perform(post("/api/tracks/inexistente/reset-progress"))
+                .andExpect(status().isNotFound());
+        assertThat(progressRepository.load()).isEqualTo(original);
+    }
+
+    @Test
+    void resetaTrilhaSemFundamentosEPreservaAtivoDeOutroTema() throws Exception {
+        var original = Progress.empty().withActiveScenario("docker/01")
+                .withCompleted("kubernetes/01", "hoje");
+        progressRepository.save(original);
+        mvc().perform(post("/api/tracks/kubernetes/reset-progress"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").value(0));
+        assertThat(progressRepository.load().activeScenario()).isEqualTo("docker/01");
+        assertThat(progressRepository.load().completed()).isEmpty();
+    }
 
     @BeforeEach
     void limparProgresso() throws Exception {

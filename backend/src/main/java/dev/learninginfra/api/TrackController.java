@@ -57,6 +57,13 @@ public class TrackController {
         return FundamentalsDetail.from(id, track.fundamentals(), progress);
     }
 
+    @PostMapping("/{id}/reset-progress")
+    public TrackSummary resetProgress(@PathVariable String id) {
+        Track track = requireTrack(id);
+        var progress = progressRepository.update(current -> current.withoutTrackProgress(id));
+        return TrackSummary.from(track, progress);
+    }
+
     @PostMapping("/{id}/questionnaire")
     public QuestionnaireResultDto answer(
             @PathVariable String id,

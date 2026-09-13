@@ -29,6 +29,15 @@ public record Progress(
         return new Progress(activeScenario, novos, fundamentals);
     }
 
+    public Progress withoutTrackProgress(String trackId) {
+        var remainingCompleted = new LinkedHashMap<>(completed);
+        remainingCompleted.keySet().removeIf(id -> id.startsWith(trackId + "/"));
+        var remainingFundamentals = new LinkedHashMap<>(fundamentals);
+        remainingFundamentals.remove(trackId);
+        // O ambiente ativo continua rastreado para o teardown do próximo cenário.
+        return new Progress(activeScenario, remainingCompleted, remainingFundamentals);
+    }
+
     public Progress withFundamentals(
             String trackId, FundamentalsProgress novoProgresso) {
         var novos = new LinkedHashMap<>(fundamentals);
