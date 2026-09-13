@@ -89,7 +89,7 @@ export type VerificationResult = {
   assertions: AssertionResult[]
 }
 
-async function request<T>(url: string, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<T> {
+async function execute<T>(url: string, method: 'GET' | 'POST', body?: unknown): Promise<T> {
   const response = await fetch(url, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -100,6 +100,23 @@ async function request<T>(url: string, method: 'GET' | 'POST' = 'GET', body?: un
     throw new Error(detail ?? `${method} ${url} devolveu ${response.status}`)
   }
   return response.json() as Promise<T>
+}
+
+const inFlightGets = new Map<string, Promise<unknown>>()
+
+function request<T>(url: string, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<T> {
+  if (method !== 'GET') return execute<T>(url, method, body)
+
+  const inFlight = inFlightGets.get(url)
+  if (inFlight) return inFlight as Promise<T>
+
+  const promise = execute<T>(url, method, body)
+  inFlightGets.set(url, promise)
+  const release = () => {
+    if (inFlightGets.get(url) === promise) inFlightGets.delete(url)
+  }
+  promise.then(release, release)
+  return promise
 }
 
 /**
