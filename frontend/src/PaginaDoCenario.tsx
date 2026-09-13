@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   getScenario,
   startScenario,
@@ -21,6 +21,8 @@ import {
 import { SumarioDaAula } from './SumarioDaAula'
 import { secoesDoMarkdown } from './secoesDaAula'
 
+type LocalDaAcao = 'lateral' | 'final'
+
 export function PaginaDoCenario({ id }: { id: string }) {
   const [scenario, setCenario] = useState<ScenarioDetail | null>(null)
   const [error, setErro] = useState<string | null>(null)
@@ -28,6 +30,8 @@ export function PaginaDoCenario({ id }: { id: string }) {
   const [result, setResultado] = useState<VerificationResult | null>(null)
   const [ocupado, setOcupado] = useState<'iniciando' | 'verificando' | null>(null)
   const [diretorioCopiado, setDiretorioCopiado] = useState(false)
+  const [localDaAcao, setLocalDaAcao] = useState<LocalDaAcao>('lateral')
+  const requisicaoEmCurso = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -49,7 +53,10 @@ export function PaginaDoCenario({ id }: { id: string }) {
     }
   }, [id])
 
-  async function aoIniciar() {
+  async function aoIniciar(local: LocalDaAcao) {
+    if (requisicaoEmCurso.current) return
+    requisicaoEmCurso.current = true
+    setLocalDaAcao(local)
     setOcupado('iniciando')
     setErro(null)
     setResultado(null)
@@ -61,13 +68,18 @@ export function PaginaDoCenario({ id }: { id: string }) {
     } catch (e) {
       setErro(String(e))
     } finally {
+      requisicaoEmCurso.current = false
       setOcupado(null)
     }
   }
 
-  async function aoVerificar() {
+  async function aoVerificar(local: LocalDaAcao) {
+    if (requisicaoEmCurso.current) return
+    requisicaoEmCurso.current = true
+    setLocalDaAcao(local)
     setOcupado('verificando')
     setErro(null)
+    setResultado(null)
     try {
       const newResult = await verifyScenario(id)
       setResultado(newResult)
@@ -77,6 +89,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
     } catch (e) {
       setErro(String(e))
     } finally {
+      requisicaoEmCurso.current = false
       setOcupado(null)
     }
   }
@@ -146,7 +159,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
             </div>
 
             <div className="acoes">
-              <button className="botao botao-primario" onClick={aoIniciar} disabled={ocupado !== null}>
+              <button className="botao botao-primario" onClick={() => aoIniciar('lateral')} disabled={ocupado !== null}>
                 {ocupado === 'iniciando' && <span className="spinner spinner-botao" aria-hidden="true" />}
                 {ocupado === 'iniciando'
                   ? 'Preparando…'
@@ -156,7 +169,7 @@ export function PaginaDoCenario({ id }: { id: string }) {
                       ? 'Refazer laboratório'
                       : 'Iniciar ambiente'}
               </button>
-              <button className="botao botao-secundario" onClick={aoVerificar} disabled={ocupado !== null || !podeVerificar}>
+              <button className="botao botao-secundario" onClick={() => aoVerificar('lateral')} disabled={ocupado !== null || !podeVerificar}>
                 {ocupado === 'verificando' && <span className="spinner spinner-botao" aria-hidden="true" />}
                 {ocupado === 'verificando' ? 'Verificando…' : 'Verificar exercício'}
               </button>
@@ -188,22 +201,64 @@ export function PaginaDoCenario({ id }: { id: string }) {
               </div>
             )}
 
-            {error && <p className="erro" role="alert">{error}</p>}
+            {error && localDaAcao === 'lateral' && <p className="erro" role="alert">{error}</p>}
           </section>
 
-          {result && <ChecklistDeVerificacao result={result} />}
+          {result && localDaAcao === 'lateral' && <ChecklistDeVerificacao result={result} />}
 
           <SumarioDaAula secoes={secoes} rotulo="Neste Cenário" />
         </aside>
 
-        <article className="conteudo-aula">
-          <div className="nota-de-uso">
-            <span aria-hidden="true">↗</span>
-            <p><strong>Os comandos rodam no seu terminal.</strong> Esta página explica o exercício e verifica o resultado na sua máquina.</p>
-          </div>
+        <div className="coluna-cenario">
+          <article className="conteudo-aula">
+            <div className="nota-de-uso">
+              <span aria-hidden="true">↗</span>
+              <p><strong>Os comandos rodam no seu terminal.</strong> Esta página explica o exercício e verifica o resultado na sua máquina.</p>
+            </div>
 
-          <ConteudoMarkdown markdown={scenario.markdown} />
-        </article>
+            <ConteudoMarkdown markdown={scenario.markdown} />
+          </article>
+
+          <section className="verificacao-final" aria-labelledby="titulo-verificacao-final">
+            <h2 id="titulo-verificacao-final">Verifique seu exercício</h2>
+            <p>
+              {podeVerificar
+                ? 'Terminou os passos no terminal? Confira o resultado e veja se falta algum ajuste.'
+                : 'Inicie o ambiente, execute os passos no terminal e volte aqui para verificar o resultado.'}
+            </p>
+            <div className="verificacao-final-acoes" aria-busy={ocupado !== null}>
+              {podeVerificar ? (
+                <button type="button" className="botao botao-primario"
+                  onClick={() => aoVerificar('final')} disabled={ocupado !== null}>
+                  {ocupado === 'verificando' ? 'Verificando…' : 'Verificar exercício'}
+                </button>
+              ) : (
+                <button type="button" className="botao botao-primario"
+                  onClick={() => aoIniciar('final')} disabled={ocupado !== null}>
+                  {ocupado === 'iniciando' ? 'Preparando…' : 'Iniciar ambiente'}
+                </button>
+              )}
+              <span role="status">
+                {ocupado === 'verificando'
+                  ? 'Conferindo as verificações do cenário…'
+                  : ocupado === 'iniciando'
+                    ? 'Preparando seu diretório de trabalho…'
+                    : 'Você pode verificar novamente após cada ajuste.'}
+              </span>
+            </div>
+            {diretorio && localDaAcao === 'final' && (
+              <div className="diretorio">
+                <span>Ambiente preparado. Execute os comandos neste diretório:</span>
+                <code>{diretorio}</code>
+                <button type="button" className="copiar-caminho" onClick={copiarDiretorio}>
+                  {diretorioCopiado ? 'Copiado' : 'Copiar caminho'}
+                </button>
+              </div>
+            )}
+            {error && localDaAcao === 'final' && <p className="erro" role="alert">{error}</p>}
+          </section>
+          {result && localDaAcao === 'final' && <ChecklistDeVerificacao result={result} />}
+        </div>
       </div>
     </div>
   )

@@ -36,7 +36,7 @@ export type TrackSummary = {
   scenarios: ScenarioSummary[]
   completed: number
   total: number
-  progress: number
+  score: number
   allCompleted: boolean
 }
 
@@ -118,6 +118,9 @@ async function extractDetail(response: Response): Promise<string | null> {
 export const listScenarios = () => request<ScenarioDetail[]>('/api/scenarios')
 
 export const listTracks = () => request<TrackSummary[]>('/api/tracks')
+
+export const resetTrackProgress = (trackId: string) =>
+  request<TrackSummary>(`/api/tracks/${encodeURIComponent(trackId)}/reset-progress`, 'POST')
 
 export const getFundamentals = (trackId: string) =>
   request<FundamentalsDetail>(`/api/tracks/${trackId}/fundamentals`)

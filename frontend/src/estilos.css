@@ -1392,6 +1392,81 @@ h3 {
   justify-self: end;
 }
 
+.trilha-rodape {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 20px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.trilha-rodape .trilha-reset {
+  color: var(--ink);
+  background: transparent;
+  border-color: var(--line-strong);
+  font-size: 0.75rem;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+.confirmacao-reset {
+  width: min(520px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 24px;
+  overflow-y: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-cartao);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+}
+
+.confirmacao-reset::backdrop {
+  background: color-mix(in srgb, var(--canvas) 65%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.confirmacao-reset h2 {
+  margin: 0 0 16px;
+  font-size: 1.3rem;
+}
+
+.confirmacao-reset p {
+  margin: 0 0 16px;
+  line-height: 1.6;
+}
+
+.reset-acoes {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.reset-acoes .botao {
+  white-space: nowrap;
+}
+
+.botao-reset-confirmar {
+  color: var(--perigo-tinta);
+  background: var(--perigo-suave);
+  border-color: var(--perigo-linha);
+}
+
+.reset-erro {
+  color: var(--perigo-tinta);
+}
+
+.reset-sucesso {
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--ok-linha);
+  border-radius: var(--r-aninhado);
+  color: var(--ok-tinta);
+  background: var(--ok-suave);
+}
+
 .trilha-aderir {
   min-height: 34px;
   padding: 6px 14px;
@@ -1534,7 +1609,11 @@ h3 {
   bottom: 44px;
 }
 
-.cenario-concluido .linha-progresso {
+.cenario-completed {
+  background: var(--ok-suave);
+}
+
+.cenario-completed .linha-progresso {
   background: color-mix(in oklab, var(--ok) 40%, transparent);
 }
 
@@ -1557,13 +1636,13 @@ h3 {
   transform: translateY(-50%);
 }
 
-.marcador-concluido {
+.marcador-completed {
   border-color: var(--ok);
   color: var(--surface);
   background: var(--ok);
 }
 
-.marcador-andamento {
+.marcador-in-progress {
   border-color: var(--atencao);
   color: var(--atencao);
   background: var(--atencao-suave);
@@ -1628,15 +1707,24 @@ h3 {
   font-weight: 650;
 }
 
-.estado-concluido {
+.estado-completed {
   color: var(--ok);
 }
 
-.estado-andamento {
+.cenario-meta .estado-completed {
+  padding: 2px 8px;
+  border: 1px solid var(--ok-linha);
+  border-radius: var(--r-pill);
+  color: var(--ok-tinta);
+  background: var(--surface);
+  white-space: nowrap;
+}
+
+.estado-in-progress {
   color: var(--atencao);
 }
 
-.estado-nao-iniciado {
+.estado-not-started {
   color: var(--ink-soft);
 }
 
@@ -1905,6 +1993,71 @@ h3 {
   color: var(--ink);
   font-size: 1.01rem;
   line-height: 1.75;
+}
+
+.coluna-cenario {
+  grid-area: conteudo;
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.coluna-cenario > .conteudo-aula {
+  grid-area: auto;
+}
+
+.verificacao-final {
+  padding: clamp(22px, 4vw, 32px);
+  border: 1px solid var(--acento-linha);
+  border-radius: var(--r-cartao);
+  background: var(--acento-suave);
+  scroll-margin-top: 96px;
+}
+
+.verificacao-final h2 {
+  margin: 0 0 10px;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.verificacao-final > p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.verificacao-final-acoes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-top: 22px;
+}
+
+.verificacao-final-acoes .botao {
+  white-space: nowrap;
+}
+
+.verificacao-final-acoes > span {
+  flex: 1 1 160px;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.coluna-cenario > .checklist {
+  scroll-margin-top: 96px;
+}
+
+@media (max-width: 760px) {
+  .verificacao-final-acoes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .verificacao-final-acoes > span {
+    flex: auto;
+  }
 }
 
 .conteudo-aula > *:first-child {
@@ -2595,17 +2748,14 @@ h3 {
   border: 1px solid var(--line);
   border-radius: var(--r-aninhado);
   background: var(--surface);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: border-color 160ms ease;
 }
 
-.questionario fieldset:focus-within {
-  border-color: var(--acento-linha);
-  box-shadow: var(--foco);
-}
-
+/* A borda nativa respeita o recorte do legend; sombra e outline o atravessam. */
+.questionario fieldset:focus-within,
 .questionario fieldset:focus-visible {
-  outline: 2px solid var(--acento);
-  outline-offset: 3px;
+  border-color: var(--acento);
+  outline: none;
 }
 
 .questionario legend {
